@@ -1,5 +1,9 @@
 # StockProject
 ## Download package from third-party source
+- get dependency package
+
+pip3 install -r requirements.txt
+
 - get directory path
 
 import os
