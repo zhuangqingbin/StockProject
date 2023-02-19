@@ -1,8 +1,8 @@
 chinese_calendar
 pandas
 numpy
-tensorflow==1.15
-tensorflow_datasets==3.2.0
+tensorflow
+tensorflow_datasets
 tushare
 jupyter
 ipykernel

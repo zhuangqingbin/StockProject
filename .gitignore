@@ -1,0 +1,14 @@
+#### reference: https://github.com/github/gitignore/blob/main/Python.gitignor
+# dirs
+/Work
+__pycache__/
+.ipynb_checkpoints/
+.idea/
+
+# files
+.DS_Store
+*.zip
+draft*.py
+*.log
+
+
