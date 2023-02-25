@@ -19,9 +19,9 @@ def save(obj, file_path):
     if not os.path.exists(dir_name):
         print(f'[{dir_name}] Not Exists. \n\t Create New Folder ...')
         os.makedirs(dir_name)
-        print(f'Save sucessfully.')
     with open(file_path, 'wb') as f:
         pickle.dump(obj, f)
+    print(f'Save sucessfully.')
         
 def load(file_path):
     with open(file_path, 'rb') as f:
