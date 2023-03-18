@@ -35,7 +35,7 @@ brf_daily = bt.feeds.GenericCSVData(
     openinterest=-1 # 不存在这个数据
 )
 
-# 2.2 Add the Data Feed to Cerebro
+# 2.2 Add the DataStore Feed to Cerebro
 cerebro.adddata(brf_daily)
 
 # 3 Add strategy

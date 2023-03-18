@@ -4,6 +4,9 @@
 __pycache__/
 .ipynb_checkpoints/
 .idea/
+/DataStore/Temp
+/DataStore/Local
+/Note/Debug/Temp
 
 # files
 .DS_Store

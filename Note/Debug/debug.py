@@ -3,7 +3,7 @@ import os
 import sys
 
 CURR_FILE_PATH = os.path.realpath(__file__)
-CONFIG_FILE_PATH = os.path.join(CURR_FILE_PATH, '../common')
+CONFIG_FILE_PATH = os.path.join(CURR_FILE_PATH, '../../common')
 sys.path.append(CONFIG_FILE_PATH)
 from common.config import TOKEN
 print(TOKEN)

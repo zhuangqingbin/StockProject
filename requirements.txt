@@ -14,3 +14,4 @@ yfinance
 yahoo_fin
 Pillow
 pyyaml
+simplejson==3.17.2
