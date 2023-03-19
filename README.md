@@ -1,4 +1,38 @@
 # StockProject
+## Content
+```
+.
+|-- BaseClass
+|   |-- BaseDataFetch.py
+|   |-- Test.py
+|   `-- __init__.py
+|-- DataFetch
+|   `-- stock_basic.py
+|-- DataStore
+|   |-- Important
+|   |-- Local
+|   `-- Temp
+|-- Note
+|   |-- Debug
+|   `-- YoutubeClass
+|-- README.md
+|-- Work
+|-- common
+|   |-- AutoEmail.py
+|   |-- IndustryTop.yaml
+|   |-- config.py
+|   `-- utils.py
+|-- demo_test.py
+|-- draft.py
+|-- main.py
+|-- requirements.txt
+`-- requirements2.txt
+```
+- DataStore: data storage directory
+  - Important: will be uploaded to github
+    - `df_sw2021_industry_info.pkl`: SWS 2021 Industry Classification (31 first-level classifications, 134 second-level classifications, 346 third-level classifications)
+  - Local: will not be uploaded to github
+  - Temp: temporary storage
 ## Download package from third-party source
 - create env
   - conda create -n env39 python=3.9
@@ -16,11 +50,9 @@
 
 
 - get directory path
-
+```python
 import os
+print(os.path) # xxx/anaconda3/lib/python3.8/posixpath.py
+# pip install --target=xxx/anaconda3/lib/python3.8/site-packages PACKAGE
+```
 
-print(os.path)
-
-result: e.g. xxx/anaconda3/lib/python3.8/posixpath.py
-
-- pip install --target=xxx/anaconda3/lib/python3.8/site-packages PACKAGE
