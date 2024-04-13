@@ -2,6 +2,7 @@
 ## Content
 ```
 .
+|-- Backtrader
 |-- BaseClass
 |   |-- BaseDataFetch.py
 |   |-- Test.py
@@ -28,11 +29,15 @@
 |-- requirements.txt
 `-- requirements2.txt
 ```
+
 - DataStore: data storage directory
   - Important: will be uploaded to github
-    - `df_sw2021_industry_info.pkl`: SWS 2021 Industry Classification (31 first-level classifications, 134 second-level classifications, 346 third-level classifications)
+    - `df_sw2021_industry_info.pkl`: 
+      - description: SWS 2021 Industry Classification (31 first-level classifications, 134 second-level classifications, 346 third-level classifications)
+      - code in `common/code_repository.py` **get_sw_ind_list**
   - Local: will not be uploaded to github
   - Temp: temporary storage
+
 ## Download package from third-party source
 - create env
   - conda create -n env39 python=3.9
