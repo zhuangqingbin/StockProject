@@ -1,14 +1,13 @@
-from contextlib import contextmanager
-import time
-import chinese_calendar
-import datetime, os
 import math
-import numpy as np
+import os
 import pickle
-import tushare as ts
-from config import TOKEN
+import sys
+import time
+from contextlib import contextmanager
+import pymysql
+from sqlalchemy import create_engine
+from .config import *
 
-pro = ts.pro_api(TOKEN)
 
 @contextmanager
 def timer(name):
@@ -64,3 +63,31 @@ def get_n(pv, pmt, rate):
     q = 1 / (1 + rate)
     return math.log(1 - pv / pmt * (1 - q), q)
 
+
+def get_engine():
+    """
+    demo:
+        engine = get_engine()
+        query = ""
+        df1 = pd.read_sql(query, engine)
+    """
+    conn_str = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}?charset={MYSQL_CHARSET}"
+    return create_engine(conn_str)
+
+def create_table_daily_kline(engine):
+    with engine.connect() as conn:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS daily_kline (
+            ts_code VARCHAR(10),
+            trade_date DATE,
+            open FLOAT,
+            high FLOAT,
+            low FLOAT,
+            close FLOAT,
+            change_val FLOAT,
+            pct_chg FLOAT,
+            vol FLOAT,
+            amount FLOAT,
+            PRIMARY KEY (ts_code, trade_date)
+        );
+        """)

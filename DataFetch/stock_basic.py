@@ -1,14 +1,21 @@
 import os
 import sys
-from abc import abstractmethod
 
-CURR_FILE_PATH = os.path.realpath(__file__)
-BASE_CLASS_FILE_PATH = os.path.join(CURR_FILE_PATH, '../BaseClass')
+# CURR_FILE_PATH = os.path.realpath(__file__)
+# BASE_CLASS_FILE_PATH = os.path.join(CURR_FILE_PATH)
+#
+# sys.path.append(BASE_CLASS_FILE_PATH)
 
-sys.path.append(BASE_CLASS_FILE_PATH)
+from .BaseClass import BaseDataFetch
 
-from BaseClass.BaseDataFetch import BaseDataFetch
-import tushare as ts
+class HsStocksFetch(BaseDataFetch):
+    """
+    基础信息
+        获取沪股通、深股通成分数据
+    """
+    def read_data(self):
+        self.data = self.pro.hs_const(hs_type='SH')
+
 
 class StockBasicFetch(BaseDataFetch):
     """
@@ -43,3 +50,15 @@ class StockCompanyFetch(BaseDataFetch):
     """
     def read_data(self, ts_code = None, exchange = None):
         self.data = self.pro.stock_company(ts_code = ts_code, exchange = exchange)
+
+
+class StockDailyFetch(BaseDataFetch):
+    """
+    行情数据
+        获取A股日线行情
+    """
+    def read_data(self, ts_code = None, start_date=None, end_date=None, trade_date = None):
+        if ts_code:
+            self.data = self.pro.daily(ts_code = ts_code, start_date=start_date, end_date=end_date)
+        else:
+            self.data = self.pro.daily(trade_date=trade_date)
