@@ -88,19 +88,21 @@ USE stock_data;
 ```
 3.create table
 ```bash
+
 CREATE TABLE daily_kline (
-    ts_code VARCHAR(10),
-    trade_date DATE,
-    open FLOAT,
-    high FLOAT,
-    low FLOAT,
-    close FLOAT,
-    pre_close FLOAT,
-    `change` FLOAT,
-    pct_chg FLOAT,
-    vol FLOAT,
-    amount FLOAT,
-    PRIMARY KEY (ts_code, trade_date)
+    ts_code    VARCHAR(10) NOT NULL,
+    trade_date CHAR(8)     NOT NULL,           -- 存 YYYYMMDD
+    open       FLOAT,
+    high       FLOAT,
+    low        FLOAT,
+    close      FLOAT,
+    pre_close  FLOAT,
+    `change`   FLOAT,
+    pct_chg    FLOAT,
+    vol        FLOAT,
+    amount     FLOAT,
+    PRIMARY KEY (ts_code, trade_date),
+    CHECK (trade_date REGEXP '^[0-9]{8}$')     -- MySQL 8.0+ 才会真正生效
 );
 ```
 
@@ -141,4 +143,27 @@ LIMIT 30
 df = pd.read_sql(query, engine)
 print(df.head())
 
+```
+
+## Backtrader感悟
+- 统一用self.datas[X]的方式比较好,X就是adddata的顺序
+- self.data(即self.datas[0])本质也是一个line,和定义的指标一样,假设定义了一个指标A(lines有B和C),访问B和C分别为self.A.lines.B其中lines可以省略,访问data中的close也可以self.datas[0].lines.close,但是通常省略为self.datas[0].close
+- get(ago=0,size=0), 返回截止包含到ago位置的size数组
+- ()defaly操作, self.data.close(-1) → 一条“移位后的 line”（上一根 close，仍是 line，可在 \_\_init__ 里与其它 line 组合生成新 line）;self.data.close[-1] → 一个即时数值（上一根的具体数）。只能在 next() 里安全使用；在 \_\_init__ 里用会把逻辑“固化”或直接越界
+- order.status有order.Completed, order.Canceled, order.Rejected, rder.Submitted, order.Accepted
+```python
+class TestStrategy(bt.Strategy):
+    def __init__(self):
+        # To keep track of pending orders and buy price/commission
+        self.order = None 
+    def notify_order(self, order):
+        if order.status in [order.Completed, order.Canceled, order.Rejected]:
+            self.order = None  # 只有这些结束状态才清空
+    def next(self):
+        # Check if an order is pending ... if yes, we cannot send a 2nd one
+        if self.order:
+            return
+# submit和accept仍然不设置为None， 因为这个时候还没真正完成
+# 回测时：下单 → Submitted → Accepted → Completed
+# 实盘：下单 → Submitted → Accepted → （等待几秒/几分钟） → Completed
 ```

@@ -91,3 +91,42 @@ def create_table_daily_kline(engine):
             PRIMARY KEY (ts_code, trade_date)
         );
         """)
+
+def code_add_suffix(ts_code: str) -> str:
+    if type(ts_code) == int:
+        code = str(code)
+    elif type(ts_code) == str:
+        pass
+    else:
+        raise ValueError(f"ts_code({ts_code}) must be int or str.")
+    if ts_code.startswith(('60', '68')):
+        return ts_code + '.SH'
+    elif ts_code.startswith(('00', '30')):
+        return ts_code + '.SZ'
+    elif ts_code.startswith(('4', '8')):
+        return ts_code + '.BJ'
+    else:
+        raise ValueError(f"ts_code({ts_code}) must start with 60/68/00/30/4/8")
+
+        
+def get_prev_trade_days(date: str, n: int):
+    """
+    获取某个日期之前的 n 个 A 股交易日（不含当天）
+    
+    :param date: 日期字符串，格式 '2024-05-14'
+    :param n: 向前取 n 个交易日
+    :return: n 个交易日构成的 list
+    """
+    # 获取从远古到指定日期的所有交易日
+    trade_dates_df = ak.tool_trade_date_hist_sina()
+    trade_dates_df['trade_date'] = pd.to_datetime(trade_dates_df['trade_date'])
+    
+    target_date = pd.to_datetime(date)
+    
+    # 筛选出小于目标日期的日期
+    before_target = trade_dates_df[trade_dates_df['trade_date'] < target_date]
+    
+    # 取最后 n 个
+    result = before_target['trade_date'].tail(n).dt.strftime('%Y-%m-%d').tolist()
+    
+    return result
