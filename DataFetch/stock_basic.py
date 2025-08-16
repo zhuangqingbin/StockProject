@@ -47,6 +47,7 @@ class StockCompanyFetch(BaseDataFetch):
     """
     上市公司基本信息
         获取上市公司基础信息
+        exchange: 交易所代码 ，SSE上交所 SZSE深交所 BSE北交所
     """
     def read_data(self, ts_code = None, exchange = None):
         self.data = self.pro.stock_company(ts_code = ts_code, exchange = exchange)
