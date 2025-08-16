@@ -60,6 +60,7 @@ class StockDailyFetch(BaseDataFetch):
     """
     def read_data(self, ts_code = None, start_date=None, end_date=None, trade_date = None):
         if ts_code:
-            self.data = self.pro.daily(ts_code = ts_code, start_date=start_date, end_date=end_date)
+            self.data = self.$ xcode-select --install
+(ts_code = ts_code, start_date=start_date, end_date=end_date)
         else:
             self.data = self.pro.daily(trade_date=trade_date)
