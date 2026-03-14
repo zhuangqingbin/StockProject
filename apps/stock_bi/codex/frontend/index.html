@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock BI | A股市场情报终端</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="page-backdrop" aria-hidden="true">
+        <div class="page-backdrop__mesh"></div>
+        <div class="page-backdrop__grid"></div>
+        <div class="page-backdrop__noise"></div>
+    </div>
+
+    <div class="app">
+        <header class="header masthead">
+            <div class="masthead__brand">
+                <div class="masthead__seal">
+                    <svg class="header__logo" viewBox="0 0 32 32" fill="none">
+                        <rect x="2" y="14" width="6" height="16" rx="1" fill="currentColor" opacity="0.35"/>
+                        <rect x="10" y="8" width="6" height="22" rx="1" fill="currentColor" opacity="0.55"/>
+                        <rect x="18" y="2" width="6" height="28" rx="1" fill="currentColor" opacity="0.75"/>
+                        <rect x="26" y="10" width="6" height="20" rx="1" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="masthead__copy">
+                    <p class="masthead__eyebrow">Shanghai Market Desk</p>
+                    <h1 class="header__title">Stock BI</h1>
+                </div>
+            </div>
+
+            <div class="header__info">
+                <div class="header__status">
+                    <div class="ws-status" id="wsStatus">
+                        <span class="ws-dot" id="wsDot"></span>
+                        <span id="wsText">连接中...</span>
+                    </div>
+                    <span class="status-divider"></span>
+                    <span class="header__date" id="currentDate">加载中...</span>
+                </div>
+                <button class="header__btn" id="refreshBtn" title="刷新数据">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+                        <path d="M21 3v6h-6"/>
+                    </svg>
+                    <span>刷新</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="viz-panel">
+                <section class="hero-grid">
+                    <article class="hero-sheet">
+                        <div class="hero-sheet__header">
+                            <p class="section-kicker">Market Briefing</p>
+                            <span class="hero-stamp">Daily Sheet</span>
+                        </div>
+                        <h2 class="hero-sheet__title">中国市场日内广度、资金流与热点结构</h2>
+                        <p class="hero-sheet__brief" id="heroBrief">
+                            正在汇总交易日全量信号，生成开盘后的第一版市场摘要。
+                        </p>
+                        <div class="hero-sheet__meta">
+                            <div class="hero-meta-card">
+                                <span class="hero-meta-card__label">市场广度</span>
+                                <strong class="hero-meta-card__value" id="heroBreadth">--</strong>
+                            </div>
+                            <div class="hero-meta-card">
+                                <span class="hero-meta-card__label">资金流向</span>
+                                <strong class="hero-meta-card__value" id="heroFlow">--</strong>
+                            </div>
+                            <div class="hero-meta-card">
+                                <span class="hero-meta-card__label">盘面焦点</span>
+                                <strong class="hero-meta-card__value" id="heroFocus">--</strong>
+                            </div>
+                        </div>
+                    </article>
+
+                    <aside class="pulse-panel" id="marketPulse">
+                        <div class="section-heading">
+                            <div>
+                                <p class="section-kicker">Index Pulse</p>
+                                <h3>核心指数脉冲</h3>
+                            </div>
+                            <span class="section-note">A-share tape</span>
+                        </div>
+                        <div class="index-bar" id="indexBar">
+                            <div class="index-item" id="idx-sh">
+                                <span class="index-name">上证指数</span>
+                                <span class="index-value">--</span>
+                                <span class="index-chg">--</span>
+                            </div>
+                            <div class="index-item" id="idx-sz">
+                                <span class="index-name">深证成指</span>
+                                <span class="index-value">--</span>
+                                <span class="index-chg">--</span>
+                            </div>
+                            <div class="index-item" id="idx-cyb">
+                                <span class="index-name">创业板指</span>
+                                <span class="index-value">--</span>
+                                <span class="index-chg">--</span>
+                            </div>
+                            <div class="index-item" id="idx-kc">
+                                <span class="index-name">科创50</span>
+                                <span class="index-value">--</span>
+                                <span class="index-chg">--</span>
+                            </div>
+                        </div>
+                    </aside>
+                </section>
+
+                <section class="signal-strip" id="signalStrip">
+                    <div class="overview-cards" id="overviewCards">
+                        <article class="card card--up">
+                            <div class="card__label">上涨家数</div>
+                            <div class="card__value" id="upCount">--</div>
+                            <div class="card__sub" id="upRatio">--%</div>
+                        </article>
+                        <article class="card card--down">
+                            <div class="card__label">下跌家数</div>
+                            <div class="card__value" id="downCount">--</div>
+                            <div class="card__sub" id="downRatio">--%</div>
+                        </article>
+                        <article class="card card--amount">
+                            <div class="card__label">两市成交额</div>
+                            <div class="card__value" id="totalAmount">--</div>
+                            <div class="card__sub">亿元</div>
+                        </article>
+                        <article class="card card--limit">
+                            <div class="card__label">涨停 / 跌停</div>
+                            <div class="card__value"><span id="limitUp">--</span> / <span id="limitDown">--</span></div>
+                            <div class="card__sub">家</div>
+                        </article>
+                        <article class="card card--north">
+                            <div class="card__label">北向资金</div>
+                            <div class="card__value" id="northMoney">--</div>
+                            <div class="card__sub">亿元</div>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="chart-stage">
+                    <div class="chart-container chart-container--main">
+                        <div class="chart-header">
+                            <div>
+                                <p class="section-kicker">Visual Board</p>
+                                <h3 class="chart-title" id="mainChartTitle">市场概览</h3>
+                            </div>
+                            <div class="chart-controls">
+                                <div class="chart-actions">
+                                    <button class="chart-btn active" data-view="distribution">涨跌分布</button>
+                                    <button class="chart-btn" data-view="industry">行业热力图</button>
+                                    <button class="chart-btn" data-view="ranking">排行热力图</button>
+                                </div>
+                                <select class="control-select" id="topNSelect" title="显示数量">
+                                    <option value="10" selected>Top 10</option>
+                                    <option value="20">Top 20</option>
+                                    <option value="30">Top 30</option>
+                                    <option value="50">Top 50</option>
+                                </select>
+                                <div class="toggle-group" id="orderToggle">
+                                    <button class="toggle-btn active" data-order="desc">涨幅榜</button>
+                                    <button class="toggle-btn" data-order="asc">跌幅榜</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart" id="mainChart"></div>
+                    </div>
+
+                    <div class="secondary-charts">
+                        <div class="chart-container chart-container--half">
+                            <div class="chart-header">
+                                <div>
+                                    <p class="section-kicker">Flow Tape</p>
+                                    <h3 class="chart-title">北向资金趋势 (30日)</h3>
+                                </div>
+                            </div>
+                            <div class="chart" id="northChart"></div>
+                        </div>
+                        <div class="chart-container chart-container--half">
+                            <div class="chart-header">
+                                <div>
+                                    <p class="section-kicker">Volume Tape</p>
+                                    <h3 class="chart-title">成交额趋势 (30日)</h3>
+                                </div>
+                            </div>
+                            <div class="chart" id="amountChart"></div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside class="chat-panel assistant-console" id="assistantConsole">
+                <div class="assistant-console__header">
+                    <div>
+                        <p class="section-kicker">Analyst Copilot</p>
+                        <h3>问答命令台</h3>
+                    </div>
+                    <span class="assistant-console__hint">rule + llm</span>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message message--assistant">
+                        <div class="message__avatar">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                            </svg>
+                        </div>
+                        <div class="message__content">
+                            <div class="message__text">
+                                你好，我会把原始市场数据翻译成可操作的盘面摘要。可以直接点选命令，或输入更自然的问题。<br><br>
+                                <span class="cmd-link" data-cmd="今天市场怎么样">生成今日晨报</span><br>
+                                <span class="cmd-link" data-cmd="北向资金流入多少">北向资金净流向</span><br>
+                                <span class="cmd-link" data-cmd="显示涨幅前20">查看涨幅前20</span><br>
+                                <span class="cmd-link" data-cmd="哪个行业最强">查看最强行业</span><br>
+                                <span class="cmd-link" data-cmd="龙虎榜有哪些">检索龙虎榜</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="command-deck" id="commandDeck">
+                        <div class="quick-commands" id="quickCommands">
+                            <button class="quick-btn" data-cmd="市场概览">市场晨报</button>
+                            <button class="quick-btn" data-cmd="涨幅榜">强势股</button>
+                            <button class="quick-btn" data-cmd="跌幅榜">弱势股</button>
+                            <button class="quick-btn" data-cmd="行业排名">行业热度</button>
+                            <button class="quick-btn" data-cmd="北向资金">北向流向</button>
+                            <button class="quick-btn" data-cmd="龙虎榜">龙虎榜</button>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-container">
+                        <textarea
+                            class="chat-input"
+                            id="chatInput"
+                            placeholder="例如：今天市场怎么样，或者显示涨幅前20"
+                            rows="1"
+                        ></textarea>
+                        <button class="chat-send" id="chatSend" title="发送 (Enter)">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 20.25V3.75a.75.75 0 0 1 1.12-.65l16.5 8.25a.75.75 0 0 1 0 1.3L4.12 20.9A.75.75 0 0 1 3 20.25Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chat-hint">Enter 发送 | Shift+Enter 换行</div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <div class="update-banner" id="updateBanner">
+        <span>数据已更新，建议刷新看板</span>
+        <button id="refreshNowBtn">立即刷新</button>
+        <button id="dismissBannerBtn">稍后</button>
+    </div>
+
+    <div class="consistency-warning" id="consistencyWarning">
+        <span class="warning-icon">!</span>
+        <span class="warning-text">数据日期不一致: <span id="consistencyText"></span></span>
+        <button id="dismissConsistencyBtn">&times;</button>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✓</span>
+        <span id="toastText">操作成功</span>
+    </div>
+
+    <div class="modal-overlay" id="industryModal">
+        <div class="modal modal--wide">
+            <div class="modal__header">
+                <div class="modal__title">
+                    <span class="industry-name" id="industryModalName">--</span>
+                    <span class="industry-stats" id="industryModalStats">--</span>
+                </div>
+                <div class="modal__controls">
+                    <div class="toggle-group" id="industryViewToggle">
+                        <button class="toggle-btn active" data-view="kline">K线图</button>
+                        <button class="toggle-btn" data-view="stocks">股票列表</button>
+                    </div>
+                    <button class="modal__close" id="industryModalClose">&times;</button>
+                </div>
+            </div>
+            <div class="modal__body">
+                <div class="industry-view" id="industryKlineView">
+                    <div class="modal__chart modal__chart--industry" id="industryKlineChart"></div>
+                    <div class="industry-summary-grid">
+                        <div class="industry-info-card">
+                            <div class="info-label">今日涨跌</div>
+                            <div class="info-value" id="industryTodayPct">--</div>
+                        </div>
+                        <div class="industry-info-card">
+                            <div class="info-label">行业指数</div>
+                            <div class="info-value" id="industryTodayClose">--</div>
+                        </div>
+                        <div class="industry-info-card">
+                            <div class="info-label">成交额</div>
+                            <div class="info-value" id="industryTodayAmount">--</div>
+                        </div>
+                        <div class="industry-info-card">
+                            <div class="info-label">平均 PE</div>
+                            <div class="info-value" id="industryTodayPE">--</div>
+                        </div>
+                        <div class="industry-info-card">
+                            <div class="info-label">上涨/下跌</div>
+                            <div class="info-value" id="industryUpDown">--</div>
+                        </div>
+                    </div>
+                    <div class="view-stocks-hint">
+                        <button class="btn-view-stocks" id="btnViewStocks">查看成分股列表</button>
+                    </div>
+                </div>
+
+                <div class="industry-view" id="industryStocksView" style="display:none;">
+                    <div class="stocks-header">
+                        <div class="toggle-group" id="industryOrderToggle">
+                            <button class="toggle-btn active" data-order="desc">涨幅↓</button>
+                            <button class="toggle-btn" data-order="asc">涨幅↑</button>
+                        </div>
+                    </div>
+                    <div class="stock-table-container">
+                        <table class="data-table" id="industryStockTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-rank">#</th>
+                                    <th class="col-code">代码</th>
+                                    <th class="col-name">名称</th>
+                                    <th class="col-pct">涨跌幅</th>
+                                    <th class="col-close">收盘</th>
+                                    <th class="col-amount">成交额</th>
+                                    <th class="col-turnover">换手率</th>
+                                    <th class="col-pe">PE</th>
+                                    <th class="col-mv">市值</th>
+                                </tr>
+                            </thead>
+                            <tbody id="industryStockBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="stockModal">
+        <div class="modal">
+            <div class="modal__header">
+                <div class="modal__title">
+                    <span class="stock-name" id="modalStockName">--</span>
+                    <span class="stock-code" id="modalStockCode">--</span>
+                    <span class="info-value" id="modalPctChg">--</span>
+                </div>
+                <button class="modal__close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="modal__grid">
+                    <div>
+                        <div class="modal__chart" id="modalKlineChart"></div>
+
+                        <div class="modal__section">
+                            <div class="modal__section-title">今日数据</div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">开盘</span>
+                                    <span class="info-value" id="modalOpen">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">最高</span>
+                                    <span class="info-value" id="modalHigh">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">最低</span>
+                                    <span class="info-value" id="modalLow">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">收盘</span>
+                                    <span class="info-value" id="modalClose2">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">成交量</span>
+                                    <span class="info-value" id="modalVol">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">成交额</span>
+                                    <span class="info-value" id="modalAmount">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">换手率</span>
+                                    <span class="info-value" id="modalTurnover">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">量比</span>
+                                    <span class="info-value" id="modalVolRatio">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="modal__section">
+                            <div class="modal__section-title">公司信息</div>
+                            <div class="company-info">
+                                <div class="company-row">
+                                    <span class="company-label">行业</span>
+                                    <span class="company-value" id="modalIndustry">--</span>
+                                </div>
+                                <div class="company-row">
+                                    <span class="company-label">地区</span>
+                                    <span class="company-value" id="modalArea">--</span>
+                                </div>
+                                <div class="company-row">
+                                    <span class="company-label">市场</span>
+                                    <span class="company-value" id="modalMarket">--</span>
+                                </div>
+                                <div class="company-row">
+                                    <span class="company-label">上市日期</span>
+                                    <span class="company-value" id="modalListDate">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal__section">
+                            <div class="modal__section-title">估值指标</div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">PE</span>
+                                    <span class="info-value" id="modalPE">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">PE(TTM)</span>
+                                    <span class="info-value" id="modalPETTM">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">PB</span>
+                                    <span class="info-value" id="modalPB">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">总市值</span>
+                                    <span class="info-value" id="modalTotalMV">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">流通市值</span>
+                                    <span class="info-value" id="modalCircMV">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

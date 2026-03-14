@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artisan Espresso Club — Member Portal</title>
+  <meta name="description" content="Premium espresso membership for Bay Area coffee enthusiasts. $200/month includes equipment rental, fresh roasts, and expert guidance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient Background -->
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient__orb ambient__orb--1"></div>
+    <div class="ambient__orb ambient__orb--2"></div>
+    <div class="ambient__grain"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header__inner">
+      <a href="#" class="logo">
+        <span class="logo__icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+            <path d="M10 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="16" cy="11" r="2" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="logo__text">Artisan Espresso Club</span>
+      </a>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="#" class="nav__link">How it works</a>
+        <a href="#" class="nav__link">Equipment</a>
+        <a href="#" class="nav__link">Member stories</a>
+      </nav>
+      <div class="header__cta">
+        <span class="badge">Bay Area Exclusive</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="container main__grid">
+      
+      <!-- Left: Value Proposition -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero__eyebrow">
+          <span class="pulse" aria-hidden="true"></span>
+          Crafted for discerning palates
+        </div>
+        
+        <h1 id="hero-title" class="hero__title">
+          The science of espresso,<br>
+          <span class="gradient-text">delivered to your kitchen.</span>
+        </h1>
+        
+        <p class="hero__desc">
+          A curated membership for those who understand that exceptional espresso is equal parts 
+          art and precision. Equipment, beans, and expertise—unified.
+        </p>
+
+        <!-- Pricing Card -->
+        <div class="pricing">
+          <div class="pricing__header">
+            <div class="pricing__label">Recommended</div>
+            <div class="pricing__plan">
+              <span class="pricing__name">6-Month Commitment</span>
+              <div class="pricing__price">
+                <span class="pricing__amount">$200</span>
+                <span class="pricing__period">/month</span>
+              </div>
+            </div>
+          </div>
+          <ul class="pricing__features">
+            <li>
+              <svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span><strong>Premium espresso machine</strong> — La Marzocco or Decent DE1</span>
+            </li>
+            <li>
+              <svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span><strong>Monthly bean drops</strong> — Single-origin, roasted weekly</span>
+            </li>
+            <li>
+              <svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span><strong>1-on-1 dial-in sessions</strong> — With certified Q graders</span>
+            </li>
+            <li>
+              <svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span><strong>White-glove maintenance</strong> — We come to you</span>
+            </li>
+          </ul>
+          <div class="pricing__footer">
+            <span class="pricing__savings">Save $240/year vs month-to-month</span>
+          </div>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="proof">
+          <div class="proof__avatars" aria-hidden="true">
+            <div class="avatar" style="--hue: 25"></div>
+            <div class="avatar" style="--hue: 180"></div>
+            <div class="avatar" style="--hue: 280"></div>
+            <div class="avatar" style="--hue: 45"></div>
+          </div>
+          <div class="proof__text">
+            <strong>127 members</strong> in the Bay Area
+            <span class="proof__rating">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              4.9
+            </span>
+          </div>
+        </div>
+
+        <!-- Quote -->
+        <blockquote class="quote">
+          <p>"Finally, café-quality shots without the guesswork. The dial-in sessions alone are worth the membership."</p>
+          <footer>
+            <cite>— Michael T.</cite>
+            <span>Staff Engineer, Menlo Park</span>
+          </footer>
+        </blockquote>
+      </section>
+
+      <!-- Right: Login Panel -->
+      <section class="panel" aria-labelledby="login-title">
+        <div class="panel__inner">
+          <div class="panel__header">
+            <h2 id="login-title" class="panel__title">Welcome back</h2>
+            <p class="panel__subtitle">Sign in to access your member dashboard, schedule sessions, and manage deliveries.</p>
+          </div>
+
+          <!-- OAuth Buttons -->
+          <div class="oauth">
+            <button type="button" class="oauth__btn oauth__btn--google">
+              <svg class="oauth__icon" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Continue with Google
+            </button>
+            <button type="button" class="oauth__btn oauth__btn--apple">
+              <svg class="oauth__icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              Continue with Apple
+            </button>
+          </div>
+
+          <div class="divider">
+            <span>or sign in with email</span>
+          </div>
+
+          <!-- Login Form -->
+          <form class="form" id="loginForm" novalidate>
+            <div class="field">
+              <label for="email" class="field__label">Email address</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                class="field__input" 
+                placeholder="you@company.com"
+                autocomplete="email"
+                required
+              >
+            </div>
+
+            <div class="field">
+              <label for="password" class="field__label">Password</label>
+              <div class="field__password">
+                <input 
+                  type="password" 
+                  id="password" 
+                  name="password" 
+                  class="field__input" 
+                  placeholder="••••••••••••"
+                  autocomplete="current-password"
+                  minlength="8"
+                  required
+                >
+                <button type="button" class="field__toggle" id="togglePassword" aria-label="Show password">
+                  <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form__row">
+              <label class="checkbox">
+                <input type="checkbox" name="remember">
+                <span class="checkbox__box"></span>
+                <span class="checkbox__text">Keep me signed in</span>
+              </label>
+              <a href="#" class="link">Forgot password?</a>
+            </div>
+
+            <!-- 6-Month Upsell -->
+            <div class="upsell" id="upsellBox">
+              <div class="upsell__header">
+                <span class="upsell__badge">Best Value</span>
+                <span class="upsell__title">Upgrade to 6-month plan</span>
+              </div>
+              <p class="upsell__desc">
+                Get priority equipment selection, exclusive roast access, and save <strong>$240/year</strong>.
+              </p>
+              <label class="toggle">
+                <input type="checkbox" id="sixMonthToggle" checked>
+                <span class="toggle__track"></span>
+                <span class="toggle__label">I'm committed to the 6-month plan</span>
+              </label>
+            </div>
+
+            <button type="submit" class="submit" id="submitBtn">
+              <span class="submit__text">Sign in to your account</span>
+              <span class="submit__subtext" id="submitSubtext">Continue your 6-month membership</span>
+            </button>
+
+            <p class="terms">
+              By signing in, you agree to our 
+              <a href="#" class="link">Terms of Service</a> and 
+              <a href="#" class="link">Privacy Policy</a>.
+            </p>
+          </form>
+
+          <div class="panel__footer">
+            <p>New to Artisan Espresso Club? <a href="#" class="link link--strong">Start your membership</a></p>
+          </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast" id="toast" role="alert" aria-live="polite" hidden>
+          <div class="toast__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="toast__content">
+            <div class="toast__title" id="toastTitle">Success</div>
+            <div class="toast__message" id="toastMessage">Signing you in...</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <span class="logo__text">Artisan Espresso Club</span>
+        <p>Premium espresso experiences for the Bay Area's most discerning coffee enthusiasts.</p>
+      </div>
+      <div class="footer__links">
+        <a href="#">Support</a>
+        <a href="#">Equipment Care</a>
+        <a href="#">Roasting Partners</a>
+        <a href="#">Careers</a>
+      </div>
+      <div class="footer__security">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        <span>256-bit encryption</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Espresso Society — Member Login</title>
+    <meta
+      name="description"
+      content="Bay Area espresso membership: $200/mo. Roasting + equipment rental + guided espresso training. Log in to manage your 6‑month plan."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <div class="bg" aria-hidden="true">
+      <div class="grain"></div>
+      <div class="glow glow--a"></div>
+      <div class="glow glow--b"></div>
+    </div>
+
+    <header class="topbar">
+      <div class="container topbar__inner">
+        <div class="brand" aria-label="Espresso Society">
+          <span class="brand__mark" aria-hidden="true"></span>
+          <span class="brand__name">Espresso Society</span>
+        </div>
+
+        <nav class="topbar__nav" aria-label="Primary">
+          <a class="topbar__link" href="#" aria-label="Learn about the membership">Membership</a>
+          <a class="topbar__link" href="#" aria-label="See what's included">What’s included</a>
+          <a class="topbar__link" href="#" aria-label="Read member stories">Stories</a>
+        </nav>
+
+        <div class="topbar__meta" aria-label="Trust signals">
+          <span class="pill">Bay Area concierge delivery</span>
+          <span class="pill pill--muted">Secure login</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="container">
+      <div class="layout">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero__badge">
+            <span class="dot" aria-hidden="true"></span>
+            For serious espresso people in the Bay Area
+          </div>
+
+          <h1 id="hero-title" class="hero__title">
+            Your home espresso setup,
+            <span class="hero__title-accent">dialed in like a lab.</span>
+          </h1>
+
+          <p class="hero__subtitle">
+            A $200/month membership that combines freshly roasted coffee, equipment rental, and guided training—
+            engineered for consistency, joy, and the kind of workflow you’ll actually keep.
+          </p>
+
+          <div class="value">
+            <div class="value__card">
+              <div class="value__kicker">Most members choose</div>
+              <div class="value__plan">
+                <div class="value__plan-name">6‑month commitment</div>
+                <div class="value__plan-price">
+                  <span class="price">$200</span><span class="per">/mo</span>
+                </div>
+              </div>
+              <ul class="value__list">
+                <li><strong>Espresso machine + grinder rental</strong> matched to your taste goals</li>
+                <li><strong>Roasting drops</strong> tailored to your water + recipe</li>
+                <li><strong>Guided dialing</strong> (video + chat) with extraction analytics</li>
+                <li><strong>Concierge swaps</strong> & preventive maintenance</li>
+              </ul>
+              <div class="value__fineprint">
+                Cancel anytime after 6 months. No hidden “equipment fees.”
+              </div>
+            </div>
+
+            <div class="proof">
+              <div class="proof__row">
+                <div class="proof__metric">
+                  <div class="proof__num">4.9</div>
+                  <div class="proof__label">average member rating</div>
+                </div>
+                <div class="proof__metric">
+                  <div class="proof__num">12–18</div>
+                  <div class="proof__label">dial‑in sessions per month</div>
+                </div>
+                <div class="proof__metric">
+                  <div class="proof__num">0</div>
+                  <div class="proof__label">guesswork, once calibrated</div>
+                </div>
+              </div>
+
+              <blockquote class="quote" aria-label="Member quote">
+                <p>
+                  “I used to chase espresso like a weekend project. Now it’s a daily ritual—consistent, sweet,
+                  and repeatable. The guidance is as rigorous as my job in tech.”
+                </p>
+                <footer>
+                  <span class="quote__name">Amit, Palo Alto</span>
+                  <span class="quote__sep" aria-hidden="true">•</span>
+                  <span class="quote__meta">6‑month member</span>
+                </footer>
+              </blockquote>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="login-title">
+          <div class="panel__header">
+            <h2 id="login-title" class="panel__title">Welcome back</h2>
+            <p class="panel__subtitle">Log in to manage your membership, delivery schedule, and equipment.</p>
+          </div>
+
+          <div class="auth">
+            <button class="oauth oauth--google" type="button" aria-label="Continue with Google">
+              <span class="oauth__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false">
+                  <path
+                    fill="currentColor"
+                    d="M21.35 11.1H12v2.98h5.35c-.23 1.5-1.75 4.4-5.35 4.4-3.22 0-5.85-2.66-5.85-5.93S8.78 6.62 12 6.62c1.84 0 3.07.78 3.78 1.45l2.58-2.49C16.77 4.1 14.6 3 12 3 7.03 3 3 7.02 3 12.05S7.03 21.1 12 21.1c6.92 0 8.62-4.86 8.62-7.38 0-.5-.05-.87-.12-1.62Z"
+                  />
+                </svg>
+              </span>
+              Continue with Google
+            </button>
+
+            <button class="oauth oauth--apple" type="button" aria-label="Continue with Apple">
+              <span class="oauth__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false">
+                  <path
+                    fill="currentColor"
+                    d="M16.365 1.43c0 1.14-.42 2.2-1.23 3.07-.89.95-2.35 1.68-3.62 1.58-.16-1.1.36-2.24 1.15-3.09.87-.94 2.4-1.62 3.7-1.56ZM20.19 17.08c-.51 1.2-.76 1.73-1.41 2.79-.91 1.48-2.2 3.32-3.8 3.33-1.42.01-1.79-.93-3.72-.93-1.93 0-2.35.91-3.74.95-1.55.06-2.74-1.59-3.65-3.06C1.3 18.1.49 14.48 1.94 11.9c1.03-1.84 2.88-3 4.89-3.03 1.53-.03 2.98 1.03 3.73 1.03.74 0 2.68-1.27 4.52-1.08.77.03 2.94.31 4.34 2.34-3.82 2.09-3.2 6.03-.25 7.92Z"
+                  />
+                </svg>
+              </span>
+              Continue with Apple
+            </button>
+
+            <div class="divider" role="separator" aria-label="Or sign in with email">
+              <span>or</span>
+            </div>
+
+            <form class="form" id="loginForm" novalidate>
+              <div class="field">
+                <label for="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  placeholder="name@company.com"
+                  required
+                />
+                <div class="hint" id="emailHint">Use the email you subscribed with.</div>
+              </div>
+
+              <div class="field">
+                <label for="password">Password</label>
+                <div class="password">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="••••••••••••"
+                    required
+                    minlength="8"
+                  />
+                  <button class="password__toggle" type="button" id="togglePw" aria-label="Show password">
+                    Show
+                  </button>
+                </div>
+                <div class="hint">
+                  Tip: members who commit to 6 months see the biggest improvement by week 3.
+                </div>
+              </div>
+
+              <div class="row">
+                <label class="check">
+                  <input type="checkbox" name="remember" />
+                  <span>Keep me signed in</span>
+                </label>
+                <a class="link" href="#">Forgot password?</a>
+              </div>
+
+              <div class="offer" aria-label="Six month conversion offer">
+                <div class="offer__top">
+                  <div class="offer__title">Upgrade to 6‑month</div>
+                  <div class="offer__tag">Most popular</div>
+                </div>
+                <div class="offer__body">
+                  <p>
+                    Lock in priority equipment upgrades + a dedicated dialing calendar.
+                    <strong>Keep $200/mo</strong> and get white‑glove maintenance included.
+                  </p>
+                  <label class="switch">
+                    <input type="checkbox" id="sixMonth" checked />
+                    <span class="switch__ui" aria-hidden="true"></span>
+                    <span class="switch__text">I’m on the 6‑month plan</span>
+                  </label>
+                </div>
+              </div>
+
+              <button class="cta" type="submit">
+                Log in
+                <span class="cta__hint" id="ctaHint">and continue your 6‑month journey</span>
+              </button>
+
+              <p class="legal">
+                By continuing, you agree to our <a class="link" href="#">Terms</a> and
+                <a class="link" href="#">Privacy Policy</a>.
+              </p>
+              <p class="tiny">
+                Secure by default. We never sell your data—ever.
+              </p>
+            </form>
+
+            <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true" hidden>
+              <div class="toast__title" id="toastTitle">Signed in</div>
+              <div class="toast__msg" id="toastMsg">Redirecting to your dashboard…</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer__inner">
+        <div class="footer__left">
+          <div class="brand brand--small">
+            <span class="brand__mark" aria-hidden="true"></span>
+            <span class="brand__name">Espresso Society</span>
+          </div>
+          <div class="footer__meta">Roasting + equipment + coaching for Bay Area espresso obsessives.</div>
+        </div>
+        <div class="footer__right">
+          <a class="footer__link" href="#">Support</a>
+          <a class="footer__link" href="#">Billing</a>
+          <a class="footer__link" href="#">Security</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

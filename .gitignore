@@ -3,15 +3,23 @@
 /Work
 __pycache__/
 .ipynb_checkpoints/
+.pytest_cache/
 .idea/
 .worktrees/
+.git.backup/
 /DataStore/Temp
 /DataStore/Local
 /Note/Debug/Temp
+/experiments/notes/Debug/Temp/
+/experiments/llm/.evn
+/assets/book_library/Book/
+/experiments/backtrader/learn_backtrader/
+/experiments/pytorch/dlwpt-code/
 
 # files
 .DS_Store
+.env
+.env.local
 *.zip
 draft*.py
 *.log
-
