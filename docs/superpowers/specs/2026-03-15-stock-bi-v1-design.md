@@ -2,7 +2,7 @@
 
 > 日期: 2026-03-15
 > 状态: Draft
-> 视觉稿: `apps/stock_bi_v1/brainstorm/` 目录下的 HTML 文件（待移动）
+> 视觉稿: 待移动至 `apps/stock_bi_v1/brainstorm/`（当前位于 `.superpowers/brainstorm/31532-1773512828/`）
 
 ## 1. 概述
 
@@ -156,7 +156,7 @@ Level 0: 首页仪表盘 (市场全景)
 
 | Tab | 内容 | 数据来源 |
 |-----|------|----------|
-| 资金流向 | 今日超大/大/中/小单买卖明细 + 近30日主力净流入柱状图 + 累计净流入曲线 | moneyflow |
+| 资金流向 | 今日特大单(buy_elg)/大单(buy_lg)/中单(buy_md)/小单(buy_sm)买卖明细 + 近30日主力净流入(net_mf_amount)柱状图 + 累计净流入曲线 | moneyflow |
 | 估值趋势 | PE/PB/PS 历史走势图(可叠加) + 当前百分位 + 估值带(均值±标准差) | daily_basic |
 | 大单明细 | 各档位买卖量趋势图 + 主力净流入占比 | moneyflow |
 | 龙虎榜记录 | 历史上榜日期列表 + 营业部买卖额 + 上榜原因 | top_list |
@@ -172,7 +172,7 @@ Level 0: 首页仪表盘 (市场全景)
 
 **估值维度:** PE(TTM)、PB、PS(TTM)、总市值、流通市值、总股本、流通股本
 
-**资金+分类维度:** 主力净流入、超大单净流入、大单净流入、行业、市场(沪/深)、是否 ST
+**资金+分类维度:** 主力净流入(net_mf_amount)、特大单净流入(buy_elg-sell_elg)、大单净流入(buy_lg-sell_lg)、行业、市场(沪/深)、是否 ST
 
 - 结果表格: 代码/名称/涨跌幅/PE/PB/市值/换手/主力净流入/行业，可排序
 - 点击行跳转个股详情
@@ -300,33 +300,33 @@ apps/stock_bi_v1/
 | GET | /api/market/overview | 仪表盘全量数据 (预计算) |
 | GET | /api/market/indices | 5大指数行情 |
 | GET | /api/market/distribution?date= | 涨跌分布直方图 |
-| GET | /api/market/ranking?type=pct_chg&order=desc&limit=20 | 排行榜 |
-| GET | /api/market/limit-stats?date= | 涨停分析统计 |
-| GET | /api/market/limit-list?type=up&date= | 涨停/跌停股列表 (来源: stk_limit 表) |
+| GET | /api/market/ranking?sort_by=pct_chg&order=desc&limit=20 | 排行榜 |
+| GET | /api/market/limit-stats?date= | 涨停分析统计 (返回 precomputed_limit 聚合数据: 涨停数/跌停数/炸板率/连板梯队) |
+| GET | /api/market/limit-list?type=up&date= | 涨停/跌停股列表 (返回 precomputed_limit.up_limit_stocks 或 down_limit_stocks JSON 数组) |
 
 #### Industry 模块
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | /api/industry/heatmap?date= | 板块热力图 Treemap 数据 |
-| GET | /api/industry/{name}/detail | 行业详情 (指数走势+统计) |
-| GET | /api/industry/{name}/stocks?sort=pct_chg&order=desc | 行业内个股排行 |
+| GET | /api/industry/detail?name= | 行业详情 (指数走势+统计，name 为 URL 编码的行业名称) |
+| GET | /api/industry/stocks?name=&sort_by=pct_chg&order=desc | 行业内个股排行 |
 
 #### Stock 模块
 | 方法 | 路径 | 说明 |
 |------|------|------|
+| GET | /api/stock/search?q= | 模糊搜索 (代码/名称)，**必须在 {code} 路由前注册** |
 | GET | /api/stock/{code}/profile | 基本信息 + 今日行情 + 估值 |
 | GET | /api/stock/{code}/kline?period=daily&start=&end= | K线数据 (日/周/月) |
 | GET | /api/stock/{code}/valuation-history?start=&end= | PE/PB/PS 历史时序 |
 | GET | /api/stock/{code}/peers | 同板块个股排名 |
 | GET | /api/stock/{code}/history?start=&end=&page=&size= | 历史行情 (分页) |
-| GET | /api/stock/search?q= | 模糊搜索 (代码/名称) |
 
 #### Flow 模块
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | /api/flow/north?days=30 | 北向资金趋势 |
 | GET | /api/flow/stock/{code}?days=30 | 个股资金流 |
-| GET | /api/flow/stock/{code}/detail?date= | 某日大单明细 |
+| GET | /api/flow/stock/{code}/detail?date= | 某日各档位(特大/大/中/小单)买卖额明细，与资金流向Tab共用 moneyflow 数据 |
 
 #### TopList 模块
 | 方法 | 路径 | 说明 |
@@ -339,23 +339,25 @@ apps/stock_bi_v1/
 |------|------|------|
 | GET | /api/screener/filters | 可用筛选条件列表 |
 | POST | /api/screener/query | 执行筛选 (body: conditions, sort, page) |
-| POST | /api/screener/export?format=csv | 导出筛选结果 (body: 与 query 相同的 conditions) |
+| POST | /api/screener/export?format=csv | 导出筛选结果 (body: 与 query 相同的 conditions，最大 5000 行。响应: Content-Type: text/csv, Content-Disposition: attachment) |
 
 ### 4.4 预计算层
 
 每日收盘后由 `stock_data_platform` 的 daily job 触发。集成方式: 在 `apps/stock_data_platform/jobs/` 中新增 `precompute_bi_v1.py` 任务，由 launchd scheduler 在数据入库完成后调用 `apps/stock_bi_v1/backend/precompute/runner.py`：
 
 **precomputed_market** — 每日一行
+- `trade_date` DATE NOT NULL PRIMARY KEY
 - `distribution` JSON: `{"-10~-7": n, "-7~-5": n, "-5~-3": n, "-3~0": n, "0": n, "0~3": n, "3~5": n, "5~7": n, "7~10": n}`
 - `up_limit_count` INT, `down_limit_count` INT, `flat_count` INT
 - `total_amount` DECIMAL(20,2)
 - `top_gainers` JSON: `[{ts_code, name, pct_chg, close, amount}]` (TOP 20)
 - `top_losers` JSON: 同上
-- `top_volume` JSON: 同上
-- `top_turnover` JSON: 同上
+- `top_volume` JSON: `[{ts_code, name, pct_chg, close, amount}]` (TOP 20)
+- `top_turnover` JSON: `[{ts_code, name, pct_chg, close, turnover_rate}]` (TOP 20，需 JOIN daily_basic)
 
 **precomputed_industry** — 每日每行业一行 (主键: trade_date + industry)
-- `industry` VARCHAR(50)
+- `trade_date` DATE NOT NULL
+- `industry` VARCHAR(50) NOT NULL
 - `avg_pct_chg` DECIMAL(8,4)
 - `total_amount` DECIMAL(20,2)
 - `up_count` INT, `down_count` INT
@@ -363,15 +365,20 @@ apps/stock_bi_v1/
 - `stock_count` INT (行业内股票总数)
 
 **precomputed_limit** — 每日一行
+- `trade_date` DATE NOT NULL PRIMARY KEY
 - `up_limit_stocks` JSON: `[{ts_code, name, pct_chg, close, amount, consecutive_days, industry}]`
 - `down_limit_stocks` JSON: `[{ts_code, name, pct_chg, close, amount, industry}]`
 - `up_count` INT, `down_count` INT, `broken_count` INT
 - `broken_rate` DECIMAL(5,2)
-- `tier_stats` JSON: `{1: count, 2: count, 3: count, ...}` (连板梯队)
+- `tier_stats` JSON: `{"1": count, "2": count, "3": count, ...}` (连板梯队，key 为字符串)
 
-三张表都以 JSON 列存储复杂数据，`trade_date` 为主键。
-
-> **注意**: 涨停分析的原始数据来源为 `stk_limit` 表（而非 `top_list`）。预计算时通过 `stk_limit` 查询涨停/跌停/炸板信息并写入 `precomputed_limit`。
+> **预计算数据来源与算法**:
+> - 涨停判定: `stk_limit` 表提供每日个股的涨停价 (`up_limit`) 和跌停价 (`down_limit`)。通过 JOIN `daily_kline` 判断 `close >= up_limit` 确定涨停，`close <= down_limit` 确定跌停。
+> - 价格/成交数据: 从 `daily_kline` 获取 `pct_chg`, `close`, `amount`。
+> - 行业信息: 从 `stock_basic` 获取 `industry`。
+> - `consecutive_days` (连板天数): 向前回溯 `daily_kline`，计算连续 N 日满足 `close >= up_limit` 的天数。
+> - `broken_count` (炸板): 当日盘中触及涨停但收盘未封住，即 `high >= up_limit AND close < up_limit`（从 `daily_kline` + `stk_limit` 推导）。
+> - 股票名称: 从 `stock_basic` 获取 `name`。
 
 ### 4.5 缓存策略
 
@@ -380,7 +387,7 @@ apps/stock_bi_v1/
 | 数据类型 | TTL | 说明 |
 |----------|-----|------|
 | 仪表盘 overview | 5 min | 预计算数据变化不频繁 |
-| 个股日 K线 | 1 min | 当日数据会更新 |
+| 个股日 K线 | 5 min | 收盘后数据入库一次，无需频繁刷新 |
 | 周K/月K线 | 1 hour | 历史周/月K不变，仅最新周/月可能更新 |
 | 排行榜 | 2 min | 首页高频请求 |
 | 筛选结果 | 30 sec | 条件变化大，不宜长缓存 |
