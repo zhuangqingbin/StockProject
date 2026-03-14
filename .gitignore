@@ -4,6 +4,7 @@
 __pycache__/
 .ipynb_checkpoints/
 .idea/
+.worktrees/
 /DataStore/Temp
 /DataStore/Local
 /Note/Debug/Temp
@@ -13,5 +14,4 @@ __pycache__/
 *.zip
 draft*.py
 *.log
-
 
