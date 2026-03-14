@@ -3,15 +3,13 @@
 # Stock BI 启动脚本
 # 使用方法: ./run.sh
 
+set -euo pipefail
+
 cd "$(dirname "$0")"
 
 echo "=========================================="
 echo "     Stock BI - A股数据可视化平台"
 echo "=========================================="
-
-# 检查依赖
-echo "检查依赖..."
-pip3 install -q -r requirements.txt
 
 # 启动服务
 echo "启动服务..."
@@ -23,4 +21,4 @@ echo ""
 echo "按 Ctrl+C 停止服务"
 echo "=========================================="
 
-python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+exec python3 run.py

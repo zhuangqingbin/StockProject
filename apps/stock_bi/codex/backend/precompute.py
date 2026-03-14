@@ -3,25 +3,16 @@
 定时计算并存储每日市场聚合数据，提升前端查询性能
 """
 import json
-from datetime import datetime
-from decimal import Decimal
 from typing import Optional, Dict, Any, List
-from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from .database import engine
-from .cache import cache
-
-
-def convert_decimal(obj):
-    """递归转换 Decimal 类型为 float"""
-    if isinstance(obj, Decimal):
-        return float(obj)
-    elif isinstance(obj, dict):
-        return {k: convert_decimal(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_decimal(item) for item in obj]
-    return obj
+from .modules.precompute_read_model.service import (
+    build_or_load_summary,
+    convert_decimal,
+    load_summary,
+    save_summary,
+)
 
 
 def ensure_summary_table():
@@ -460,124 +451,11 @@ def precompute_daily_summary(trade_date: str) -> Dict[str, Any]:
     return summary
 
 
-def save_summary(summary: Dict[str, Any]):
-    """将预计算结果保存到数据库"""
-    trade_date = summary["trade_date"]
-    
-    # 转换 JSON 字段
-    json_fields = [
-        "sector_stats", "industry_stats", "pct_distribution", "top_gainers",
-        "top_losers", "top_amount", "top_turnover", "north_money",
-        "top_list_summary", "limit_stats", "industry_ranking", "index_data"
-    ]
-    
-    insert_data = {k: v for k, v in summary.items()}
-    for field in json_fields:
-        if field in insert_data and insert_data[field] is not None:
-            insert_data[field] = json.dumps(insert_data[field], ensure_ascii=False)
-        else:
-            insert_data[field] = None
-    
-    sql = text("""
-        REPLACE INTO market_daily_summary (
-            trade_date, total_stocks, up_count, down_count, flat_count,
-            limit_up, limit_down, avg_pct_chg, total_amount, total_vol,
-            sector_stats, industry_stats, pct_distribution, top_gainers,
-            top_losers, top_amount, top_turnover, north_money,
-            top_list_summary, limit_stats, industry_ranking, index_data
-        ) VALUES (
-            :trade_date, :total_stocks, :up_count, :down_count, :flat_count,
-            :limit_up, :limit_down, :avg_pct_chg, :total_amount, :total_vol,
-            :sector_stats, :industry_stats, :pct_distribution, :top_gainers,
-            :top_losers, :top_amount, :top_turnover, :north_money,
-            :top_list_summary, :limit_stats, :industry_ranking, :index_data
-        )
-    """)
-    
-    with engine.connect() as conn:
-        conn.execute(sql, insert_data)
-        conn.commit()
-    
-    print(f"✅ {trade_date} 市场汇总已保存")
-
-
-def load_summary(trade_date: str) -> Optional[Dict[str, Any]]:
-    """从数据库加载预计算结果"""
-    # 先检查缓存
-    cache_key = f"summary:{trade_date}"
-    cached = cache.get(cache_key)
-    if cached:
-        return cached
-    
-    sql = text("""
-        SELECT trade_date, total_stocks, up_count, down_count, flat_count,
-               limit_up, limit_down, avg_pct_chg, total_amount, total_vol,
-               sector_stats, industry_stats, pct_distribution, top_gainers,
-               top_losers, top_amount, top_turnover, north_money,
-               top_list_summary, limit_stats, industry_ranking, index_data
-        FROM market_daily_summary
-        WHERE trade_date = :trade_date
-    """)
-    
-    with engine.connect() as conn:
-        row = conn.execute(sql, {"trade_date": trade_date}).fetchone()
-    
-    if not row:
-        return None
-    
-    json_fields_idx = {
-        10: "sector_stats", 11: "industry_stats", 12: "pct_distribution",
-        13: "top_gainers", 14: "top_losers", 15: "top_amount", 16: "top_turnover",
-        17: "north_money", 18: "top_list_summary", 19: "limit_stats",
-        20: "industry_ranking", 21: "index_data"
-    }
-    
-    summary = {
-        "trade_date": row[0],
-        "total_stocks": row[1],
-        "up_count": row[2],
-        "down_count": row[3],
-        "flat_count": row[4],
-        "limit_up": row[5],
-        "limit_down": row[6],
-        "avg_pct_chg": row[7],
-        "total_amount": row[8],
-        "total_vol": row[9]
-    }
-    
-    for idx, field in json_fields_idx.items():
-        val = row[idx]
-        if val:
-            try:
-                summary[field] = json.loads(val) if isinstance(val, str) else val
-            except:
-                summary[field] = val
-        else:
-            summary[field] = None
-    
-    # 缓存 10 分钟
-    cache.set(cache_key, summary, ttl=600)
-    return summary
-
-
 def get_summary(trade_date: str) -> Dict[str, Any]:
     """
     获取指定日期的市场汇总（优先从缓存/数据库读取，否则实时计算）
     """
-    # 1. 尝试从缓存/数据库加载
-    summary = load_summary(trade_date)
-    if summary:
-        return summary
-    
-    # 2. 没有则实时计算并保存
-    summary = precompute_daily_summary(trade_date)
-    save_summary(summary)
-    
-    # 3. 缓存
-    cache_key = f"summary:{trade_date}"
-    cache.set(cache_key, summary, ttl=600)
-    
-    return summary
+    return build_or_load_summary(trade_date, precompute_daily_summary)
 
 
 def precompute_and_save(trade_date: str):

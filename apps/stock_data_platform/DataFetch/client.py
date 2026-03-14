@@ -8,7 +8,7 @@ from typing import Any, Callable, Optional
 
 import tushare as ts
 
-from common.config import TOKEN
+from apps.stock_data_platform.common.config import TOKEN
 
 """
 统一处理 重试 + backoff、简单限流、可选本地 pickle 缓存

@@ -20,8 +20,10 @@ apps/stock_bi/codex/
 
 ```bash
 cd apps/stock_bi/codex
-pip install -r requirements.txt
+python3 run.py
 ```
+
+首次运行会自动创建 `apps/stock_bi/codex/.venv` 并安装 `requirements.txt`，同时绕开用户目录里的 Python site-packages，避免 `pydantic_core` 这类架构不匹配问题。
 
 配置数据库和数据源：
 
