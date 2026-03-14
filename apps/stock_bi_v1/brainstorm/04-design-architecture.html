@@ -1,0 +1,141 @@
+<h2>设计方案 - 整体架构</h2>
+<p class="subtitle">stock_bi_v1 系统全貌</p>
+
+<div class="mockup">
+  <div class="mockup-header">系统架构图</div>
+  <div class="mockup-body" style="font-size: 12px; background: #0a0a0a;">
+
+    <!-- Frontend -->
+    <div style="border: 2px solid #ff8c00; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+      <div style="color: #ff8c00; font-weight: bold; font-size: 14px; font-family: monospace; margin-bottom: 10px;">FRONTEND — Next.js + shadcn/ui + TailwindCSS + ECharts</div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 100px; text-align: center; font-family: monospace;">
+          <div style="color: #ff8c00; font-size: 11px;">首页仪表盘</div>
+          <div style="color: #666; font-size: 10px;">9 模块 + 钻取</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 100px; text-align: center; font-family: monospace;">
+          <div style="color: #ff8c00; font-size: 11px;">行业详情</div>
+          <div style="color: #666; font-size: 10px;">板块走势+成分股</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 100px; text-align: center; font-family: monospace;">
+          <div style="color: #ff8c00; font-size: 11px;">个股详情</div>
+          <div style="color: #666; font-size: 10px;">全维度分析</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 100px; text-align: center; font-family: monospace;">
+          <div style="color: #ff8c00; font-size: 11px;">高级筛选</div>
+          <div style="color: #666; font-size: 10px;">多条件组合</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 100px; text-align: center; font-family: monospace;">
+          <div style="color: #ff8c00; font-size: 11px;">资金流详情</div>
+          <div style="color: #666; font-size: 10px;">北向+个股资金</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 100px; text-align: center; font-family: monospace;">
+          <div style="color: #ff8c00; font-size: 11px;">龙虎榜详情</div>
+          <div style="color: #666; font-size: 10px;">营业部+历史</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div style="text-align: center; color: #444; font-family: monospace; margin: 4px 0;">▼ REST API (Next.js API Routes → FastAPI) ▼</div>
+
+    <!-- Backend -->
+    <div style="border: 2px solid #33cc33; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+      <div style="color: #33cc33; font-weight: bold; font-size: 14px; font-family: monospace; margin-bottom: 10px;">BACKEND — FastAPI + 预计算 + 缓存</div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 130px; font-family: monospace;">
+          <div style="color: #33cc33; font-size: 11px;">market router</div>
+          <div style="color: #666; font-size: 10px;">概览 / 指数 / 涨跌分布</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 130px; font-family: monospace;">
+          <div style="color: #33cc33; font-size: 11px;">industry router</div>
+          <div style="color: #666; font-size: 10px;">板块 / 行业排行 / 成分股</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 130px; font-family: monospace;">
+          <div style="color: #33cc33; font-size: 11px;">stock router</div>
+          <div style="color: #666; font-size: 10px;">个股详情 / K线 / 估值</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 130px; font-family: monospace;">
+          <div style="color: #33cc33; font-size: 11px;">flow router</div>
+          <div style="color: #666; font-size: 10px;">资金流向 / 北向 / 大单</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 130px; font-family: monospace;">
+          <div style="color: #33cc33; font-size: 11px;">screener router</div>
+          <div style="color: #666; font-size: 10px;">高级筛选 / 组合条件</div>
+        </div>
+        <div style="background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; flex: 1; min-width: 130px; font-family: monospace;">
+          <div style="color: #33cc33; font-size: 11px;">toplist router</div>
+          <div style="color: #666; font-size: 10px;">龙虎榜 / 涨停分析</div>
+        </div>
+      </div>
+      <!-- Precompute + Cache layer -->
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div style="background: #1a1a0a; border: 1px solid #ff8c00; border-radius: 4px; padding: 10px; flex: 1; min-width: 200px; font-family: monospace;">
+          <div style="color: #ff8c00; font-weight: bold; font-size: 11px;">预计算层</div>
+          <div style="color: #888; font-size: 10px; margin-top: 4px;">
+            每日收盘后触发:<br>
+            · 市场概览汇总 (涨跌分布/板块排行)<br>
+            · 行业统计 (行业涨跌幅/成分股排行)<br>
+            · 涨停分析 (连板/炸板/首板)<br>
+            → 存入 precomputed_* 表
+          </div>
+        </div>
+        <div style="background: #0a1a0a; border: 1px solid #33cc33; border-radius: 4px; padding: 10px; flex: 1; min-width: 200px; font-family: monospace;">
+          <div style="color: #33cc33; font-weight: bold; font-size: 11px;">查询缓存 (内存 TTL)</div>
+          <div style="color: #888; font-size: 10px; margin-top: 4px;">
+            高频查询缓存:<br>
+            · 仪表盘数据 TTL=5min<br>
+            · 个股K线 TTL=1min<br>
+            · 筛选结果 TTL=30s<br>
+            · 使用 cachetools / lru_cache
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div style="text-align: center; color: #444; font-family: monospace; margin: 4px 0;">▼ SQLAlchemy ▼</div>
+
+    <!-- Storage -->
+    <div style="border: 2px solid #ff3333; border-radius: 8px; padding: 14px;">
+      <div style="color: #ff3333; font-weight: bold; font-size: 14px; font-family: monospace; margin-bottom: 10px;">STORAGE — MySQL (stock_database) 只读</div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="background: #1a0a0a; border: 1px solid #333; padding: 8px; border-radius: 4px; flex: 1; min-width: 120px; font-family: monospace;">
+          <div style="color: #ff6666; font-size: 10px; font-weight: bold;">现有表 (只读)</div>
+          <div style="color: #888; font-size: 9px; margin-top: 4px;">daily_kline<br>daily_basic<br>moneyflow<br>moneyflow_hsgt<br>index_daily<br>top_list<br>stock_basic</div>
+        </div>
+        <div style="background: #1a0a0a; border: 1px solid #333; padding: 8px; border-radius: 4px; flex: 1; min-width: 120px; font-family: monospace;">
+          <div style="color: #ff6666; font-size: 10px; font-weight: bold;">新增预计算表</div>
+          <div style="color: #888; font-size: 9px; margin-top: 4px;">precomputed_market<br><span style="color: #555;">(每日市场汇总)</span><br>precomputed_industry<br><span style="color: #555;">(每日行业统计)</span><br>precomputed_limit<br><span style="color: #555;">(涨跌停分析)</span></div>
+        </div>
+        <div style="background: #1a0a0a; border: 1px solid #333; padding: 8px; border-radius: 4px; flex: 1; min-width: 120px; font-family: monospace;">
+          <div style="color: #ff6666; font-size: 10px; font-weight: bold;">新增索引</div>
+          <div style="color: #888; font-size: 9px; margin-top: 4px;">daily_basic:<br><span style="color: #555;">idx(trade_date, pe_ttm)</span><br><span style="color: #555;">idx(trade_date, pb)</span><br>moneyflow:<br><span style="color: #555;">idx(trade_date, net_mf_amount)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 16px;">
+  <h3>钻取导航层级</h3>
+  <div style="background: #0a0a0a; padding: 14px; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 2.2;">
+    <div style="color: #ff8c00;">Level 0: 首页仪表盘 (市场全景)</div>
+    <div style="padding-left: 24px;">
+      <div><span style="color: #33cc33;">→ Level 1:</span> <span style="color: #ccc;">行业详情页</span> <span style="color: #666;">(板块指数走势 + 行业内个股涨跌幅排行 + 行业资金流)</span></div>
+      <div style="padding-left: 24px;"><span style="color: #ff3333;">→ Level 2:</span> <span style="color: #ccc;">个股详情页</span> <span style="color: #666;">(全维度分析)</span></div>
+      <div><span style="color: #33cc33;">→ Level 1:</span> <span style="color: #ccc;">排行钻取</span> <span style="color: #666;">(完整排行表格，可排序/筛选)</span></div>
+      <div style="padding-left: 24px;"><span style="color: #ff3333;">→ Level 2:</span> <span style="color: #ccc;">个股详情页</span></div>
+      <div><span style="color: #33cc33;">→ Level 1:</span> <span style="color: #ccc;">北向资金详情</span> <span style="color: #666;">(沪深港通分项 + 历史趋势 + 净买入个股)</span></div>
+      <div style="padding-left: 24px;"><span style="color: #ff3333;">→ Level 2:</span> <span style="color: #ccc;">个股详情页</span></div>
+      <div><span style="color: #33cc33;">→ Level 1:</span> <span style="color: #ccc;">龙虎榜详情</span> <span style="color: #666;">(营业部买卖明细 + 历史上榜)</span></div>
+      <div style="padding-left: 24px;"><span style="color: #ff3333;">→ Level 2:</span> <span style="color: #ccc;">个股详情页</span></div>
+      <div><span style="color: #33cc33;">→ Level 1:</span> <span style="color: #ccc;">涨停详情</span> <span style="color: #666;">(涨停列表 + 连板梯队 + 概念分布)</span></div>
+      <div style="padding-left: 24px;"><span style="color: #ff3333;">→ Level 2:</span> <span style="color: #ccc;">个股详情页</span></div>
+    </div>
+    <div style="color: #ff8c00; margin-top: 8px;">独立入口: 高级筛选器</div>
+    <div style="padding-left: 24px;">
+      <div><span style="color: #33cc33;">→</span> <span style="color: #ccc;">筛选结果列表</span> <span style="color: #ff3333;">→ 个股详情页</span></div>
+    </div>
+  </div>
+</div>

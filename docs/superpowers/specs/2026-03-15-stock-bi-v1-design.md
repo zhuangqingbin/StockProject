@@ -2,7 +2,7 @@
 
 > 日期: 2026-03-15
 > 状态: Draft
-> 视觉稿: 待移动至 `apps/stock_bi_v1/brainstorm/`（当前位于 `.superpowers/brainstorm/31532-1773512828/`）
+> 视觉稿: `apps/stock_bi_v1/brainstorm/` 目录下的 HTML 文件
 
 ## 1. 概述
 
@@ -480,9 +480,9 @@ brainstorm 过程中的可视化设计稿：
 
 | 文件 | 内容 |
 |------|------|
-| visual-style.html | 三种视觉风格对比 (选定 Bloomberg 终端风) |
-| navigation-layout.html | 三种导航结构对比 (选定仪表盘+钻取) |
-| dashboard-layout.html | 首页仪表盘完整 wireframe (9 模块) |
-| design-architecture.html | 系统架构图 + 钻取层级 |
-| design-stock-detail.html | 个股详情页 wireframe |
-| design-screener-backend.html | 高级筛选器 + 后端模块 + API 路由 |
+| 01-visual-style.html | 三种视觉风格对比 (选定 Bloomberg 终端风) |
+| 02-navigation-layout.html | 三种导航结构对比 (选定仪表盘+钻取) |
+| 03-dashboard-layout.html | 首页仪表盘完整 wireframe (9 模块) |
+| 04-design-architecture.html | 系统架构图 + 钻取层级 |
+| 05-design-stock-detail.html | 个股详情页 wireframe |
+| 06-design-screener-backend.html | 高级筛选器 + 后端模块 + API 路由 |

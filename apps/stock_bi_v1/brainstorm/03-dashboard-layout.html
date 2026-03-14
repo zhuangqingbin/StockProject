@@ -1,0 +1,363 @@
+<h2>首页仪表盘布局方案</h2>
+<p class="subtitle">Bloomberg 终端风 + 钻取导航，点击任何模块可深入</p>
+
+<div class="mockup">
+  <div class="mockup-header">首页仪表盘 — 市场全景</div>
+  <div class="mockup-body" style="font-size: 11px; background: #0a0a0a; padding: 0;">
+
+    <!-- Top bar -->
+    <div style="background: #111; padding: 6px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="color: #ff8c00; font-weight: bold; font-family: monospace; font-size: 13px;">STOCK BI</span>
+        <span style="color: #fff; font-family: monospace;">市场概览</span>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <input style="background: #1a1a1a; border: 1px solid #333; color: #888; padding: 3px 10px; border-radius: 3px; font-size: 10px; width: 180px; font-family: monospace;" placeholder="🔍 搜索股票 / 代码 / 行业..." />
+        <span style="color: #666; font-family: monospace; font-size: 10px;">2026-03-15 FRI</span>
+      </div>
+    </div>
+
+    <!-- Row 1: Index Ticker -->
+    <div style="padding: 6px 14px; background: #080808; border-bottom: 1px solid #1a1a1a; display: flex; gap: 24px; font-family: monospace; cursor: pointer;" title="点击钻取到指数详情">
+      <div>
+        <span style="color: #666;">上证</span>
+        <span style="color: #ff3333; font-weight: bold; margin-left: 6px;">3,421.50</span>
+        <span style="color: #ff3333; font-size: 10px;">▼28.3 -0.82%</span>
+      </div>
+      <div>
+        <span style="color: #666;">深证</span>
+        <span style="color: #33cc33; font-weight: bold; margin-left: 6px;">11,025.8</span>
+        <span style="color: #33cc33; font-size: 10px;">▲49.5 +0.45%</span>
+      </div>
+      <div>
+        <span style="color: #666;">创业</span>
+        <span style="color: #33cc33; font-weight: bold; margin-left: 6px;">2,180.6</span>
+        <span style="color: #33cc33; font-size: 10px;">▲24.2 +1.12%</span>
+      </div>
+      <div>
+        <span style="color: #666;">科创50</span>
+        <span style="color: #ff3333; font-weight: bold; margin-left: 6px;">988.3</span>
+        <span style="color: #ff3333; font-size: 10px;">▼5.1 -0.51%</span>
+      </div>
+      <div>
+        <span style="color: #666;">沪深300</span>
+        <span style="color: #33cc33; font-weight: bold; margin-left: 6px;">4,052.1</span>
+        <span style="color: #33cc33; font-size: 10px;">▲12.8 +0.32%</span>
+      </div>
+      <div style="margin-left: auto;">
+        <span style="color: #666;">北向</span>
+        <span style="color: #33cc33; font-weight: bold; margin-left: 6px;">+42.3亿</span>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div style="padding: 8px 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto auto; gap: 6px;">
+
+      <!-- Module 1: 涨跌分布 (span 1) -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; cursor: pointer;" title="钻取: 查看各涨跌区间个股列表">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">涨跌分布</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 10px; font-family: monospace;">
+          <span style="color: #ff3333;">涨停 68</span>
+          <span style="color: #888;">平盘 312</span>
+          <span style="color: #33cc33;">跌停 12</span>
+        </div>
+        <!-- Histogram bars -->
+        <div style="display: flex; gap: 2px; align-items: flex-end; height: 50px;">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #33cc33; width: 100%; height: 10px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">-10</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #33cc33; width: 100%; height: 8px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">-7</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #2a9d4a; width: 100%; height: 15px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">-5</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #1a7a3a; width: 100%; height: 28px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">-3</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #555; width: 100%; height: 38px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">0</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #aa3333; width: 100%; height: 45px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">+3</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #cc3333; width: 100%; height: 30px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">+5</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #ee3333; width: 100%; height: 18px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">+7</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+            <div style="background: #ff3333; width: 100%; height: 12px;"></div>
+            <span style="color: #444; font-size: 8px; margin-top: 2px;">+10</span>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; font-family: monospace;">
+          <span style="color: #33cc33;">跌 1,892</span>
+          <span style="color: #ff3333;">涨 2,856</span>
+        </div>
+      </div>
+
+      <!-- Module 2: 板块热力图 (span 2) -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; grid-column: span 2; cursor: pointer;" title="钻取: 点击板块查看成分股">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">行业板块热力图</span>
+          <div>
+            <span style="color: #444; font-size: 9px; padding: 2px 6px; border: 1px solid #333; margin-right: 4px; cursor: pointer;">申万一级</span>
+            <span style="color: #888; font-size: 9px; padding: 2px 6px; border: 1px solid #444; cursor: pointer;">概念板块</span>
+          </div>
+        </div>
+        <!-- Treemap simulation -->
+        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.2fr 1fr 1fr 0.8fr 0.8fr; grid-template-rows: 1fr 1fr; gap: 2px; height: 80px;">
+          <div style="background: #cc2222; display: flex; align-items: center; justify-content: center; flex-direction: column; grid-row: span 2;">
+            <span style="color: #fff; font-size: 11px; font-weight: bold;">券商</span>
+            <span style="color: #ffcccc; font-size: 9px;">+4.52%</span>
+          </div>
+          <div style="background: #aa3333; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #fff; font-size: 10px;">银行</span>
+            <span style="color: #ffcccc; font-size: 8px;">+2.18%</span>
+          </div>
+          <div style="background: #993333; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #fff; font-size: 10px;">保险</span>
+            <span style="color: #ffcccc; font-size: 8px;">+1.85%</span>
+          </div>
+          <div style="background: #884433; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #fff; font-size: 9px;">电子</span>
+            <span style="color: #ddd; font-size: 8px;">+1.2%</span>
+          </div>
+          <div style="background: #555; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #ccc; font-size: 9px;">食品</span>
+            <span style="color: #aaa; font-size: 8px;">+0.1%</span>
+          </div>
+          <div style="background: #336633; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #ccc; font-size: 9px;">地产</span>
+            <span style="color: #aaa; font-size: 8px;">-0.8%</span>
+          </div>
+          <div style="background: #226622; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #ccc; font-size: 9px;">医药</span>
+            <span style="color: #aaa; font-size: 8px;">-1.5%</span>
+          </div>
+          <div style="background: #883322; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #fff; font-size: 10px;">汽车</span>
+            <span style="color: #ffcccc; font-size: 8px;">+1.65%</span>
+          </div>
+          <div style="background: #774433; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #ddd; font-size: 9px;">军工</span>
+            <span style="color: #ccc; font-size: 8px;">+0.92%</span>
+          </div>
+          <div style="background: #666; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #ccc; font-size: 9px;">传媒</span>
+            <span style="color: #aaa; font-size: 8px;">-0.2%</span>
+          </div>
+          <div style="background: #2a6633; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #ccc; font-size: 9px;">化工</span>
+            <span style="color: #aaa; font-size: 8px;">-1.1%</span>
+          </div>
+          <div style="background: #115511; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <span style="color: #ccc; font-size: 9px;">钢铁</span>
+            <span style="color: #aaa; font-size: 8px;">-2.3%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 3: 涨幅排行 -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; cursor: pointer;" title="钻取: 点击个股进入个股详情">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">涨幅 TOP</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="font-family: monospace; font-size: 10px;">
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">东方财富</span><span style="color: #ff3333; font-weight: bold;">+9.98%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">中信证券</span><span style="color: #ff3333;">+7.22%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">招商证券</span><span style="color: #ff3333;">+6.85%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">光大证券</span><span style="color: #ff3333;">+5.91%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+            <span style="color: #888;">国泰君安</span><span style="color: #ff3333;">+5.43%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 4: 跌幅排行 -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">跌幅 TOP</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="font-family: monospace; font-size: 10px;">
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">*ST 某某</span><span style="color: #33cc33; font-weight: bold;">-9.95%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">某某科技</span><span style="color: #33cc33;">-7.88%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">某某医药</span><span style="color: #33cc33;">-6.52%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">某某股份</span><span style="color: #33cc33;">-5.73%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+            <span style="color: #888;">某某能源</span><span style="color: #33cc33;">-5.21%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 5: 北向资金 -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">北向资金 (近30日)</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="height: 55px; position: relative;">
+          <svg width="100%" height="100%" viewBox="0 0 200 55" preserveAspectRatio="none">
+            <!-- Zero line -->
+            <line x1="0" y1="28" x2="200" y2="28" stroke="#333" stroke-width="0.5"/>
+            <!-- Area chart -->
+            <polyline points="0,35 7,38 14,32 21,40 28,42 35,30 42,25 49,20 56,28 63,35 70,30 77,22 84,18 91,15 98,20 105,25 112,22 119,18 126,15 133,20 140,25 147,20 154,15 161,18 168,12 175,10 182,15 189,18 196,12" fill="none" stroke="#33cc33" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-family: monospace; font-size: 10px; margin-top: 4px;">
+          <span style="color: #666;">今日</span>
+          <span style="color: #33cc33;">沪股通 +28.1亿</span>
+          <span style="color: #33cc33;">深股通 +14.2亿</span>
+        </div>
+      </div>
+
+      <!-- Module 6: 成交额排行 -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">成交额 TOP</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="font-family: monospace; font-size: 10px;">
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">东方财富</span><span style="color: #ff8c00;">152.3亿</span><span style="color: #ff3333;">+9.98%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">贵州茅台</span><span style="color: #ff8c00;">98.7亿</span><span style="color: #ff3333;">+2.35%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">中信证券</span><span style="color: #ff8c00;">87.2亿</span><span style="color: #ff3333;">+7.22%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">宁德时代</span><span style="color: #ff8c00;">76.5亿</span><span style="color: #33cc33;">-0.82%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+            <span style="color: #888;">比亚迪</span><span style="color: #ff8c00;">65.8亿</span><span style="color: #ff3333;">+1.65%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 7: 换手率 TOP -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">换手率 TOP</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="font-family: monospace; font-size: 10px;">
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">某某科技</span><span style="color: #ff8c00;">38.5%</span><span style="color: #ff3333;">+5.2%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">某某电子</span><span style="color: #ff8c00;">32.1%</span><span style="color: #33cc33;">-2.1%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">某某新材</span><span style="color: #ff8c00;">28.7%</span><span style="color: #ff3333;">+8.9%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="color: #888;">某某半导</span><span style="color: #ff8c00;">25.3%</span><span style="color: #ff3333;">+3.4%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+            <span style="color: #888;">某某通信</span><span style="color: #ff8c00;">22.9%</span><span style="color: #33cc33;">-1.6%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 8: 龙虎榜 -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; grid-column: span 2; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">龙虎榜</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="font-family: monospace; font-size: 10px;">
+          <div style="display: flex; gap: 12px; padding: 2px 0; border-bottom: 1px solid #1a1a1a; color: #555;">
+            <span style="width: 70px;">名称</span><span style="width: 55px;">涨幅</span><span style="width: 55px;">换手</span><span style="width: 70px;">买入额</span><span style="width: 70px;">卖出额</span><span style="flex: 1;">上榜原因</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 3px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="width: 70px; color: #ccc;">东方财富</span><span style="width: 55px; color: #ff3333;">+9.98%</span><span style="width: 55px; color: #ff8c00;">18.5%</span><span style="width: 70px; color: #ff3333;">12.3亿</span><span style="width: 70px; color: #33cc33;">8.7亿</span><span style="flex: 1; color: #888;">涨幅偏离7%</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 3px 0; border-bottom: 1px solid #1a1a1a;">
+            <span style="width: 70px; color: #ccc;">招商证券</span><span style="width: 55px; color: #ff3333;">+6.85%</span><span style="width: 55px; color: #ff8c00;">12.3%</span><span style="width: 70px; color: #ff3333;">8.5亿</span><span style="width: 70px; color: #33cc33;">5.2亿</span><span style="flex: 1; color: #888;">涨幅偏离7%</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 3px 0;">
+            <span style="width: 70px; color: #ccc;">某某科技</span><span style="width: 55px; color: #33cc33;">-7.88%</span><span style="width: 55px; color: #ff8c00;">38.5%</span><span style="width: 70px; color: #ff3333;">3.2亿</span><span style="width: 70px; color: #33cc33;">9.8亿</span><span style="flex: 1; color: #888;">跌幅偏离7%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 9: 涨停分析 -->
+      <div style="background: #111; border: 1px solid #222; padding: 10px; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span style="color: #ff8c00; font-family: monospace; font-size: 10px;">涨停板分析</span>
+          <span style="color: #333; font-size: 9px;">DRILL ›</span>
+        </div>
+        <div style="font-family: monospace; font-size: 10px;">
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; color: #ccc;">
+            <span>涨停数</span><span style="color: #ff3333; font-weight: bold;">68</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; color: #888;">
+            <span>跌停数</span><span style="color: #33cc33;">12</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; color: #888;">
+            <span>炸板率</span><span style="color: #ff8c00;">18.2%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; color: #888;">
+            <span>连板最高</span><span style="color: #ff3333;">5板</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 2px 0; color: #888;">
+            <span>首板数量</span><span>52</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom status bar -->
+    <div style="background: #080808; padding: 4px 14px; border-top: 1px solid #1a1a1a; display: flex; justify-content: space-between; font-family: monospace; font-size: 9px; color: #444;">
+      <span>全市场 5,089 只 | 今日成交 1.23万亿</span>
+      <span>数据更新: 15:05:32 | 点击任意模块钻取详情</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top: 16px;">
+  <h3>钻取路径</h3>
+  <div style="font-size: 12px; color: #888; line-height: 2; font-family: monospace;">
+    <div><span style="color: #ff8c00;">涨跌分布</span> → 选中某涨跌区间 → 该区间个股列表 → 点击个股 → 个股详情页</div>
+    <div><span style="color: #ff8c00;">板块热力图</span> → 点击板块 → 板块成分股列表 + 板块指数走势 → 点击个股 → 个股详情页</div>
+    <div><span style="color: #ff8c00;">排行榜 (涨幅/跌幅/成交/换手)</span> → 点击个股 → 个股详情页</div>
+    <div><span style="color: #ff8c00;">北向资金</span> → 资金流详情 (沪深港通分项 + 历史趋势 + 持仓变动)</div>
+    <div><span style="color: #ff8c00;">龙虎榜</span> → 个股龙虎榜详情 (营业部买卖 + 历史上榜)</div>
+    <div><span style="color: #ff8c00;">涨停分析</span> → 涨停股列表 + 连板梯队 + 涨停概念分布</div>
+  </div>
+</div>
