@@ -11,7 +11,7 @@
 - 强大的多维数据分析能力
 - Bloomberg 终端风格的专业界面（纯黑背景 + 橙色强调 + 等宽字体）
 - 高信息密度，查询快，体验好
-- 数据来源为 `stock_data_platform` 通过每日任务写入 MySQL 的行情数据（含 stk_limit 涨跌停数据）
+- 数据来源为 `stock_data_platform` 通过每日任务写入 MySQL 的行情数据（含 stock_stk_limit 涨跌停数据）
 
 ### 1.2 用户
 小团队 / 朋友圈（几个人共用）。
@@ -55,7 +55,7 @@
 │  MySQL (stock_database)                              │
 │  现有表: daily_kline, daily_basic, moneyflow,        │
 │          moneyflow_hsgt, index_daily, top_list,      │
-│          stock_basic, stk_limit                      │
+│          stock_basic, stock_stk_limit                      │
 │  新增: precomputed_market, precomputed_industry,     │
 │        precomputed_limit                             │
 └──────────────────────────────────────────────────────┘
@@ -172,7 +172,7 @@ Level 0: 首页仪表盘 (市场全景)
 
 **估值维度:** PE(TTM)、PB、PS(TTM)、总市值、流通市值、总股本、流通股本
 
-**资金+分类维度:** 主力净流入(net_mf_amount)、特大单净流入(buy_elg-sell_elg)、大单净流入(buy_lg-sell_lg)、行业、市场(沪/深)、是否 ST
+**资金+分类维度:** 主力净流入(net_mf_amount)、特大单净流入(buy_elg-sell_elg)、大单净流入(buy_lg-sell_lg)、行业、市场(沪/深)、是否 ST (通过 `stock_basic.name LIKE 'ST%' OR LIKE '*ST%'` 判定，stock_basic 无 is_st 字段)
 
 - 结果表格: 代码/名称/涨跌幅/PE/PB/市值/换手/主力净流入/行业，可排序
 - 点击行跳转个股详情
@@ -190,7 +190,7 @@ Level 0: 首页仪表盘 (市场全景)
 - 点击个股展开营业部明细
 
 **涨停详情:**
-- 涨停股完整列表 (数据来源: stk_limit + precomputed_limit)
+- 涨停股完整列表 (数据来源: stock_stk_limit + precomputed_limit)
 - 连板梯队 (5板/4板/3板/2板/首板)
 - 涨停行业分布 (基于 stock_basic.industry，V1 不含概念分类)
 
@@ -286,7 +286,7 @@ apps/stock_bi_v1/
 
 **flow 模块** — 北向资金趋势（沪/深/合计）、个股资金流（超大/大/中/小单）、大单明细
 
-**toplist 模块** — 今日龙虎榜列表、个股历史上榜记录
+**toplist 模块** — 今日龙虎榜列表、个股历史上榜记录。**注意**: `top_list` 表的涨跌幅字段为 `pct_change`（非 `pct_chg`），API 响应中需统一 alias 为 `pct_chg` 以保持前端字段一致性
 
 **screener 模块** — 可用筛选条件元数据、动态 SQL 组合筛选、结果排序分页、CSV 导出
 
@@ -341,9 +341,14 @@ apps/stock_bi_v1/
 | POST | /api/screener/query | 执行筛选 (body: conditions, sort, page) |
 | POST | /api/screener/export?format=csv | 导出筛选结果 (body: 与 query 相同的 conditions，最大 5000 行。响应: Content-Type: text/csv, Content-Disposition: attachment) |
 
+#### Precompute 触发
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /api/precompute/{trade_date} | 触发预计算 (由 daily_runner.py 在数据入库后调用) |
+
 ### 4.4 预计算层
 
-每日收盘后由 `stock_data_platform` 的 daily job 触发。集成方式: 在 `apps/stock_data_platform/jobs/` 中新增 `precompute_bi_v1.py` 任务，由 launchd scheduler 在数据入库完成后调用 `apps/stock_bi_v1/backend/precompute/runner.py`：
+每日收盘后由 `stock_data_platform` 的 daily job 触发。集成方式: 沿用现有 `sync_stock_bi` 模式，在 `daily_runner.py` 末尾（所有数据入库完成后）新增一步 HTTP POST 调用 `POST /api/precompute/{trade_date}` 触发预计算。后端需新增此 endpoint，内部调用 `precompute/runner.py` 执行计算并写入预计算表：
 
 **precomputed_market** — 每日一行
 - `trade_date` DATE NOT NULL PRIMARY KEY
@@ -373,11 +378,11 @@ apps/stock_bi_v1/
 - `tier_stats` JSON: `{"1": count, "2": count, "3": count, ...}` (连板梯队，key 为字符串)
 
 > **预计算数据来源与算法**:
-> - 涨停判定: `stk_limit` 表提供每日个股的涨停价 (`up_limit`) 和跌停价 (`down_limit`)。通过 JOIN `daily_kline` 判断 `close >= up_limit` 确定涨停，`close <= down_limit` 确定跌停。
+> - 涨停判定: `stock_stk_limit` 表提供每日个股的涨停价 (`up_limit`) 和跌停价 (`down_limit`)。通过 JOIN `daily_kline` 判断 `close >= up_limit` 确定涨停，`close <= down_limit` 确定跌停。
 > - 价格/成交数据: 从 `daily_kline` 获取 `pct_chg`, `close`, `amount`。
 > - 行业信息: 从 `stock_basic` 获取 `industry`。
 > - `consecutive_days` (连板天数): 向前回溯 `daily_kline`，计算连续 N 日满足 `close >= up_limit` 的天数。
-> - `broken_count` (炸板): 当日盘中触及涨停但收盘未封住，即 `high >= up_limit AND close < up_limit`（从 `daily_kline` + `stk_limit` 推导）。
+> - `broken_count` (炸板): 当日盘中触及涨停但收盘未封住，即 `high >= up_limit AND close < up_limit`（从 `daily_kline` + `stock_stk_limit` 推导）。
 > - 股票名称: 从 `stock_basic` 获取 `name`。
 
 ### 4.5 缓存策略
