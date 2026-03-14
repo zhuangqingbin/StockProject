@@ -1,5 +1,10 @@
 import os
 
+from .env import bootstrap_project_env
+
+
+bootstrap_project_env(__file__)
+
 
 def _get_env(name: str, default: str = "") -> str:
     value = os.getenv(name)

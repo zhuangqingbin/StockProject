@@ -10,8 +10,8 @@ import json
 import asyncio
 
 from ..database import get_db
+from ..modules.chat_query.application import resolve_intent
 from ..models import ChatRequest, ChatResponse
-from ..services.llm import llm_service
 from ..cache import cache
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -59,7 +59,7 @@ async def chat_query(
     处理自然语言查询
     """
     # 解析用户意图
-    intent = await llm_service.parse_query(request.message, request.context)
+    intent = await resolve_intent(request.message, request.context)
     
     action = intent.get("action", "overview")
     params = intent.get("params", {})
@@ -104,7 +104,7 @@ async def chat_stream(
     """
     async def generate():
         # 解析用户意图
-        intent = await llm_service.parse_query(request.message, request.context)
+        intent = await resolve_intent(request.message, request.context)
         
         action = intent.get("action", "overview")
         params = intent.get("params", {})

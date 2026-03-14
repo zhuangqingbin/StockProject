@@ -4,13 +4,17 @@ WebSocket 实时数据推送
 """
 import asyncio
 import json
-from datetime import datetime
 from typing import Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import text
 
 from ..database import engine
 from ..cache import cache
+from ..modules.realtime_updates.service import (
+    build_connected_message,
+    build_data_updated_message,
+    build_status_message,
+)
 
 router = APIRouter(tags=["websocket"])
 
@@ -82,12 +86,7 @@ async def check_data_update():
     
     if _last_trade_date and current_date != _last_trade_date:
         # 数据有更新，广播通知
-        await manager.broadcast({
-            "type": "data_updated",
-            "trade_date": current_date,
-            "previous_date": _last_trade_date,
-            "timestamp": datetime.now().isoformat()
-        })
+        await manager.broadcast(build_data_updated_message(current_date, previous_date=_last_trade_date))
         # 清除缓存
         cache.clear()
         print(f"🔔 数据更新: {_last_trade_date} → {current_date}")
@@ -117,11 +116,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         # 发送初始状态
         current_date = get_latest_trade_date()
-        await manager.send_to(websocket, {
-            "type": "connected",
-            "trade_date": current_date,
-            "timestamp": datetime.now().isoformat()
-        })
+        await manager.send_to(websocket, build_connected_message(current_date))
         
         # 保持连接，接收客户端消息
         while True:
@@ -133,11 +128,10 @@ async def websocket_endpoint(websocket: WebSocket):
                 if message.get("type") == "ping":
                     await manager.send_to(websocket, {"type": "pong"})
                 elif message.get("type") == "get_status":
-                    await manager.send_to(websocket, {
-                        "type": "status",
-                        "trade_date": get_latest_trade_date(),
-                        "connections": len(manager.active_connections)
-                    })
+                    await manager.send_to(
+                        websocket,
+                        build_status_message(get_latest_trade_date(), len(manager.active_connections)),
+                    )
             except json.JSONDecodeError:
                 pass
     
@@ -153,12 +147,7 @@ async def notify_data_update(trade_date: str = None):
     if trade_date is None:
         trade_date = get_latest_trade_date()
     
-    await manager.broadcast({
-        "type": "data_updated",
-        "trade_date": trade_date,
-        "timestamp": datetime.now().isoformat(),
-        "manual": True
-    })
+    await manager.broadcast(build_data_updated_message(trade_date, manual=True))
     
     # 清除缓存
     cache.clear()
