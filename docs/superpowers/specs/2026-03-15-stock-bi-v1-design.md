@@ -156,7 +156,7 @@ Level 0: 首页仪表盘 (市场全景)
 
 | Tab | 内容 | 数据来源 |
 |-----|------|----------|
-| 资金流向 | 今日特大单(buy_elg)/大单(buy_lg)/中单(buy_md)/小单(buy_sm)买卖明细 + 近30日主力净流入(net_mf_amount)柱状图 + 累计净流入曲线 | moneyflow |
+| 资金流向 | 今日特大单(buy_elg_amount/sell_elg_amount)/大单(buy_lg_amount/sell_lg_amount)/中单(buy_md_amount/sell_md_amount)/小单(buy_sm_amount/sell_sm_amount)买卖明细 + 近30日主力净流入(net_mf_amount)柱状图 + 累计净流入曲线 | moneyflow |
 | 估值趋势 | PE/PB/PS 历史走势图(可叠加) + 当前百分位 + 估值带(均值±标准差) | daily_basic |
 | 大单明细 | 各档位买卖量趋势图 + 主力净流入占比 | moneyflow |
 | 龙虎榜记录 | 历史上榜日期列表 + 营业部买卖额 + 上榜原因 | top_list |
@@ -172,7 +172,7 @@ Level 0: 首页仪表盘 (市场全景)
 
 **估值维度:** PE(TTM)、PB、PS(TTM)、总市值、流通市值、总股本、流通股本
 
-**资金+分类维度:** 主力净流入(net_mf_amount)、特大单净流入(buy_elg-sell_elg)、大单净流入(buy_lg-sell_lg)、行业、市场(沪/深)、是否 ST (通过 `stock_basic.name LIKE 'ST%' OR LIKE '*ST%'` 判定，stock_basic 无 is_st 字段)
+**资金+分类维度:** 主力净流入(net_mf_amount)、特大单净流入(buy_elg_amount - sell_elg_amount)、大单净流入(buy_lg_amount - sell_lg_amount)、行业、市场(沪/深)、是否 ST (通过 `stock_basic.name LIKE 'ST%' OR LIKE '*ST%'` 判定，stock_basic 无 is_st 字段)
 
 - 结果表格: 代码/名称/涨跌幅/PE/PB/市值/换手/主力净流入/行业，可排序
 - 点击行跳转个股详情
@@ -286,7 +286,7 @@ apps/stock_bi_v1/
 
 **flow 模块** — 北向资金趋势（沪/深/合计）、个股资金流（超大/大/中/小单）、大单明细
 
-**toplist 模块** — 今日龙虎榜列表、个股历史上榜记录。**注意**: `top_list` 表的涨跌幅字段为 `pct_change`（非 `pct_chg`），API 响应中需统一 alias 为 `pct_chg` 以保持前端字段一致性
+**toplist 模块** — 今日龙虎榜列表、个股历史上榜记录。**注意**: `top_list` 表的涨跌幅字段为 `pct_change`（非 `pct_chg`）。ORM 定义时使用 `pct_chg = Column("pct_change", Float)` 在 ORM 层完成别名映射，确保 API 响应统一使用 `pct_chg`
 
 **screener 模块** — 可用筛选条件元数据、动态 SQL 组合筛选、结果排序分页、CSV 导出
 
@@ -348,7 +348,9 @@ apps/stock_bi_v1/
 
 ### 4.4 预计算层
 
-每日收盘后由 `stock_data_platform` 的 daily job 触发。集成方式: 沿用现有 `sync_stock_bi` 模式，在 `daily_runner.py` 末尾（所有数据入库完成后）新增一步 HTTP POST 调用 `POST /api/precompute/{trade_date}` 触发预计算。后端需新增此 endpoint，内部调用 `precompute/runner.py` 执行计算并写入预计算表：
+每日收盘后由 `stock_data_platform` 的 daily job 触发。集成方式: 沿用现有 `sync_stock_bi` 模式，在 `daily_runner.py` 末尾（**所有 jobs 全部完成后，包括 stock_stk_limit**）新增一步 HTTP POST 调用 `POST /api/precompute/{trade_date}` 触发预计算。后端需新增此 endpoint，内部调用 `precompute/runner.py` 执行计算并写入预计算表。
+
+> **顺序要求**: 预计算依赖 `stock_stk_limit` 数据（涨停判定），而 `stk_limit` job 无 `trigger_stock_bi_sync` 标记。因此 precompute 调用必须放在 `daily_runner.py` 所有 jobs 循环结束之后，不能挂在单个 job 的 trigger 上。
 
 **precomputed_market** — 每日一行
 - `trade_date` DATE NOT NULL PRIMARY KEY
