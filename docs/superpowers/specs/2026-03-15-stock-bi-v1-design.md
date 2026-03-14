@@ -11,7 +11,7 @@
 - 强大的多维数据分析能力
 - Bloomberg 终端风格的专业界面（纯黑背景 + 橙色强调 + 等宽字体）
 - 高信息密度，查询快，体验好
-- 数据来源为 `stock_data_platform` 通过每日任务写入 MySQL 的行情数据
+- 数据来源为 `stock_data_platform` 通过每日任务写入 MySQL 的行情数据（含 stk_limit 涨跌停数据）
 
 ### 1.2 用户
 小团队 / 朋友圈（几个人共用）。
@@ -55,7 +55,7 @@
 │  MySQL (stock_database)                              │
 │  现有表: daily_kline, daily_basic, moneyflow,        │
 │          moneyflow_hsgt, index_daily, top_list,      │
-│          stock_basic                                 │
+│          stock_basic, stk_limit                      │
 │  新增: precomputed_market, precomputed_industry,     │
 │        precomputed_limit                             │
 └──────────────────────────────────────────────────────┘
@@ -127,7 +127,7 @@ Level 0: 首页仪表盘 (市场全景)
 | 龙虎榜摘要 | top_list | 下方 (占2列) | 龙虎榜详情 |
 | 涨停分析 | precomputed_limit | 下右 | 涨停详情 |
 
-板块热力图支持「申万一级」/「概念板块」切换。
+板块热力图仅支持「申万一级」行业分类（数据来源: stock_basic.industry 字段）。V1 不支持概念板块（无数据源）。
 排行榜模块每个显示 TOP 5，右上角 "DRILL ›" 标识可钻取。
 
 #### 行业详情页 (Level 1)
@@ -190,9 +190,9 @@ Level 0: 首页仪表盘 (市场全景)
 - 点击个股展开营业部明细
 
 **涨停详情:**
-- 涨停股完整列表
+- 涨停股完整列表 (数据来源: stk_limit + precomputed_limit)
 - 连板梯队 (5板/4板/3板/2板/首板)
-- 涨停概念分布
+- 涨停行业分布 (基于 stock_basic.industry，V1 不含概念分类)
 
 ## 4. 后端设计
 
@@ -302,7 +302,7 @@ apps/stock_bi_v1/
 | GET | /api/market/distribution?date= | 涨跌分布直方图 |
 | GET | /api/market/ranking?type=pct_chg&order=desc&limit=20 | 排行榜 |
 | GET | /api/market/limit-stats?date= | 涨停分析统计 |
-| GET | /api/market/limit-stocks?type=up&date= | 涨停/跌停股列表 |
+| GET | /api/market/limit-list?type=up&date= | 涨停/跌停股列表 (来源: stk_limit 表) |
 
 #### Industry 模块
 | 方法 | 路径 | 说明 |
@@ -339,31 +339,39 @@ apps/stock_bi_v1/
 |------|------|------|
 | GET | /api/screener/filters | 可用筛选条件列表 |
 | POST | /api/screener/query | 执行筛选 (body: conditions, sort, page) |
-| GET | /api/screener/export?format=csv | 导出筛选结果 |
+| POST | /api/screener/export?format=csv | 导出筛选结果 (body: 与 query 相同的 conditions) |
 
 ### 4.4 预计算层
 
-每日收盘后由 `stock_data_platform` 的 daily job 触发（与现有 `stock_bi_sync` 类似）：
+每日收盘后由 `stock_data_platform` 的 daily job 触发。集成方式: 在 `apps/stock_data_platform/jobs/` 中新增 `precompute_bi_v1.py` 任务，由 launchd scheduler 在数据入库完成后调用 `apps/stock_bi_v1/backend/precompute/runner.py`：
 
 **precomputed_market** — 每日一行
-- 涨跌分布统计 (各区间股票数量)
-- 涨停数/跌停数/平盘数
-- 全市场成交额
-- 排行榜 TOP 20 (涨幅/跌幅/成交/换手)
+- `distribution` JSON: `{"-10~-7": n, "-7~-5": n, "-5~-3": n, "-3~0": n, "0": n, "0~3": n, "3~5": n, "5~7": n, "7~10": n}`
+- `up_limit_count` INT, `down_limit_count` INT, `flat_count` INT
+- `total_amount` DECIMAL(20,2)
+- `top_gainers` JSON: `[{ts_code, name, pct_chg, close, amount}]` (TOP 20)
+- `top_losers` JSON: 同上
+- `top_volume` JSON: 同上
+- `top_turnover` JSON: 同上
 
-**precomputed_industry** — 每日每行业一行
-- 行业平均涨跌幅
-- 行业成交额合计
-- 行业内涨/跌家数
-- 行业主力净流入合计
+**precomputed_industry** — 每日每行业一行 (主键: trade_date + industry)
+- `industry` VARCHAR(50)
+- `avg_pct_chg` DECIMAL(8,4)
+- `total_amount` DECIMAL(20,2)
+- `up_count` INT, `down_count` INT
+- `net_mf_amount` DECIMAL(20,2) (主力净流入合计)
+- `stock_count` INT (行业内股票总数)
 
 **precomputed_limit** — 每日一行
-- 涨停股列表 (含连板信息)
-- 跌停股列表
-- 炸板数量和炸板率
-- 连板梯队统计
+- `up_limit_stocks` JSON: `[{ts_code, name, pct_chg, close, amount, consecutive_days, industry}]`
+- `down_limit_stocks` JSON: `[{ts_code, name, pct_chg, close, amount, industry}]`
+- `up_count` INT, `down_count` INT, `broken_count` INT
+- `broken_rate` DECIMAL(5,2)
+- `tier_stats` JSON: `{1: count, 2: count, 3: count, ...}` (连板梯队)
 
 三张表都以 JSON 列存储复杂数据，`trade_date` 为主键。
+
+> **注意**: 涨停分析的原始数据来源为 `stk_limit` 表（而非 `top_list`）。预计算时通过 `stk_limit` 查询涨停/跌停/炸板信息并写入 `precomputed_limit`。
 
 ### 4.5 缓存策略
 
@@ -372,7 +380,8 @@ apps/stock_bi_v1/
 | 数据类型 | TTL | 说明 |
 |----------|-----|------|
 | 仪表盘 overview | 5 min | 预计算数据变化不频繁 |
-| 个股 K线 | 1 min | 历史数据不变，当日会更新 |
+| 个股日 K线 | 1 min | 当日数据会更新 |
+| 周K/月K线 | 1 hour | 历史周/月K不变，仅最新周/月可能更新 |
 | 排行榜 | 2 min | 首页高频请求 |
 | 筛选结果 | 30 sec | 条件变化大，不宜长缓存 |
 | 行业热力图 | 5 min | 与仪表盘同步 |
