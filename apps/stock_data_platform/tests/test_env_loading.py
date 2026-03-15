@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 
+import pytest
+
+from shared.stock_core import config
 from shared.stock_core.env import discover_env_files, load_env_files
 
 
@@ -46,3 +49,20 @@ def test_load_env_files_sets_missing_values_without_overriding_existing(tmp_path
     assert env["MYSQL_USER"] == "existing_user"
     assert env["MYSQL_PASSWORD"] == "secret pass"
     assert env["EMPTY_VALUE"] == ""
+
+
+def test_shared_config_helpers_trim_and_parse_values(monkeypatch):
+    monkeypatch.setenv("TEST_TEXT", "  hello  ")
+    monkeypatch.setenv("TEST_NUMBER", "  42  ")
+    monkeypatch.setenv("TEST_CSV", " a, b , , c ")
+
+    assert config.get_env("TEST_TEXT") == "hello"
+    assert config.get_int("TEST_NUMBER", 0) == 42
+    assert config.get_csv("TEST_CSV") == ["a", "b", "c"]
+
+
+def test_shared_config_get_int_raises_for_invalid_values(monkeypatch):
+    monkeypatch.setenv("TEST_BAD_NUMBER", "NaN")
+
+    with pytest.raises(ValueError, match="TEST_BAD_NUMBER"):
+        config.get_int("TEST_BAD_NUMBER", 0)

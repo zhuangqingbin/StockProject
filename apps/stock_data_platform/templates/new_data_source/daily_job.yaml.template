@@ -1,0 +1,10 @@
+- name: {{ job_name }}
+  fetcher: {{ FetcherClassName }}
+  table_name: {{ primary_table_name }}
+  mirror_table_names:
+    - {{ optional_bi_table_name }}
+  trigger_stock_bi_sync: true
+  params:
+    trade_date: "{{ trade_date_compact }}"
+  scope_columns:
+    - trade_date

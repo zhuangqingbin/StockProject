@@ -62,29 +62,3 @@ class MoneyFlowHSGTFetch(BaseDataFetch):
             fields=','.join(self.fields),
             **kwargs,
         )
-
-
-class HSGTTop10Fetch(BaseDataFetch):
-    """
-    API: https://tushare.pro/document/2?doc_id=48
-    沪深港通十大成交股, 120积分
-        获取沪股通、深股通每日前十大成交详细数据
-    API params:
-        ts_code: 股票代码
-        trade_date: 交易日期(YYYYMMDD)
-        start_date: 开始日期
-        end_date: 结束日期
-        market_type: 市场类型(1:沪股通, 2:深股通, 3:港股通-沪, 4:港股通-深)
-    """
-    def read_data(self, **kwargs):
-        self.fields = [
-            "trade_date", "ts_code", "name",
-            "close", "change", "rank",
-            "market_type", "amount", "net_amount",
-            "buy", "sell"
-        ]
-        return self.client.call(
-            "hsgt_top10",
-            fields=','.join(self.fields),
-            **kwargs,
-        )

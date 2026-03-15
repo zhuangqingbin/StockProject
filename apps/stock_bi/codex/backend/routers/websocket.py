@@ -8,8 +8,8 @@ from typing import Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import text
 
-from ..database import engine
-from ..cache import cache
+from ..infrastructure.cache import cache
+from ..infrastructure.database import engine
 from ..modules.realtime_updates.service import (
     build_connected_message,
     build_data_updated_message,

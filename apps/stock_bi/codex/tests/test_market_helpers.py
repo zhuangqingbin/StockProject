@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date
 from decimal import Decimal
 
@@ -27,6 +28,7 @@ from apps.stock_bi.codex.backend.modules.ranking_kline.application import (
     select_ranking_rows,
     to_float,
 )
+from apps.stock_bi.codex.backend.modules import realtime_updates
 from apps.stock_bi.codex.backend.modules.realtime_updates.service import (
     build_connected_message,
     build_data_updated_message,
@@ -160,3 +162,28 @@ def test_numeric_and_realtime_helpers_keep_existing_contracts():
     assert build_connected_message("20250314")["type"] == "connected"
     assert build_status_message("20250314", 3)["connections"] == 3
     assert build_data_updated_message("20250314", previous_date="20250313", manual=True)["manual"] is True
+
+
+def test_sync_market_data_update_precomputes_and_notifies(monkeypatch):
+    observed = {}
+
+    def fake_precompute_and_save(trade_date: str):
+        observed["precomputed"] = trade_date
+        return {"total_stocks": 123}
+
+    async def fake_notify_data_update(trade_date=None):
+        observed["notified"] = trade_date
+        return {"status": "notified", "connections": 2}
+
+    monkeypatch.setattr(realtime_updates.service, "precompute_and_save", fake_precompute_and_save, raising=False)
+    monkeypatch.setattr(realtime_updates.service, "notify_data_update", fake_notify_data_update, raising=False)
+
+    payload = asyncio.run(realtime_updates.service.sync_market_data_update("2025-03-14"))
+
+    assert payload == {
+        "status": "success",
+        "trade_date": "20250314",
+        "summary_total_stocks": 123,
+        "notification": {"status": "notified", "connections": 2},
+    }
+    assert observed == {"precomputed": "20250314", "notified": "20250314"}

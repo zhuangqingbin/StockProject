@@ -1,70 +1,50 @@
-import io
-from contextlib import redirect_stdout
+from pathlib import Path
 
-import pytest
-
-import common as common_compat
 from apps.stock_data_platform import common as common_pkg
-from apps.stock_data_platform.common.utils import (
-    code_add_suffix,
-    datetime2str,
-    get_n,
-    get_pmt,
-    get_pv,
-    get_rate,
-    timer,
-)
+from apps.stock_data_platform.common.database_runtime import get_engine
+from apps.stock_data_platform.common.market_calendar import get_prev_trade_days, get_trade_cal
+from apps.stock_data_platform.common.timing import timer
 
 
-class FakeDate:
-    year = 2025
-    month = 3
-    day = 14
+COMMON_DIR = Path("apps/stock_data_platform/common")
 
 
-def test_datetime2str_formats_yyyymmdd():
-    assert datetime2str(FakeDate()) == "20250314"
+def test_common_directory_contains_only_runtime_modules():
+    python_files = {path.name for path in COMMON_DIR.glob("*.py")}
+
+    assert python_files == {
+        "__init__.py",
+        "config.py",
+        "database_runtime.py",
+        "market_calendar.py",
+        "timing.py",
+        "venv_runtime.py",
+    }
 
 
-def test_code_add_suffix_keeps_suffix_and_maps_exchange():
-    assert code_add_suffix("600000") == "600000.SH"
-    assert code_add_suffix("300001") == "300001.SZ"
-    assert code_add_suffix(830001) == "830001.BJ"
-    assert code_add_suffix("000001.SZ") == "000001.SZ"
+def test_common_directory_drops_legacy_helpers():
+    for filename in (
+        "AutoEmail.py",
+        "IndustryTop.yaml",
+        "backtrader_support.py",
+        "code_repository.py",
+        "date_formats.py",
+        "finance_math.py",
+        "pickle_store.py",
+        "security_codes.py",
+        "utils.py",
+    ):
+        assert not (COMMON_DIR / filename).exists()
 
 
-def test_code_add_suffix_rejects_unknown_prefix():
-    with pytest.raises(ValueError):
-        code_add_suffix("100001")
-
-
-def test_finance_helpers_round_trip_present_value_and_payment():
-    pv = get_pv(1000, 0.05, 12)
-    pmt = get_pmt(pv, 0.05, 12)
-
-    assert round(pmt, 6) == 1000
-    assert round(get_n(pv, pmt, 0.05), 6) == 12
-    assert round(get_rate(pv, pmt, 12), 6) == 0.05
-
-
-def test_timer_prints_elapsed_seconds():
-    stdout = io.StringIO()
-    with redirect_stdout(stdout):
-        with timer("fetch"):
-            pass
-
-    output = stdout.getvalue()
-    assert "[fetch] done in " in output
-    assert output.strip().endswith("s")
-
-
-def test_common_package_exports_refactored_helpers():
+def test_common_package_exports_only_runtime_helpers():
+    assert common_pkg.__all__ == [
+        "get_engine",
+        "get_prev_trade_days",
+        "get_trade_cal",
+        "timer",
+    ]
+    assert common_pkg.get_engine is get_engine
+    assert common_pkg.get_prev_trade_days is get_prev_trade_days
+    assert common_pkg.get_trade_cal is get_trade_cal
     assert common_pkg.timer is timer
-    assert common_pkg.datetime2str is datetime2str
-    assert "timer" in common_pkg.__all__
-    assert "datetime2str" in common_pkg.__all__
-
-
-def test_root_common_wrapper_reexports_common_helpers():
-    assert common_compat.timer is timer
-    assert common_compat.code_add_suffix is code_add_suffix

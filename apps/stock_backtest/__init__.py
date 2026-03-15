@@ -1,0 +1,1 @@
+"""Stock backtest application package."""

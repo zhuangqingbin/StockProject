@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = [
+    "apps/stock_bi/codex/tests",
+    "apps/stock_backtest/tests",
+    "apps/stock_bi_v1/tests",
+    "apps/stock_data_platform/tests",
+]
+norecursedirs = [
+    ".git",
+    ".idea",
+    ".worktrees",
+    "apps/stock_data_platform/.cache",
+    "assets",
+    "experiments",
+    "Work",
+]
+python_files = ["test_*.py"]

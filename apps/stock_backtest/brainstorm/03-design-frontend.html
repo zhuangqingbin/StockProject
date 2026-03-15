@@ -1,0 +1,404 @@
+<h2>设计方案 - 前端页面与交互</h2>
+<p class="subtitle">React 前端的页面结构和核心交互</p>
+
+<div class="mockup">
+  <div class="mockup-header">页面结构总览</div>
+  <div class="mockup-body" style="font-size: 13px;">
+    <!-- Layout wireframe -->
+    <div style="border: 1px solid #444; border-radius: 8px; overflow: hidden;">
+      <!-- Top nav -->
+      <div style="background: #1a1a2e; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333;">
+        <div style="display: flex; gap: 24px; align-items: center;">
+          <span style="color: #60a5fa; font-weight: bold; font-size: 15px;">📈 Stock Backtest</span>
+          <span style="color: #ccc; border-bottom: 2px solid #60a5fa; padding-bottom: 4px;">策略管理</span>
+          <span style="color: #888;">回测中心</span>
+          <span style="color: #888;">结果分析</span>
+          <span style="color: #888;">策略对比</span>
+          <span style="color: #888;">Notebook</span>
+        </div>
+        <div style="color: #888; font-size: 12px;">用户名 ▾</div>
+      </div>
+      <!-- Content hint -->
+      <div style="padding: 20px; color: #666; text-align: center; min-height: 60px;">
+        ← 顶部导航切换五大模块 →
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page 1: Strategy Management -->
+<div class="section" style="margin-top: 24px;">
+  <h3>📋 页面一：策略管理</h3>
+  <div class="mockup">
+    <div class="mockup-header">策略管理页</div>
+    <div class="mockup-body" style="font-size: 13px;">
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <!-- Left: Strategy list -->
+        <div style="flex: 1; min-width: 250px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="color: #ccc; font-weight: bold;">我的策略</span>
+            <span style="background: #60a5fa; color: #000; padding: 4px 12px; border-radius: 4px; font-size: 12px;">+ 新建策略</span>
+          </div>
+          <!-- Strategy cards -->
+          <div style="border: 1px solid #444; border-radius: 6px; padding: 12px; margin-bottom: 8px; background: #1a1a2e;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #60a5fa;">双均线交叉策略</span>
+              <span style="color: #34d399; font-size: 11px;">● 模板</span>
+            </div>
+            <div style="color: #888; font-size: 11px; margin-top: 4px;">基于短期/长期均线交叉产生买卖信号</div>
+            <div style="color: #666; font-size: 11px; margin-top: 4px;">最后回测: 2026-03-14 | 年化: +18.3%</div>
+          </div>
+          <div style="border: 1px solid #333; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #ccc;">连涨突破策略</span>
+              <span style="color: #fbbf24; font-size: 11px;">● 自定义</span>
+            </div>
+            <div style="color: #888; font-size: 11px; margin-top: 4px;">连续N日上涨后突破前高买入</div>
+            <div style="color: #666; font-size: 11px; margin-top: 4px;">最后回测: 2026-03-12 | 年化: +12.7%</div>
+          </div>
+          <div style="border: 1px solid #333; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #ccc;">资金流向策略</span>
+              <span style="color: #fbbf24; font-size: 11px;">● 自定义</span>
+            </div>
+            <div style="color: #888; font-size: 11px; margin-top: 4px;">基于主力资金净流入做多</div>
+            <div style="color: #666; font-size: 11px; margin-top: 4px;">最后回测: 2026-03-10 | 年化: +9.1%</div>
+          </div>
+        </div>
+
+        <!-- Right: Strategy editor -->
+        <div style="flex: 2; min-width: 300px;">
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <span style="background: #333; color: #ccc; padding: 4px 12px; border-radius: 4px; font-size: 12px; border: 1px solid #60a5fa;">模板配置</span>
+            <span style="background: #222; color: #888; padding: 4px 12px; border-radius: 4px; font-size: 12px;">代码编辑</span>
+          </div>
+          <!-- Template config mode -->
+          <div style="border: 1px solid #444; border-radius: 6px; padding: 16px; background: #1a1a2e;">
+            <div style="margin-bottom: 12px;">
+              <div style="color: #888; font-size: 11px; margin-bottom: 4px;">策略模板</div>
+              <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">双均线交叉 ▾</div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+              <div style="flex: 1;">
+                <div style="color: #888; font-size: 11px; margin-bottom: 4px;">短期均线</div>
+                <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">5 日</div>
+              </div>
+              <div style="flex: 1;">
+                <div style="color: #888; font-size: 11px; margin-bottom: 4px;">长期均线</div>
+                <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">20 日</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+              <div style="flex: 1;">
+                <div style="color: #888; font-size: 11px; margin-bottom: 4px;">止损比例</div>
+                <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">5%</div>
+              </div>
+              <div style="flex: 1;">
+                <div style="color: #888; font-size: 11px; margin-bottom: 4px;">止盈比例</div>
+                <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">15%</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <div style="color: #888; font-size: 11px; margin-bottom: 4px;">仓位管理</div>
+              <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">等权重 ▾</div>
+            </div>
+            <div style="color: #666; font-size: 11px; border-top: 1px solid #333; padding-top: 8px;">
+              💡 模板代码已内置，只需配置参数。切换到「代码编辑」可查看和修改源码。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page 2: Backtest Center -->
+<div class="section" style="margin-top: 24px;">
+  <h3>🚀 页面二：回测中心</h3>
+  <div class="mockup">
+    <div class="mockup-header">回测配置与执行</div>
+    <div class="mockup-body" style="font-size: 13px;">
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <!-- Config panel -->
+        <div style="flex: 1; min-width: 280px; border: 1px solid #444; border-radius: 6px; padding: 16px;">
+          <div style="color: #fbbf24; font-weight: bold; margin-bottom: 12px;">回测配置</div>
+          <div style="margin-bottom: 10px;">
+            <div style="color: #888; font-size: 11px; margin-bottom: 4px;">选择策略</div>
+            <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">双均线交叉策略 ▾</div>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <div style="color: #888; font-size: 11px; margin-bottom: 4px;">回测区间</div>
+            <div style="display: flex; gap: 8px;">
+              <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333; flex: 1;">2024-01-01</div>
+              <div style="color: #666; padding: 8px 0;">→</div>
+              <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333; flex: 1;">2025-12-31</div>
+            </div>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <div style="color: #888; font-size: 11px; margin-bottom: 4px;">标的选择</div>
+            <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">
+              <span style="background: #1e3a5f; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-right: 4px;">000001.SZ</span>
+              <span style="background: #1e3a5f; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-right: 4px;">600519.SH</span>
+              <span style="color: #888; font-size: 11px;">+ 添加</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <div style="flex: 1;">
+              <div style="color: #888; font-size: 11px; margin-bottom: 4px;">初始资金</div>
+              <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">1,000,000</div>
+            </div>
+            <div style="flex: 1;">
+              <div style="color: #888; font-size: 11px; margin-bottom: 4px;">手续费率</div>
+              <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">0.03%</div>
+            </div>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <div style="color: #888; font-size: 11px; margin-bottom: 4px;">基准指数</div>
+            <div style="background: #222; padding: 8px 12px; border-radius: 4px; border: 1px solid #333;">沪深300 (000300.SH) ▾</div>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <div style="color: #888; font-size: 11px; margin-bottom: 4px;">数据源 <span style="color: #666;">(可多选)</span></div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <span style="background: #1a3a2a; border: 1px solid #34d399; padding: 4px 10px; border-radius: 4px; font-size: 11px;">✓ 日线行情</span>
+              <span style="background: #1a3a2a; border: 1px solid #34d399; padding: 4px 10px; border-radius: 4px; font-size: 11px;">✓ 基本面</span>
+              <span style="background: #222; border: 1px solid #333; padding: 4px 10px; border-radius: 4px; font-size: 11px; color: #888;">资金流</span>
+              <span style="background: #222; border: 1px solid #333; padding: 4px 10px; border-radius: 4px; font-size: 11px; color: #888;">龙虎榜</span>
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 16px;">
+            <span style="background: #34d399; color: #000; padding: 8px 32px; border-radius: 6px; font-weight: bold;">🚀 开始回测</span>
+          </div>
+        </div>
+
+        <!-- Run history -->
+        <div style="flex: 1; min-width: 280px;">
+          <div style="color: #ccc; font-weight: bold; margin-bottom: 12px;">回测记录</div>
+          <div style="border: 1px solid #444; border-radius: 6px; padding: 12px; margin-bottom: 8px; background: #1a2a1a; border-left: 3px solid #34d399;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #34d399;">双均线交叉 #12</span>
+              <span style="color: #34d399; font-size: 11px;">✓ 完成</span>
+            </div>
+            <div style="color: #888; font-size: 11px; margin-top: 4px;">2024.01 - 2025.12 | 2 只股票 | 年化 +18.3%</div>
+            <div style="color: #666; font-size: 11px; margin-top: 2px;">3分钟前</div>
+          </div>
+          <div style="border: 1px solid #444; border-radius: 6px; padding: 12px; margin-bottom: 8px; background: #2a2a1a; border-left: 3px solid #fbbf24;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #fbbf24;">资金流向策略 #11</span>
+              <span style="color: #fbbf24; font-size: 11px;">⟳ 运行中 67%</span>
+            </div>
+            <div style="background: #333; height: 4px; border-radius: 2px; margin-top: 6px;">
+              <div style="background: #fbbf24; height: 4px; border-radius: 2px; width: 67%;"></div>
+            </div>
+            <div style="color: #666; font-size: 11px; margin-top: 4px;">预计剩余 45 秒</div>
+          </div>
+          <div style="border: 1px solid #333; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #ccc;">连涨突破 #10</span>
+              <span style="color: #34d399; font-size: 11px;">✓ 完成</span>
+            </div>
+            <div style="color: #888; font-size: 11px; margin-top: 4px;">2023.01 - 2025.12 | 5 只股票 | 年化 +12.7%</div>
+          </div>
+          <div style="border: 1px solid #333; border-radius: 6px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #ccc;">双均线交叉 #9</span>
+              <span style="color: #ef4444; font-size: 11px;">✗ 失败</span>
+            </div>
+            <div style="color: #888; font-size: 11px; margin-top: 4px;">数据不足：000688.SH 在 2019 年无数据</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page 3: Result Analysis -->
+<div class="section" style="margin-top: 24px;">
+  <h3>📊 页面三：结果分析</h3>
+  <div class="mockup">
+    <div class="mockup-header">单次回测详情</div>
+    <div class="mockup-body" style="font-size: 13px;">
+      <!-- KPI cards -->
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+        <div style="flex: 1; min-width: 100px; background: #1a2a1a; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="color: #888; font-size: 11px;">总收益</div>
+          <div style="color: #34d399; font-size: 18px; font-weight: bold;">+36.7%</div>
+        </div>
+        <div style="flex: 1; min-width: 100px; background: #1a2a1a; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="color: #888; font-size: 11px;">年化收益</div>
+          <div style="color: #34d399; font-size: 18px; font-weight: bold;">+18.3%</div>
+        </div>
+        <div style="flex: 1; min-width: 100px; background: #2a1a1a; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="color: #888; font-size: 11px;">最大回撤</div>
+          <div style="color: #ef4444; font-size: 18px; font-weight: bold;">-12.4%</div>
+        </div>
+        <div style="flex: 1; min-width: 100px; background: #1a1a2e; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="color: #888; font-size: 11px;">夏普比率</div>
+          <div style="color: #60a5fa; font-size: 18px; font-weight: bold;">1.52</div>
+        </div>
+        <div style="flex: 1; min-width: 100px; background: #1a1a2e; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="color: #888; font-size: 11px;">胜率</div>
+          <div style="color: #60a5fa; font-size: 18px; font-weight: bold;">62.5%</div>
+        </div>
+        <div style="flex: 1; min-width: 100px; background: #1a1a2e; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="color: #888; font-size: 11px;">盈亏比</div>
+          <div style="color: #60a5fa; font-size: 18px; font-weight: bold;">2.1:1</div>
+        </div>
+      </div>
+
+      <!-- Chart area -->
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+        <div style="flex: 2; min-width: 300px; background: #111; border: 1px solid #333; border-radius: 6px; padding: 12px;">
+          <div style="color: #888; font-size: 11px; margin-bottom: 8px;">收益曲线 vs 基准</div>
+          <div style="height: 120px; position: relative;">
+            <!-- Simulated chart -->
+            <svg width="100%" height="100%" viewBox="0 0 400 120">
+              <polyline points="0,100 40,95 80,85 120,70 160,80 200,60 240,50 280,55 320,35 360,30 400,25" fill="none" stroke="#34d399" stroke-width="2"/>
+              <polyline points="0,100 40,98 80,92 120,88 160,90 200,85 240,82 280,84 320,78 360,75 400,72" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4"/>
+              <text x="360" y="20" fill="#34d399" font-size="10">策略</text>
+              <text x="360" y="68" fill="#888" font-size="10">基准</text>
+            </svg>
+          </div>
+        </div>
+        <div style="flex: 1; min-width: 200px; background: #111; border: 1px solid #333; border-radius: 6px; padding: 12px;">
+          <div style="color: #888; font-size: 11px; margin-bottom: 8px;">回撤曲线</div>
+          <div style="height: 120px; position: relative;">
+            <svg width="100%" height="100%" viewBox="0 0 200 120">
+              <polyline points="0,10 25,10 50,40 75,60 100,30 125,10 150,45 175,20 200,10" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+              <line x1="0" y1="60" x2="200" y2="60" stroke="#ef4444" stroke-width="0.5" stroke-dasharray="3"/>
+              <text x="140" y="56" fill="#ef4444" font-size="9">-12.4%</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px;">
+        <span style="color: #60a5fa; border-bottom: 2px solid #60a5fa; padding-bottom: 6px; font-size: 12px;">交易明细</span>
+        <span style="color: #888; font-size: 12px; padding: 0 8px;">K线买卖点</span>
+        <span style="color: #888; font-size: 12px; padding: 0 8px;">持仓分析</span>
+        <span style="color: #888; font-size: 12px; padding: 0 8px;">行业暴露</span>
+        <span style="color: #888; font-size: 12px; padding: 0 8px;">滚动指标</span>
+        <span style="color: #888; font-size: 12px; padding: 0 8px;">风险归因</span>
+      </div>
+      <!-- Trade table -->
+      <div style="font-size: 11px;">
+        <div style="display: flex; gap: 8px; color: #666; padding: 4px 0; border-bottom: 1px solid #222;">
+          <span style="flex: 1;">日期</span><span style="flex: 1;">标的</span><span style="flex: 0.6;">方向</span><span style="flex: 0.6;">价格</span><span style="flex: 0.6;">数量</span><span style="flex: 0.8;">盈亏</span>
+        </div>
+        <div style="display: flex; gap: 8px; color: #ccc; padding: 4px 0; border-bottom: 1px solid #222;">
+          <span style="flex: 1;">2024-03-15</span><span style="flex: 1;">600519.SH</span><span style="flex: 0.6; color: #ef4444;">买入</span><span style="flex: 0.6;">1680.5</span><span style="flex: 0.6;">100</span><span style="flex: 0.8; color: #34d399;">+8,200</span>
+        </div>
+        <div style="display: flex; gap: 8px; color: #ccc; padding: 4px 0; border-bottom: 1px solid #222;">
+          <span style="flex: 1;">2024-04-22</span><span style="flex: 1;">600519.SH</span><span style="flex: 0.6; color: #34d399;">卖出</span><span style="flex: 0.6;">1762.5</span><span style="flex: 0.6;">100</span><span style="flex: 0.8; color: #34d399;">+8,200</span>
+        </div>
+        <div style="display: flex; gap: 8px; color: #ccc; padding: 4px 0;">
+          <span style="flex: 1;">2024-05-10</span><span style="flex: 1;">000001.SZ</span><span style="flex: 0.6; color: #ef4444;">买入</span><span style="flex: 0.6;">11.25</span><span style="flex: 0.6;">5000</span><span style="flex: 0.8; color: #ef4444;">-1,500</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page 4: Strategy Comparison -->
+<div class="section" style="margin-top: 24px;">
+  <h3>⚖️ 页面四：策略对比</h3>
+  <div class="mockup">
+    <div class="mockup-header">多策略横向对比</div>
+    <div class="mockup-body" style="font-size: 13px;">
+      <!-- Comparison chart -->
+      <div style="background: #111; border: 1px solid #333; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+        <div style="color: #888; font-size: 11px; margin-bottom: 8px;">收益曲线叠加对比</div>
+        <div style="height: 100px;">
+          <svg width="100%" height="100%" viewBox="0 0 400 100">
+            <polyline points="0,90 50,85 100,70 150,60 200,55 250,45 300,40 350,30 400,25" fill="none" stroke="#60a5fa" stroke-width="2"/>
+            <polyline points="0,90 50,88 100,80 150,75 200,72 250,65 300,60 350,55 400,50" fill="none" stroke="#34d399" stroke-width="2"/>
+            <polyline points="0,90 50,92 100,85 150,88 200,78 250,80 300,70 350,68 400,62" fill="none" stroke="#fbbf24" stroke-width="2"/>
+            <polyline points="0,90 50,89 100,86 150,84 200,82 250,80 300,78 350,76 400,74" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4"/>
+          </svg>
+        </div>
+        <div style="display: flex; gap: 16px; justify-content: center; margin-top: 8px; font-size: 11px;">
+          <span><span style="color: #60a5fa;">●</span> 双均线交叉</span>
+          <span><span style="color: #34d399;">●</span> 连涨突破</span>
+          <span><span style="color: #fbbf24;">●</span> 资金流向</span>
+          <span><span style="color: #888;">- -</span> 沪深300</span>
+        </div>
+      </div>
+
+      <!-- Comparison table -->
+      <div style="font-size: 11px;">
+        <div style="display: flex; gap: 8px; color: #666; padding: 6px 0; border-bottom: 1px solid #333; font-weight: bold;">
+          <span style="flex: 1.5;">策略</span><span style="flex: 1;">年化收益</span><span style="flex: 1;">最大回撤</span><span style="flex: 1;">夏普</span><span style="flex: 1;">胜率</span><span style="flex: 1;">盈亏比</span><span style="flex: 1;">交易次数</span>
+        </div>
+        <div style="display: flex; gap: 8px; color: #ccc; padding: 6px 0; border-bottom: 1px solid #222; background: #1a1a2e;">
+          <span style="flex: 1.5; color: #60a5fa;">🥇 双均线交叉</span><span style="flex: 1; color: #34d399;">+18.3%</span><span style="flex: 1; color: #ef4444;">-12.4%</span><span style="flex: 1;">1.52</span><span style="flex: 1;">62.5%</span><span style="flex: 1;">2.1:1</span><span style="flex: 1;">24</span>
+        </div>
+        <div style="display: flex; gap: 8px; color: #ccc; padding: 6px 0; border-bottom: 1px solid #222;">
+          <span style="flex: 1.5; color: #34d399;">🥈 连涨突破</span><span style="flex: 1; color: #34d399;">+12.7%</span><span style="flex: 1; color: #ef4444;">-18.2%</span><span style="flex: 1;">0.98</span><span style="flex: 1;">55.0%</span><span style="flex: 1;">1.8:1</span><span style="flex: 1;">40</span>
+        </div>
+        <div style="display: flex; gap: 8px; color: #ccc; padding: 6px 0;">
+          <span style="flex: 1.5; color: #fbbf24;">🥉 资金流向</span><span style="flex: 1; color: #34d399;">+9.1%</span><span style="flex: 1; color: #ef4444;">-22.5%</span><span style="flex: 1;">0.72</span><span style="flex: 1;">48.3%</span><span style="flex: 1;">1.5:1</span><span style="flex: 1;">58</span>
+        </div>
+      </div>
+
+      <!-- Parameter sensitivity -->
+      <div style="margin-top: 16px; border-top: 1px solid #333; padding-top: 12px;">
+        <div style="color: #888; font-size: 11px; margin-bottom: 8px;">参数敏感性分析（双均线交叉 - 短期均线天数 vs 年化收益）</div>
+        <div style="display: flex; gap: 4px; align-items: flex-end; height: 60px;">
+          <div style="flex: 1; text-align: center;">
+            <div style="background: #2a1a1a; height: 20px; border-radius: 2px 2px 0 0;"></div>
+            <div style="color: #666; font-size: 9px; margin-top: 2px;">3日</div>
+          </div>
+          <div style="flex: 1; text-align: center;">
+            <div style="background: #1a2a1a; height: 45px; border-radius: 2px 2px 0 0;"></div>
+            <div style="color: #60a5fa; font-size: 9px; margin-top: 2px;">5日 ★</div>
+          </div>
+          <div style="flex: 1; text-align: center;">
+            <div style="background: #1a2a1a; height: 35px; border-radius: 2px 2px 0 0;"></div>
+            <div style="color: #666; font-size: 9px; margin-top: 2px;">8日</div>
+          </div>
+          <div style="flex: 1; text-align: center;">
+            <div style="background: #1a1a2e; height: 28px; border-radius: 2px 2px 0 0;"></div>
+            <div style="color: #666; font-size: 9px; margin-top: 2px;">10日</div>
+          </div>
+          <div style="flex: 1; text-align: center;">
+            <div style="background: #2a1a1a; height: 15px; border-radius: 2px 2px 0 0;"></div>
+            <div style="color: #666; font-size: 9px; margin-top: 2px;">15日</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page 5: Notebook -->
+<div class="section" style="margin-top: 24px;">
+  <h3>📓 页面五：Notebook 入口</h3>
+  <div class="mockup">
+    <div class="mockup-header">Jupyter Notebook 集成</div>
+    <div class="mockup-body" style="font-size: 13px;">
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 250px; border: 1px solid #444; border-radius: 6px; padding: 16px;">
+          <div style="color: #c084fc; font-weight: bold; margin-bottom: 8px;">快速启动</div>
+          <div style="color: #888; margin-bottom: 12px;">一键启动 JupyterLab，预装回测环境和数据连接</div>
+          <div style="background: #34d399; color: #000; padding: 8px 16px; border-radius: 6px; text-align: center; font-weight: bold;">启动 JupyterLab</div>
+        </div>
+        <div style="flex: 1; min-width: 250px; border: 1px solid #444; border-radius: 6px; padding: 16px;">
+          <div style="color: #c084fc; font-weight: bold; margin-bottom: 8px;">Notebook 模板</div>
+          <div style="color: #888; font-size: 12px;">
+            <div style="padding: 4px 0; border-bottom: 1px solid #222;">📄 策略开发模板 — 快速开始写策略</div>
+            <div style="padding: 4px 0; border-bottom: 1px solid #222;">📄 数据探索模板 — 探索可用数据源</div>
+            <div style="padding: 4px 0;">📄 回测结果分析 — 深度分析已有结果</div>
+          </div>
+        </div>
+        <div style="flex: 1; min-width: 250px; border: 1px solid #444; border-radius: 6px; padding: 16px;">
+          <div style="color: #c084fc; font-weight: bold; margin-bottom: 8px;">最近 Notebooks</div>
+          <div style="color: #888; font-size: 12px;">
+            <div style="padding: 4px 0; border-bottom: 1px solid #222;">📓 连涨策略研究.ipynb <span style="color: #666;">— 2天前</span></div>
+            <div style="padding: 4px 0; border-bottom: 1px solid #222;">📓 多因子筛选.ipynb <span style="color: #666;">— 5天前</span></div>
+            <div style="padding: 4px 0;">📓 回撤分析.ipynb <span style="color: #666;">— 1周前</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

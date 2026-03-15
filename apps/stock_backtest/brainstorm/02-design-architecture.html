@@ -1,0 +1,91 @@
+<h2>设计方案 - 整体架构与数据流</h2>
+<p class="subtitle">stock_backtest 系统全貌</p>
+
+<div class="mockup">
+  <div class="mockup-header">系统架构图</div>
+  <div class="mockup-body" style="font-size: 13px;">
+    <!-- Layer 1: Frontend -->
+    <div style="border: 2px solid #60a5fa; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+      <div style="color: #60a5fa; font-weight: bold; font-size: 15px; margin-bottom: 12px;">🖥 React Frontend (Vite + Ant Design + ECharts)</div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div style="background: #1e3a5f; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 120px; text-align: center;">策略管理<br><span style="color: #888; font-size: 11px;">模板选择 / 代码编辑</span></div>
+        <div style="background: #1e3a5f; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 120px; text-align: center;">回测配置<br><span style="color: #888; font-size: 11px;">参数 / 时间 / 标的</span></div>
+        <div style="background: #1e3a5f; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 120px; text-align: center;">结果分析<br><span style="color: #888; font-size: 11px;">收益曲线 / 交易明细</span></div>
+        <div style="background: #1e3a5f; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 120px; text-align: center;">策略对比<br><span style="color: #888; font-size: 11px;">多策略横向对比</span></div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div style="text-align: center; color: #666; margin: 4px 0;">▼ REST API + WebSocket ▼</div>
+
+    <!-- Layer 2: Backend -->
+    <div style="border: 2px solid #34d399; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+      <div style="color: #34d399; font-weight: bold; font-size: 15px; margin-bottom: 12px;">⚙️ FastAPI Backend</div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+        <div style="background: #1a3a2a; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 140px; text-align: center;">策略 Router<br><span style="color: #888; font-size: 11px;">CRUD / 模板 / 验证</span></div>
+        <div style="background: #1a3a2a; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 140px; text-align: center;">回测 Router<br><span style="color: #888; font-size: 11px;">提交 / 状态 / 结果</span></div>
+        <div style="background: #1a3a2a; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 140px; text-align: center;">分析 Router<br><span style="color: #888; font-size: 11px;">指标计算 / 归因</span></div>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div style="background: #2a2a1a; padding: 10px 14px; border-radius: 6px; flex: 1; min-width: 200px; border: 1px solid #fbbf24;">
+          <div style="color: #fbbf24; font-weight: bold; margin-bottom: 6px;">🔄 回测引擎 (ProcessPoolExecutor)</div>
+          <div style="color: #888; font-size: 12px;">
+            Backtrader 封装层<br>
+            · MySQL → Backtrader DataFeed 适配器<br>
+            · 策略代码动态加载 & 沙箱执行<br>
+            · 回测结果序列化 → MySQL<br>
+            · WebSocket 进度推送
+          </div>
+        </div>
+        <div style="background: #2a1a2a; padding: 10px 14px; border-radius: 6px; flex: 1; min-width: 200px; border: 1px solid #c084fc;">
+          <div style="color: #c084fc; font-weight: bold; margin-bottom: 6px;">📊 数据适配层</div>
+          <div style="color: #888; font-size: 12px;">
+            统一数据接口<br>
+            · MySQL 多表查询 → DataFrame<br>
+            · DataFrame → bt.feeds 转换<br>
+            · 数据缓存 (LRU, 按标的+日期范围)<br>
+            · 新数据源插件式注册
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div style="text-align: center; color: #666; margin: 4px 0;">▼ SQLAlchemy ▼</div>
+
+    <!-- Layer 3: Storage -->
+    <div style="border: 2px solid #f472b6; border-radius: 10px; padding: 16px;">
+      <div style="color: #f472b6; font-weight: bold; font-size: 15px; margin-bottom: 12px;">💾 MySQL (stock_database)</div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div style="background: #2a1a2a; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 130px;">
+          <div style="color: #f9a8d4; font-weight: bold; font-size: 12px;">现有数据表</div>
+          <div style="color: #888; font-size: 11px; margin-top: 4px;">daily_kline<br>daily_basic<br>moneyflow<br>index_daily<br>top_list<br>stock_basic</div>
+        </div>
+        <div style="background: #2a1a2a; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 130px;">
+          <div style="color: #f9a8d4; font-weight: bold; font-size: 12px;">新增 - 策略表</div>
+          <div style="color: #888; font-size: 11px; margin-top: 4px;">strategies<br><span style="color: #666;">(名称/代码/参数/作者)</span></div>
+        </div>
+        <div style="background: #2a1a2a; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 130px;">
+          <div style="color: #f9a8d4; font-weight: bold; font-size: 12px;">新增 - 回测表</div>
+          <div style="color: #888; font-size: 11px; margin-top: 4px;">backtest_runs<br><span style="color: #666;">(配置/状态/结果)</span><br>backtest_trades<br><span style="color: #666;">(每笔交易明细)</span><br>backtest_daily<br><span style="color: #666;">(每日净值)</span></div>
+        </div>
+        <div style="background: #2a1a2a; padding: 8px 14px; border-radius: 6px; flex: 1; min-width: 130px;">
+          <div style="color: #f9a8d4; font-weight: bold; font-size: 12px;">新增 - 模板表</div>
+          <div style="color: #888; font-size: 11px; margin-top: 4px;">strategy_templates<br><span style="color: #666;">(预置策略模板)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>核心数据流</h3>
+  <div style="background: #1a1a2e; padding: 16px; border-radius: 8px; font-size: 13px; line-height: 2;">
+    <div><span style="color: #60a5fa;">① 配置回测</span> → 用户选择策略模板或编写代码，设置参数、时间范围、标的池</div>
+    <div><span style="color: #34d399;">② 提交任务</span> → POST /api/backtest/run → 创建 backtest_run 记录（pending）→ 提交到进程池</div>
+    <div><span style="color: #fbbf24;">③ 执行回测</span> → 子进程加载策略代码 → 数据适配层从 MySQL 读取数据 → 转为 bt.feeds → Backtrader 执行</div>
+    <div><span style="color: #c084fc;">④ 进度推送</span> → 子进程通过回调更新状态 → WebSocket 推送进度给前端</div>
+    <div><span style="color: #f472b6;">⑤ 结果存储</span> → 回测完成 → 提取交易记录、每日净值、绩效指标 → 写入 MySQL</div>
+    <div><span style="color: #f9a8d4;">⑥ 结果展示</span> → 前端拉取结果 → 收益曲线、交易明细、风险指标、归因分析</div>
+  </div>
+</div>

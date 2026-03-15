@@ -1,5 +1,0 @@
-from apps.stock_data_platform.demo_test import main
-
-
-if __name__ == "__main__":
-    main()

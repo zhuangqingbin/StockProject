@@ -12,7 +12,7 @@ from apps.stock_data_platform.common.config import TOKEN
 
 """
 统一处理 重试 + backoff、简单限流、可选本地 pickle 缓存
-    默认缓存到 DataStore/Temp/.tushare_cache, TTL 默认 24h
+    默认缓存到 app 内 .cache/tushare, TTL 默认 24h
 """
 
 @dataclass(frozen=True)
@@ -55,8 +55,8 @@ class TuShareClient:
             os.makedirs(self.cache_dir, exist_ok=True)
 
     def _default_cache_dir(self) -> str:
-        project_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        return os.path.join(project_root, "DataStore", "Temp", ".tushare_cache")
+        app_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        return os.path.join(app_root, ".cache", "tushare")
 
     def _sleep_if_needed(self) -> None:
         min_interval = float(self.config.min_interval_seconds or 0.0)

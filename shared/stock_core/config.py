@@ -6,45 +6,53 @@ from .env import bootstrap_project_env
 bootstrap_project_env(__file__)
 
 
-def _get_env(name: str, default: str = "") -> str:
+def get_env(name: str, default: str = "") -> str:
     value = os.getenv(name)
     if value is None:
         return default
     return value.strip()
 
 
-def _get_int(name: str, default: int) -> int:
-    raw_value = _get_env(name, str(default))
+def get_int(name: str, default: int) -> int:
+    raw_value = get_env(name, str(default))
     try:
         return int(raw_value)
     except ValueError as exc:
         raise ValueError(f"Environment variable {name} must be an integer, got {raw_value!r}") from exc
 
 
-def _get_csv(name: str, default: str = "") -> list[str]:
-    raw_value = _get_env(name, default)
+def get_csv(name: str, default: str = "") -> list[str]:
+    raw_value = get_env(name, default)
     return [item.strip() for item in raw_value.split(",") if item.strip()]
 
 
-TOKEN = _get_env("TUSHARE_TOKEN")
+_get_env = get_env
+_get_int = get_int
+_get_csv = get_csv
 
-MAIL_HOST = _get_env("MAIL_HOST", "smtp.gmail.com")
-MAIL_USER = _get_env("MAIL_USER")
-MAIL_TOKEN = _get_env("MAIL_TOKEN")
-SENDER = _get_env("MAIL_SENDER", MAIL_USER)
-RECEVIERS = _get_csv("MAIL_RECEIVERS")
+TOKEN = get_env("TUSHARE_TOKEN")
+
+MAIL_HOST = get_env("MAIL_HOST", "smtp.gmail.com")
+MAIL_USER = get_env("MAIL_USER")
+MAIL_TOKEN = get_env("MAIL_TOKEN")
+SENDER = get_env("MAIL_SENDER", MAIL_USER)
+RECEVIERS = get_csv("MAIL_RECEIVERS")
 RECEIVERS = RECEVIERS
-SENDER_NAME = _get_env("MAIL_SENDER_NAME", "量化机器人")
-RECEVIER_NAME = _get_env("MAIL_RECEIVER_NAME", "终端用户")
+SENDER_NAME = get_env("MAIL_SENDER_NAME", "量化机器人")
+RECEVIER_NAME = get_env("MAIL_RECEIVER_NAME", "终端用户")
+RECEIVER_NAME = RECEVIER_NAME
 
-MYSQL_USER = _get_env("MYSQL_USER", "root")
-MYSQL_PASSWORD = _get_env("MYSQL_PASSWORD")
-MYSQL_HOST = _get_env("MYSQL_HOST", "localhost")
-MYSQL_PORT = _get_int("MYSQL_PORT", 3306)
-MYSQL_DATABASE = _get_env("MYSQL_DATABASE", "stock_database")
-MYSQL_CHARSET = _get_env("MYSQL_CHARSET", "utf8")
+MYSQL_USER = get_env("MYSQL_USER", "root")
+MYSQL_PASSWORD = get_env("MYSQL_PASSWORD")
+MYSQL_HOST = get_env("MYSQL_HOST", "localhost")
+MYSQL_PORT = get_int("MYSQL_PORT", 3306)
+MYSQL_DATABASE = get_env("MYSQL_DATABASE", "stock_database")
+MYSQL_CHARSET = get_env("MYSQL_CHARSET", "utf8")
 
 __all__ = [
+    "get_env",
+    "get_int",
+    "get_csv",
     "TOKEN",
     "MAIL_HOST",
     "MAIL_USER",
@@ -54,6 +62,7 @@ __all__ = [
     "RECEIVERS",
     "SENDER_NAME",
     "RECEVIER_NAME",
+    "RECEIVER_NAME",
     "MYSQL_USER",
     "MYSQL_PASSWORD",
     "MYSQL_HOST",

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import date, datetime
 
-from .database import Base
+from .infrastructure.database import Base
 
 
 # ==================== SQLAlchemy 模型 ====================

@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+:root {
+  --terminal-bg: #081019;
+  --terminal-panel: rgba(11, 20, 32, 0.9);
+  --terminal-panel-strong: #102033;
+  --terminal-line: rgba(224, 174, 116, 0.2);
+  --terminal-accent: #e0ae74;
+  --terminal-up: #ff7a66;
+  --terminal-down: #6fd0b3;
+  --terminal-muted: #9aa7b8;
+}
+
+@theme inline {
+  --color-background: var(--terminal-bg);
+  --color-foreground: #ffffff;
+  --font-sans: var(--font-terminal-body);
+  --font-display: var(--font-terminal-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(224, 174, 116, 0.18), transparent 32%),
+    radial-gradient(circle at top right, rgba(111, 208, 179, 0.12), transparent 26%),
+    radial-gradient(circle at 50% 120%, rgba(255, 122, 102, 0.08), transparent 24%),
+    var(--terminal-bg);
+  color: #ffffff;
+  font-family: var(--font-terminal-body), sans-serif;
+  min-height: 100vh;
+}
+
+body::before {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 100% 4px, 4px 100%;
+  content: "";
+  inset: 0;
+  opacity: 0.12;
+  pointer-events: none;
+  position: fixed;
+}
+
+.font-display {
+  font-family: var(--font-terminal-display), sans-serif;
+}
+
+.terminal-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 38%),
+    var(--terminal-panel);
+  border: 1px solid var(--terminal-line);
+  border-radius: 30px 12px 30px 12px;
+  box-shadow: 0 0 0 1px rgba(224, 174, 116, 0.08) inset, 0 30px 80px rgba(0, 0, 0, 0.28);
+  padding: 1.5rem;
+  position: relative;
+}
+
+.terminal-panel::before {
+  background: linear-gradient(90deg, var(--terminal-accent), transparent);
+  content: "";
+  height: 1px;
+  left: 1.5rem;
+  position: absolute;
+  right: 1.5rem;
+  top: 0;
+}
+
+.terminal-button,
+.terminal-button-active,
+.terminal-tab,
+.terminal-tab-active,
+.terminal-input {
+  background: rgba(9, 16, 25, 0.82);
+  border: 1px solid var(--terminal-line);
+  color: white;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.terminal-button,
+.terminal-button-active,
+.terminal-tab,
+.terminal-tab-active {
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+}
+
+.terminal-button:hover,
+.terminal-tab:hover {
+  border-color: rgba(224, 174, 116, 0.55);
+  color: var(--terminal-accent);
+}
+
+.terminal-button-active,
+.terminal-tab-active {
+  background: linear-gradient(180deg, rgba(224, 174, 116, 0.22), rgba(224, 174, 116, 0.08));
+  border-color: rgba(224, 174, 116, 0.55);
+  color: var(--terminal-accent);
+}
+
+.terminal-input {
+  border-radius: 999px;
+  min-height: 2.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+}
+
+.terminal-input:focus {
+  outline: 1px solid rgba(224, 174, 116, 0.6);
+  outline-offset: -1px;
+}

@@ -1,30 +1,19 @@
 # StockProject
 
-This repository now uses a monorepo layout with two maintained applications.
+This repository keeps only the maintained runtime and the shared infrastructure it needs.
 
-## Applications
+## Root Structure
 
-- `apps/stock_data_platform/`
-  - TuShare-based stock data fetching, utility code, and local data workflows.
-- `apps/stock_bi/`
-  - A-share market BI application with FastAPI backend and frontend assets.
-
-## Shared Root Areas
-
-- `DataStore/`
-  - Shared local data storage used by the maintained applications.
+- `apps/`
+  - maintained application code
 - `shared/stock_core/`
-  - Shared configuration and database helpers reused by both maintained applications.
-- `docs/`
-  - Design notes, implementation plans, and project documentation.
-- `experiments/`
-  - Research notebooks, backtesting studies, prototypes, and historical side work.
-- `assets/`
-  - Books, screenshots, generated charts, and other non-code artifacts.
-
-## Compatibility Layer
-
-The root `DataFetch/`, `common/`, `main.py`, and `demo_test.py` remain as thin compatibility entrypoints so older imports still resolve while the repository settles into the new layout.
+  - shared environment and database helpers used by both apps
+- `.env.example`
+  - environment variable template
+- `pyproject.toml`
+  - pytest discovery configuration
+- `.gitignore`
+  - local artifact ignore rules
 
 ## Layout
 
@@ -33,15 +22,13 @@ The root `DataFetch/`, `common/`, `main.py`, and `demo_test.py` remain as thin c
 |-- apps/
 |   |-- stock_bi/
 |   `-- stock_data_platform/
-|-- DataFetch/
-|-- common/
-|-- DataStore/
-|-- assets/
-|-- docs/
-|-- experiments/
+|       |-- .cache/
+|       `-- scripts/
 |-- shared/
-|-- main.py
-`-- requirements.txt
+|-- .env.example
+|-- .gitignore
+|-- README.md
+`-- pyproject.toml
 ```
 
 ## Local Configuration
@@ -51,6 +38,8 @@ Secrets are expected in environment variables, not in source files. See `.env.ex
 Important variables:
 
 - `TUSHARE_TOKEN`
+- `STOCK_DATA_DAILY_SCHEDULE_HOUR`
+- `STOCK_DATA_DAILY_SCHEDULE_MINUTE`
 - `MYSQL_USER`
 - `MYSQL_PASSWORD`
 - `MYSQL_HOST`
@@ -66,14 +55,16 @@ Important variables:
 Install stock data platform dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install -r apps/stock_data_platform/requirements.txt
 ```
+
+Maintained app runtimes are expected to work on both `x86_64` and `arm64`. Use each app's local virtual environment strategy rather than mixing user-level Python packages across architectures.
 
 Run the stock data platform demo:
 
 ```bash
 export TUSHARE_TOKEN=your_token
-python3 main.py
+python3 apps/stock_data_platform/main.py
 ```
 
 Run the BI application:
@@ -86,5 +77,14 @@ cd apps/stock_bi/codex
 Run the maintained test suite:
 
 ```bash
-./scripts/run_tests.sh
+./apps/stock_data_platform/scripts/run_tests.sh
 ```
+
+## App Notes
+
+- `apps/stock_data_platform/`
+  - upstream data fetch and daily write workflows
+  - `.cache/` is the app-local transient cache directory
+  - `scripts/` contains the maintained test, daily-job, and schedule-install entrypoints
+- `apps/stock_bi/codex/`
+  - FastAPI backend and frontend BI application

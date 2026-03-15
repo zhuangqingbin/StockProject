@@ -4,7 +4,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
 
-from ..cache import cache
+from ..infrastructure.cache import cache
 from ..modules.market_summary.application import (
     build_latest_date_payload,
     build_indices_payload,
@@ -38,7 +38,8 @@ from ..modules.stock_detail.service import (
     get_industry_detail,
     get_stock_detail,
 )
-from ..precompute import get_summary, get_latest_trade_date, check_data_consistency
+from ..modules.realtime_updates.service import sync_market_data_update
+from ..precompute import check_data_consistency, get_latest_trade_date, get_summary, precompute_and_save
 
 router = APIRouter(prefix="/api/market", tags=["market"])
 
@@ -264,10 +265,9 @@ async def api_search(
 @router.post("/precompute/{trade_date}")
 async def api_precompute(trade_date: str):
     """手动触发预计算"""
-    from ..precompute import precompute_and_save
     target_date = trade_date.replace("-", "")
     try:
-        summary = precompute_and_save(target_date)
+        precompute_and_save(target_date)
         return {"status": "success", "trade_date": target_date}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -286,6 +286,15 @@ async def api_notify_update():
     from .websocket import notify_data_update
     result = await notify_data_update()
     return result
+
+
+@router.post("/sync-update/{trade_date}")
+async def api_sync_update(trade_date: str):
+    """预计算最新交易日并通知前端刷新"""
+    try:
+        return await sync_market_data_update(trade_date)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/stock/{ts_code}")

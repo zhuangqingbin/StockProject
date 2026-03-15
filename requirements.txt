@@ -1,1 +1,0 @@
--r apps/stock_data_platform/requirements.txt

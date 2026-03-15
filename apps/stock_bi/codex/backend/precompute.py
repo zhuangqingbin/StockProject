@@ -6,7 +6,7 @@ import json
 from typing import Optional, Dict, Any, List
 from sqlalchemy import text
 
-from .database import engine
+from .infrastructure.database import engine
 from .modules.precompute_read_model.service import (
     build_or_load_summary,
     convert_decimal,

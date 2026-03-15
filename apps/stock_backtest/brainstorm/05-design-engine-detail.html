@@ -1,0 +1,266 @@
+<h2>设计方案 - 回测引擎与技术细节</h2>
+<p class="subtitle">Backtrader 集成、策略安全执行、绩效分析体系</p>
+
+<!-- Engine Architecture -->
+<div class="section">
+  <h3>回测引擎执行流程</h3>
+  <div class="mockup">
+    <div class="mockup-header">单次回测的完整生命周期</div>
+    <div class="mockup-body" style="font-size: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="background: #1e3a5f; padding: 8px 14px; border-radius: 6px; min-width: 140px; text-align: center;">
+            <div style="color: #60a5fa; font-weight: bold;">① 接收请求</div>
+            <div style="color: #888; font-size: 11px;">FastAPI Router</div>
+          </div>
+          <div style="color: #444;">→</div>
+          <div style="color: #888; font-size: 11px; flex: 1;">
+            验证参数 → 创建 backtest_runs 记录 (status=pending) → 返回 run_id
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="background: #2a2a1a; padding: 8px 14px; border-radius: 6px; min-width: 140px; text-align: center;">
+            <div style="color: #fbbf24; font-weight: bold;">② 提交进程池</div>
+            <div style="color: #888; font-size: 11px;">ProcessPoolExecutor</div>
+          </div>
+          <div style="color: #444;">→</div>
+          <div style="color: #888; font-size: 11px; flex: 1;">
+            submit(run_backtest, run_id, config) → status=running → 返回 Future
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="background: #1a2a2a; padding: 8px 14px; border-radius: 6px; min-width: 140px; text-align: center;">
+            <div style="color: #34d399; font-weight: bold;">③ 子进程执行</div>
+            <div style="color: #888; font-size: 11px;">run_backtest()</div>
+          </div>
+          <div style="color: #444;">→</div>
+          <div style="color: #888; font-size: 11px; flex: 1;">
+            以下全在子进程中执行 ↓
+          </div>
+        </div>
+
+        <!-- Sub-steps indented -->
+        <div style="margin-left: 40px; border-left: 2px solid #333; padding-left: 16px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="color: #c084fc; min-width: 20px;">3a</span>
+            <span style="color: #ccc;">加载策略代码</span>
+            <span style="color: #666; font-size: 11px;">— strategy_loader 动态导入, 校验继承自 bt.Strategy</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="color: #c084fc; min-width: 20px;">3b</span>
+            <span style="color: #ccc;">准备数据</span>
+            <span style="color: #666; font-size: 11px;">— data_registry 查找所需 Plugin → query MySQL → DataFrame → bt.feeds</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="color: #c084fc; min-width: 20px;">3c</span>
+            <span style="color: #ccc;">配置 Cerebro</span>
+            <span style="color: #666; font-size: 11px;">— 添加 DataFeed, Strategy, Broker (cash, commission), Analyzer, Observer</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="color: #c084fc; min-width: 20px;">3d</span>
+            <span style="color: #ccc;">执行回测</span>
+            <span style="color: #666; font-size: 11px;">— cerebro.run(), 通过回调更新进度到共享队列</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="color: #c084fc; min-width: 20px;">3e</span>
+            <span style="color: #ccc;">提取结果</span>
+            <span style="color: #666; font-size: 11px;">— result_extractor 解析交易记录、每日净值、Analyzer 输出</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="background: #2a1a2a; padding: 8px 14px; border-radius: 6px; min-width: 140px; text-align: center;">
+            <div style="color: #f472b6; font-weight: bold;">④ 结果持久化</div>
+            <div style="color: #888; font-size: 11px;">result_extractor</div>
+          </div>
+          <div style="color: #444;">→</div>
+          <div style="color: #888; font-size: 11px; flex: 1;">
+            写入 backtest_trades + backtest_daily → 计算 metrics → 更新 backtest_runs (status=completed)
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="background: #1a1a2e; padding: 8px 14px; border-radius: 6px; min-width: 140px; text-align: center;">
+            <div style="color: #60a5fa; font-weight: bold;">⑤ 通知前端</div>
+            <div style="color: #888; font-size: 11px;">WebSocket</div>
+          </div>
+          <div style="color: #444;">→</div>
+          <div style="color: #888; font-size: 11px; flex: 1;">
+            Future 回调 → WebSocket 推送完成事件 → 前端自动刷新结果
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Progress Mechanism -->
+<div class="section" style="margin-top: 24px;">
+  <h3>进度推送机制</h3>
+  <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 250px; border: 1px solid #444; border-radius: 8px; padding: 14px;">
+      <div style="color: #fbbf24; font-weight: bold; margin-bottom: 8px;">子进程 → 主进程</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.8;">
+        使用 <span style="color: #ccc;">multiprocessing.Queue</span><br>
+        子进程在 Backtrader 的 next() 回调中<br>
+        按固定间隔 (每处理 N 个 bar) 写入进度<br>
+        <span style="font-family: monospace; color: #666;">queue.put({"run_id": 1, "progress": 67})</span>
+      </div>
+    </div>
+    <div style="flex: 1; min-width: 250px; border: 1px solid #444; border-radius: 8px; padding: 14px;">
+      <div style="color: #34d399; font-weight: bold; margin-bottom: 8px;">主进程 → 前端</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.8;">
+        后台 asyncio task 轮询 Queue<br>
+        通过 <span style="color: #ccc;">WebSocket</span> 推送给订阅的客户端<br>
+        同时更新 DB 中的 progress 字段<br>
+        <span style="font-family: monospace; color: #666;">ws.send({"type": "progress", "run_id": 1, ...})</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Strategy Safety -->
+<div class="section" style="margin-top: 24px;">
+  <h3>策略代码安全执行</h3>
+  <div style="border: 1px solid #ef4444; border-radius: 8px; padding: 16px;">
+    <div style="color: #ef4444; font-weight: bold; margin-bottom: 12px;">安全边界设计 (小团队场景)</div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px;">
+      <div style="flex: 1; min-width: 200px;">
+        <div style="color: #ccc; font-weight: bold; margin-bottom: 6px;">代码加载</div>
+        <ul style="color: #888; margin: 0; padding-left: 16px; line-height: 1.8;">
+          <li>动态 import，非 exec/eval</li>
+          <li>校验必须继承 bt.Strategy</li>
+          <li>校验必须实现 next() 方法</li>
+        </ul>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+        <div style="color: #ccc; font-weight: bold; margin-bottom: 6px;">资源限制</div>
+        <ul style="color: #888; margin: 0; padding-left: 16px; line-height: 1.8;">
+          <li>超时控制 (默认 5 分钟)</li>
+          <li>子进程隔离，崩溃不影响主服务</li>
+          <li>最大并发任务数限制</li>
+        </ul>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+        <div style="color: #ccc; font-weight: bold; margin-bottom: 6px;">信任模型</div>
+        <ul style="color: #888; margin: 0; padding-left: 16px; line-height: 1.8;">
+          <li>小团队 = 信任用户代码</li>
+          <li>不做沙箱 (过度工程化)</li>
+          <li>通过代码审查保障安全</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Metrics System -->
+<div class="section" style="margin-top: 24px;">
+  <h3>绩效指标体系</h3>
+  <div class="mockup">
+    <div class="mockup-header">metrics.py 计算的完整指标集</div>
+    <div class="mockup-body" style="font-size: 12px;">
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+
+        <div style="flex: 1; min-width: 200px;">
+          <div style="color: #34d399; font-weight: bold; margin-bottom: 8px;">收益指标</div>
+          <div style="color: #888; line-height: 1.8; font-size: 11px;">
+            • 总收益率<br>
+            • 年化收益率<br>
+            • 月度收益率序列<br>
+            • 超额收益 (vs 基准)<br>
+            • Alpha / Beta
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 200px;">
+          <div style="color: #ef4444; font-weight: bold; margin-bottom: 8px;">风险指标</div>
+          <div style="color: #888; line-height: 1.8; font-size: 11px;">
+            • 最大回撤 (幅度 + 持续天数)<br>
+            • 年化波动率<br>
+            • 下行波动率<br>
+            • VaR (95%)<br>
+            • 最大连续亏损天数
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 200px;">
+          <div style="color: #60a5fa; font-weight: bold; margin-bottom: 8px;">风险调整指标</div>
+          <div style="color: #888; line-height: 1.8; font-size: 11px;">
+            • 夏普比率<br>
+            • 索提诺比率<br>
+            • Calmar 比率<br>
+            • 信息比率<br>
+            • 收益回撤比
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 200px;">
+          <div style="color: #fbbf24; font-weight: bold; margin-bottom: 8px;">交易统计</div>
+          <div style="color: #888; line-height: 1.8; font-size: 11px;">
+            • 总交易次数<br>
+            • 胜率<br>
+            • 盈亏比<br>
+            • 平均持仓天数<br>
+            • 最大单笔盈利/亏损
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 200px;">
+          <div style="color: #c084fc; font-weight: bold; margin-bottom: 8px;">归因分析</div>
+          <div style="color: #888; line-height: 1.8; font-size: 11px;">
+            • 行业暴露分布<br>
+            • 个股贡献排名<br>
+            • 滚动夏普/回撤<br>
+            • 月度热力图<br>
+            • 参数敏感性矩阵
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tech Stack Summary -->
+<div class="section" style="margin-top: 24px;">
+  <h3>技术栈汇总</h3>
+  <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px;">
+    <div style="flex: 1; min-width: 200px; border: 1px solid #444; border-radius: 8px; padding: 14px;">
+      <div style="color: #60a5fa; font-weight: bold; margin-bottom: 8px;">前端</div>
+      <div style="color: #888; line-height: 1.8;">
+        React 18 + TypeScript<br>
+        Vite (构建工具)<br>
+        Ant Design 5 (UI 组件)<br>
+        ECharts 5 (图表)<br>
+        Monaco Editor (代码编辑器)<br>
+        Zustand (状态管理)<br>
+        React Router (路由)
+      </div>
+    </div>
+    <div style="flex: 1; min-width: 200px; border: 1px solid #444; border-radius: 8px; padding: 14px;">
+      <div style="color: #34d399; font-weight: bold; margin-bottom: 8px;">后端</div>
+      <div style="color: #888; line-height: 1.8;">
+        Python 3.11+<br>
+        FastAPI + Uvicorn<br>
+        SQLAlchemy 2.0 (ORM)<br>
+        Backtrader (回测引擎)<br>
+        Pandas / NumPy (数据处理)<br>
+        PyMySQL (数据库驱动)<br>
+        Pydantic v2 (数据验证)
+      </div>
+    </div>
+    <div style="flex: 1; min-width: 200px; border: 1px solid #444; border-radius: 8px; padding: 14px;">
+      <div style="color: #f472b6; font-weight: bold; margin-bottom: 8px;">基础设施</div>
+      <div style="color: #888; line-height: 1.8;">
+        MySQL 8.0 (共用 stock_database)<br>
+        JupyterLab (Notebook 环境)<br>
+        WebSocket (实时通信)<br>
+        ProcessPoolExecutor (任务执行)<br>
+        共用 shared/stock_core (配置/DB)
+      </div>
+    </div>
+  </div>
+</div>

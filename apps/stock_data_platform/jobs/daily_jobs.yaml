@@ -1,0 +1,74 @@
+jobs:
+  - name: stock_daily
+    fetcher: StockDailyFetch
+    table_name: stock_daily
+    mirror_table_names:
+      - daily_kline
+    trigger_stock_bi_sync: true
+    params:
+      trade_date: "{{ trade_date_compact }}"
+    scope_columns:
+      - trade_date
+
+  - name: stock_daily_basic
+    fetcher: StockDailyBasicFetch
+    table_name: stock_daily_basic
+    mirror_table_names:
+      - daily_basic
+    trigger_stock_bi_sync: true
+    params:
+      trade_date: "{{ trade_date_compact }}"
+    scope_columns:
+      - trade_date
+
+  - name: money_flow
+    fetcher: MoneyFlowFetch
+    table_name: stock_money_flow
+    mirror_table_names:
+      - moneyflow
+    trigger_stock_bi_sync: true
+    params:
+      trade_date: "{{ trade_date_compact }}"
+    scope_columns:
+      - trade_date
+
+  - name: money_flow_hsgt
+    fetcher: MoneyFlowHSGTFetch
+    table_name: stock_money_flow_hsgt
+    mirror_table_names:
+      - moneyflow_hsgt
+    trigger_stock_bi_sync: true
+    params:
+      trade_date: "{{ trade_date_compact }}"
+    scope_columns:
+      - trade_date
+
+  - name: index_daily
+    fetcher: IndexDailyFetch
+    table_name: stock_index_daily
+    mirror_table_names:
+      - index_daily
+    trigger_stock_bi_sync: true
+    params:
+      trade_date: "{{ trade_date_compact }}"
+    scope_columns:
+      - trade_date
+
+  - name: top_list
+    fetcher: TopListFetch
+    table_name: stock_top_list
+    mirror_table_names:
+      - top_list
+    trigger_stock_bi_sync: true
+    params:
+      trade_date: "{{ trade_date_compact }}"
+    scope_columns:
+      - trade_date
+
+  - name: stk_limit
+    fetcher: StkLimitFetch
+    table_name: stock_stk_limit
+    params:
+      trade_date: "{{ trade_date_compact }}"
+    scope_columns:
+      - trade_date

@@ -9,10 +9,10 @@ from typing import List, Optional
 import json
 import asyncio
 
-from ..database import get_db
+from ..infrastructure.cache import cache
+from ..infrastructure.database import get_db
 from ..modules.chat_query.application import resolve_intent
 from ..models import ChatRequest, ChatResponse
-from ..cache import cache
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
