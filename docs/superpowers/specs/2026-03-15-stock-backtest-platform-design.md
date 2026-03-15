@@ -2,7 +2,7 @@
 
 > 日期: 2026-03-15
 > 状态: Draft
-> 视觉稿: `.superpowers/brainstorm/71511-1773510849/` 目录下的 HTML 文件
+> 视觉稿: `apps/stock_backtest/brainstorm/` 目录下的 HTML 文件
 
 ## 1. 概述
 
@@ -527,7 +527,7 @@ V1 沿用 `Base.metadata.create_all(engine)` 方式在应用启动时自动建�
 
 ## 10. 附录：视觉稿索引
 
-brainstorm 过程中的可视化设计稿保存在 `.superpowers/brainstorm/71511-1773510849/` 目录：
+brainstorm 过程中的可视化设计稿保存在 `apps/stock_backtest/brainstorm/` 目录：
 
 | 文件 | 内容 |
 |------|------|
