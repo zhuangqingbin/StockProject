@@ -19,7 +19,7 @@ FAVICON_SVG_PATH = FAVICON_DIR / "favicon.svg"
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="data_explorer API",
+        title="Jimmy发发发 API",
         version="0.1.0",
         docs_url="/api/docs",
         redoc_url="/api/redoc",
@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     def root() -> dict[str, str]:
-        return {"name": "data_explorer"}
+        return {"name": "Jimmy发发发"}
 
     @app.get("/favicon.ico", include_in_schema=False)
     def favicon_ico() -> FileResponse:

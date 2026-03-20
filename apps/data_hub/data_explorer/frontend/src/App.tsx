@@ -105,7 +105,7 @@ const App = () => {
           <div>
             <Text className="eyebrow">只读数据库看板</Text>
             <Title level={3} className="title">
-              data_explorer
+              Jimmy发发发
             </Title>
           </div>
           <Space>

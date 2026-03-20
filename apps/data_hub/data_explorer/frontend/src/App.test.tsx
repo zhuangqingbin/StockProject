@@ -248,6 +248,12 @@ describe("data_explorer app shell", () => {
     });
   });
 
+  test("shows the configured site name in the top bar", async () => {
+    renderApp();
+
+    expect(await screen.findByRole("heading", { name: "Jimmy发发发" })).toBeInTheDocument();
+  });
+
   test("loads the current category table list, filters within the category, and opens table detail", async () => {
     const user = userEvent.setup();
 

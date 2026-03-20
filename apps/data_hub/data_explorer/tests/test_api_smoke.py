@@ -15,6 +15,17 @@ def test_create_app_exposes_health_endpoint():
     assert response.json() == {"status": "healthy"}
 
 
+def test_create_app_uses_configured_site_name():
+    app = create_app()
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert app.title == "Jimmy发发发 API"
+    assert response.status_code == 200
+    assert response.json() == {"name": "Jimmy发发发"}
+
+
 def test_create_app_serves_favicon():
     client = TestClient(create_app())
 
@@ -33,6 +44,7 @@ def test_frontend_index_references_svg_favicon():
 
     assert 'rel="icon"' in index_html
     assert '/favicon.ico' in index_html
+    assert "<title>Jimmy发发发</title>" in index_html
     assert favicon_ico.exists()
 
 
