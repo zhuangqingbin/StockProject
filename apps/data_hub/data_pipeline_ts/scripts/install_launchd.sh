@@ -8,6 +8,7 @@ LOG_DIR="${REPO_ROOT}/apps/data_hub/data_pipeline_ts/.logs"
 RUN_SCRIPT="${REPO_ROOT}/apps/data_hub/data_pipeline_ts/scripts/run_daily.sh"
 PYTHON_RESOLVER="${REPO_ROOT}/shared/scripts/resolve_project_python.sh"
 DEFAULT_PATH="/usr/bin:/bin:/usr/sbin:/sbin:/Library/Developer/CommandLineTools/usr/bin"
+MAX_WORKERS=""
 mkdir -p "${AGENT_DIR}" "${LOG_DIR}"
 
 if [[ ! -x "${PYTHON_RESOLVER}" ]]; then
@@ -28,12 +29,43 @@ if [[ -z "${PROJECT_PYTHON}" ]]; then
   PROJECT_PYTHON="$("${PYTHON_RESOLVER}")"
 fi
 
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --max-workers)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --max-workers" >&2
+        exit 1
+      fi
+      if ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
+        echo "--max-workers must be a positive integer" >&2
+        exit 1
+      fi
+      MAX_WORKERS="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
 install_plan() {
   local label="$1"
   local hour="$2"
   local minute="$3"
   local profiles="$4"
+  local max_workers="$5"
   local plist_path="${AGENT_DIR}/${label}.plist"
+  local extra_program_arguments=""
+
+  if [[ -n "${max_workers}" ]]; then
+    extra_program_arguments=$(cat <<PLIST
+    <string>--max-workers</string>
+    <string>${max_workers}</string>
+PLIST
+)
+  fi
 
   cat > "${plist_path}" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -47,6 +79,7 @@ install_plan() {
     <string>${RUN_SCRIPT}</string>
     <string>--profiles</string>
     <string>${profiles}</string>
+${extra_program_arguments}
   </array>
   <key>WorkingDirectory</key>
   <string>${REPO_ROOT}</string>
@@ -88,7 +121,8 @@ while IFS='|' read -r profile hour minute; do
     "com.stockproject.stock-data-v1-orchestrator-v2.${profile//_/-}" \
     "${hour}" \
     "${minute}" \
-    "${profile}"
+    "${profile}" \
+    "${MAX_WORKERS}"
 done < <(
   cd "${REPO_ROOT}"
   PYTHONNOUSERSITE=1 "${PROJECT_PYTHON}" - <<'PY'

@@ -319,7 +319,7 @@ if [[ "${SKIP_CRON}" == "false" ]]; then
   if [[ "${OS}" == "macos" ]]; then
     LAUNCHD_SCRIPT="${REPO_ROOT}/apps/data_hub/data_pipeline_ts/scripts/install_launchd.sh"
     if [[ -f "${LAUNCHD_SCRIPT}" ]]; then
-      bash "${LAUNCHD_SCRIPT}"
+      bash "${LAUNCHD_SCRIPT}" --max-workers 1
       ok "launchd agents installed."
     else
       warn "install_launchd.sh not found."
@@ -336,7 +336,7 @@ for profile, spec in PROFILE_SPECS.items():
     if spec.cron is None:
         continue
     label = profile.value.replace('_', '-')
-    print(f'{spec.cron}  bash {run_script} --profiles {profile.value} >> {log_dir}/{label}.log 2>&1')
+    print(f'{spec.cron}  bash {run_script} --profiles {profile.value} --max-workers 1 >> {log_dir}/{label}.log 2>&1')
 " 2>/dev/null || true)"
 
     if [[ -n "${CRON_ENTRIES}" ]]; then
@@ -393,14 +393,14 @@ echo "  Run pipeline manually:"
 echo "    bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh --profiles trade_day_post_close_core"
 echo ""
 echo "  Backfill history:"
-echo "    bash apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh --profiles trade_day_post_close_core,trade_day_post_close_core,trade_day_post_close_extended,reference_trade_day_post_close,financial_calendar_nightly,reference_calendar_nightly --start 20250101 --end 20260101"
+echo "    bash apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh --profiles trade_day_post_close_core,trade_day_post_close_core,trade_day_post_close_extended,reference_trade_day_post_close,financial_calendar_nightly,reference_calendar_nightly --start 20250101 --end 20260101 --max-workers 1"
 echo ""
 echo "  Start data explorer (web UI):"
 echo "    bash apps/data_hub/data_explorer/scripts/run.sh dev"
 echo ""
 echo "  Install scheduled tasks (auto-run daily pipelines):"
 if [[ "${OS}" == "macos" ]]; then
-  echo "    bash apps/data_hub/data_pipeline_ts/scripts/install_launchd.sh"
+  echo "    bash apps/data_hub/data_pipeline_ts/scripts/install_launchd.sh --max-workers 1"
   echo "    # Verify: launchctl list | grep stockproject"
   echo "    # Unload: launchctl bootout gui/\$(id -u) ~/Library/LaunchAgents/com.stockproject.*.plist"
 else

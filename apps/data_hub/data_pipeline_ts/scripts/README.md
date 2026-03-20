@@ -68,6 +68,12 @@ macOS launchd 定时任务安装器，自动为所有有 cron 的 profile 生成
 3. 为每个 profile 生成 `~/Library/LaunchAgents/com.stockproject.stock-data-v1-orchestrator-v2.{profile}.plist`
 4. 用 `launchctl bootstrap` 注册到当前用户
 
+**可选参数**：
+
+- `--max-workers N`
+  - 给每个定时 profile 追加 `--max-workers N`
+  - 不传时保持旧行为，仍使用运行时代码默认并发
+
 **产出**：
 
 | Profile | Plist Label | 触发时间 |
@@ -83,4 +89,7 @@ macOS launchd 定时任务安装器，自动为所有有 cron 的 profile 生成
 
 ```bash
 bash apps/data_hub/data_pipeline_ts/scripts/install_launchd.sh
+
+# 让所有定时 profile 都以单 worker 运行
+bash apps/data_hub/data_pipeline_ts/scripts/install_launchd.sh --max-workers 1
 ```

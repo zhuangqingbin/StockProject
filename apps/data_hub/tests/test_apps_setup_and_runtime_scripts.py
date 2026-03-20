@@ -29,6 +29,16 @@ def test_data_hub_setup_script_delegates_to_shared_apps_setup():
     assert "exec" in content
 
 
+def test_apps_setup_script_defaults_backfill_and_scheduled_tasks_to_single_worker():
+    repo_root = Path(__file__).resolve().parents[3]
+    setup_script = (repo_root / "apps" / "setup.sh").read_text(encoding="utf-8")
+
+    assert 'bash "${LAUNCHD_SCRIPT}" --max-workers 1' in setup_script
+    assert '--profiles {profile.value} --max-workers 1' in setup_script
+    assert "run_backfill.sh" in setup_script
+    assert "--start 20250101 --end 20260101 --max-workers 1" in setup_script
+
+
 def test_data_explorer_runtime_script_uses_shared_apps_venv():
     repo_root = Path(__file__).resolve().parents[3]
     script = repo_root / "apps" / "data_hub" / "data_explorer" / "scripts" / "run.sh"
