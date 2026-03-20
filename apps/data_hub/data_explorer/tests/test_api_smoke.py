@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 from apps.data_hub.data_explorer.backend.main import create_app
@@ -11,6 +13,27 @@ def test_create_app_exposes_health_endpoint():
 
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
+
+
+def test_create_app_serves_favicon():
+    client = TestClient(create_app())
+
+    response = client.get("/favicon.ico", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/")
+    assert "icon" in response.headers["content-type"] or response.headers["content-type"].startswith("image/x-icon")
+
+
+def test_frontend_index_references_svg_favicon():
+    index_html = (
+        Path(__file__).resolve().parents[1] / "frontend" / "index.html"
+    ).read_text(encoding="utf-8")
+    favicon_ico = Path(__file__).resolve().parents[1] / "frontend" / "public" / "favicon.ico"
+
+    assert 'rel="icon"' in index_html
+    assert '/favicon.ico' in index_html
+    assert favicon_ico.exists()
 
 
 def test_create_app_exposes_catalog_endpoints(monkeypatch):

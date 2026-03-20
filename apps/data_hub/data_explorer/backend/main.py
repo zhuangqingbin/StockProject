@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 
 from apps.data_hub.data_explorer.backend.api.catalog import router as catalog_router
 from apps.data_hub.data_explorer.backend.api.database_metadata import (
@@ -8,6 +11,10 @@ from apps.data_hub.data_explorer.backend.api.database_metadata import (
 )
 from apps.data_hub.data_explorer.backend.api.monitor import router as monitor_router
 from apps.data_hub.data_explorer.backend.api.preview import router as preview_router
+
+FAVICON_DIR = Path(__file__).resolve().parents[1] / "frontend" / "public"
+FAVICON_ICO_PATH = FAVICON_DIR / "favicon.ico"
+FAVICON_SVG_PATH = FAVICON_DIR / "favicon.svg"
 
 
 def create_app() -> FastAPI:
@@ -30,6 +37,14 @@ def create_app() -> FastAPI:
     @app.get("/")
     def root() -> dict[str, str]:
         return {"name": "data_explorer"}
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon_ico() -> FileResponse:
+        return FileResponse(FAVICON_ICO_PATH, media_type="image/x-icon")
+
+    @app.get("/favicon.svg", include_in_schema=False)
+    def favicon_svg() -> FileResponse:
+        return FileResponse(FAVICON_SVG_PATH, media_type="image/svg+xml")
 
     return app
 
