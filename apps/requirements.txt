@@ -1,0 +1,12 @@
+sqlalchemy>=2.0
+pymysql>=1.1
+cryptography
+pandas<3
+tushare
+akshare
+pyyaml>=6.0
+ipykernel
+jupyterlab
+fastapi>=0.128
+uvicorn[standard]>=0.30
+httpx>=0.27

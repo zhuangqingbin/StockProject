@@ -1,0 +1,201 @@
+categories:
+  basic_data:
+    label: "Basic Data"
+  stock_market_data:
+    label: "Stock Market Data"
+  financial_data:
+    label: "Financial Data"
+  money_flow_data:
+    label: "Money Flow Data"
+  margin_data:
+    label: "Margin Data"
+  board_data:
+    label: "Board Data"
+  reference_data:
+    label: "Reference Data"
+  special_data:
+    label: "Special Data"
+  runtime:
+    label: "Runtime"
+  database_metadata:
+    label: "Database Metadata"
+
+tables:
+  stock_basic:
+    category: basic_data
+    description: "A股基础信息"
+  stock_company:
+    category: basic_data
+    description: "公司基础资料"
+  trade_cal:
+    category: basic_data
+    description: "交易日历"
+  stock_hsgt:
+    category: basic_data
+    description: "沪深港通股票列表"
+  stock_st:
+    category: basic_data
+    description: "ST股票状态"
+  stock_new_share:
+    category: basic_data
+    description: "新股发行与申购日历"
+
+  stock_daily:
+    category: stock_market_data
+    description: "A股日线行情"
+  stock_daily_basic:
+    category: stock_market_data
+    description: "每日基本面指标"
+  stock_daily_qfq:
+    category: stock_market_data
+    description: "A股前复权日线"
+  stock_suspend_d:
+    category: stock_market_data
+    description: "每日停复牌信息"
+  stock_stk_limit:
+    category: stock_market_data
+    description: "每日涨跌停价"
+  stock_hsgt_top10:
+    category: stock_market_data
+    description: "沪深港通前十大成交明细"
+  stock_ggt_top10:
+    category: stock_market_data
+    description: "港股通前十大成交明细"
+  stock_ggt_daily:
+    category: stock_market_data
+    description: "港股通日度统计"
+
+  stock_money_flow:
+    category: money_flow_data
+    description: "个股资金流向"
+  stock_money_flow_hsgt:
+    category: money_flow_data
+    description: "沪深港通资金流向"
+  stock_money_flow_dc:
+    category: money_flow_data
+    description: "扩展资金流向"
+  stock_money_flow_mkt_dc:
+    category: money_flow_data
+    description: "东方财富大盘资金流向"
+
+  stock_margin:
+    category: margin_data
+    description: "融资融券汇总"
+  stock_margin_detail:
+    category: margin_data
+    description: "融资融券明细"
+  stock_margin_secs:
+    category: margin_data
+    description: "融券券源信息"
+  stock_slb_len:
+    category: margin_data
+    description: "转融资交易汇总"
+
+  stock_top_list:
+    category: board_data
+    description: "龙虎榜上榜明细"
+  stock_top_inst:
+    category: board_data
+    description: "龙虎榜营业部明细"
+  stock_limit_list_d:
+    category: board_data
+    description: "每日涨跌停统计与名单"
+  stock_kpl_list:
+    category: board_data
+    description: "开盘啦题材榜单"
+  stock_hm_list:
+    category: board_data
+    description: "市场游资名录"
+  stock_kpl_concept_cons:
+    category: board_data
+    description: "开盘啦题材成分股"
+
+  stock_forecast_vip:
+    category: financial_data
+    description: "业绩预告"
+  stock_express_vip:
+    category: financial_data
+    description: "业绩快报"
+  stock_disclosure_date:
+    category: financial_data
+    description: "财报披露日期"
+  stock_dividend:
+    category: financial_data
+    description: "分红送股公告"
+  stock_fina_audit:
+    category: financial_data
+    description: "财务审计意见"
+  stock_income_vip:
+    category: financial_data
+    description: "利润表"
+  stock_balancesheet_vip:
+    category: financial_data
+    description: "资产负债表"
+  stock_cashflow_vip:
+    category: financial_data
+    description: "现金流量表"
+  stock_fina_indicator_vip:
+    category: financial_data
+    description: "财务指标"
+
+  stock_top10_holders:
+    category: reference_data
+    description: "十大股东"
+  stock_top10_floatholders:
+    category: reference_data
+    description: "十大流通股东"
+  stock_stk_holdernumber:
+    category: reference_data
+    description: "股东户数"
+  stock_stk_holdertrade:
+    category: reference_data
+    description: "股东增减持"
+  stock_pledge_stat:
+    category: reference_data
+    description: "股权质押统计"
+  stock_pledge_detail:
+    category: reference_data
+    description: "股权质押明细"
+  stock_repurchase:
+    category: reference_data
+    description: "回购公告"
+  stock_share_float:
+    category: reference_data
+    description: "限售股解禁 / 流通变动"
+  stock_block_trade:
+    category: reference_data
+    description: "大宗交易"
+
+  stock_report_rc:
+    category: special_data
+    description: "卖方盈利预测数据"
+  stock_cyq_perf:
+    category: special_data
+    description: "每日筹码及胜率"
+  stock_cyq_chips:
+    category: special_data
+    description: "每日筹码分布"
+  stock_stk_factor_pro:
+    category: special_data
+    description: "股票技术面因子（专业版）"
+  stock_ccass_hold:
+    category: special_data
+    description: "中央结算系统持股统计"
+  stock_hk_hold:
+    category: special_data
+    description: "沪深股通持股明细"
+  stock_stk_ah_comparison:
+    category: special_data
+    description: "AH股比价"
+  stock_stk_surv:
+    category: special_data
+    description: "机构调研数据"
+
+  job_run_log:
+    category: runtime
+    description: "任务执行日志"
+
+excluded_tables:
+  - precomputed_market
+  - precomputed_industry
+  - precomputed_limit

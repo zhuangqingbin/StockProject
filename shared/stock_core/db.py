@@ -1,12 +1,18 @@
 from sqlalchemy import create_engine
 
-from .config import MYSQL_CHARSET, MYSQL_DATABASE, MYSQL_HOST, MYSQL_PASSWORD, MYSQL_PORT, MYSQL_USER
+from .config import require_env, require_int
 
 
-def build_mysql_url() -> str:
+def build_mysql_url(database_env_name: str = "MYSQL_DATABASE") -> str:
+    user = require_env("MYSQL_USER")
+    password = require_env("MYSQL_PASSWORD")
+    host = require_env("MYSQL_HOST")
+    port = require_int("MYSQL_PORT")
+    database = require_env(database_env_name)
+    charset = require_env("MYSQL_CHARSET")
     return (
-        f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/"
-        f"{MYSQL_DATABASE}?charset={MYSQL_CHARSET}"
+        f"mysql+pymysql://{user}:{password}@{host}:{port}/"
+        f"{database}?charset={charset}"
     )
 
 

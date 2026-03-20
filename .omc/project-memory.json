@@ -1,0 +1,400 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773898477442,
+  "projectRoot": "/Users/qingbin.zhuang/Personal/StockProject",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": ">=3.11",
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "apps": {
+      "path": "apps",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773898477377,
+      "keyFiles": [
+        "__init__.py"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1773898477377,
+      "keyFiles": []
+    },
+    "experiments": {
+      "path": "experiments",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773898477378,
+      "keyFiles": []
+    },
+    "shared": {
+      "path": "shared",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773898477379,
+      "keyFiles": [
+        "__init__.py"
+      ]
+    },
+    "experiments/scripts": {
+      "path": "experiments/scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1773898477381,
+      "keyFiles": [
+        "mt.py"
+      ]
+    },
+    "shared/scripts": {
+      "path": "shared/scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1773898477381,
+      "keyFiles": [
+        "resolve_project_python.sh"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "apps/data_hub/data_explorer/README.md",
+      "accessCount": 3,
+      "lastAccessed": 1773900129642,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/scripts/run_daily.sh",
+      "accessCount": 3,
+      "lastAccessed": 1774001018905,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh",
+      "accessCount": 2,
+      "lastAccessed": 1773901431160,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/scripts/sync_infrastructure.sh",
+      "accessCount": 2,
+      "lastAccessed": 1773901432097,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/scripts/run.sh",
+      "accessCount": 2,
+      "lastAccessed": 1774001019538,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/main.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899979006,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/package.json",
+      "accessCount": 1,
+      "lastAccessed": 1773899979216,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/src/App.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773899979661,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/jobs/profiles.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899980921,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/jobs/specs.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899981118,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/jobs/catalog.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899981362,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/main.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899981633,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/api/catalog.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899982352,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/api/preview.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899982790,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/api/monitor.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899983017,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/api/database_metadata.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899983288,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/src/types.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773899983443,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899984707,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/runner.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899985117,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/base.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899985318,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/selection.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899985497,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/services/catalog_service.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899986242,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/services/preview_service.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899986463,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/services/monitor_service.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899986671,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/infrastructure/catalog_loader.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899986921,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/context.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899988536,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/infrastructure.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899989002,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/src/api.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773899990011,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/src/stores/navigationStore.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773899990216,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/src/pages/DirectoryPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773899990667,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/src/pages/MonitorPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773899990789,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/persistence.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899991649,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/rendering.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899992144,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/src/components/TablePreview.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773899993639,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/infrastructure/db.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899993844,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/infrastructure/mysql_introspection.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899994273,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/docs/prd.md",
+      "accessCount": 1,
+      "lastAccessed": 1773899994615,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/execution/calendar.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899995262,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/backend/services/table_detail_service.py",
+      "accessCount": 1,
+      "lastAccessed": 1773899998882,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/frontend/vite.config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773899999111,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_explorer/config/table_catalog.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1773900002669,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900003761,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/stock_daily.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900004090,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/basic_data/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900004326,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/infrastructure.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900004455,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/financial_data/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900007837,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/reference_data/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900008047,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/money_flow_data/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900008373,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/board_data/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900011463,
+      "type": "file"
+    },
+    {
+      "path": "apps/data_hub/data_pipeline_ts/fetchers/margin_data/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1773900011666,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

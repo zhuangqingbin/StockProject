@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the existing modular FastAPI read API, but add a precompute write path that aggregates raw market tables into `precomputed_market`, `precomputed_industry`, and `precomputed_limit`. Preserve the current frontend shell and only add a thin UI enhancement if it improves visibility of the new backend capability without broad redesign.
 
-**Tech Stack:** Python 3.9-compatible FastAPI, SQLAlchemy, cachetools, pytest, Next.js, React, Tailwind, Vitest
+**Tech Stack:** Python 3.11-compatible FastAPI, SQLAlchemy, cachetools, pytest, Next.js, React, Tailwind, Vitest
 
 ### Task 1: Lock the optimization scope in planning files
 

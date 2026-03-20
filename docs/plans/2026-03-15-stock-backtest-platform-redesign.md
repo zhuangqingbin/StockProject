@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the current FastAPI + Backtrader + React foundation, but expand the surface area around it instead of replacing the stack. Backend changes stay inside `apps/stock_backtest/backend` with small additions to the data module and strategy bootstrap flow; frontend changes extend the existing lazy-loaded route system into a fuller workbench with a dashboard, data lab, strategy studio, launch pad, analysis, compare, and research entry points.
 
-**Tech Stack:** Python 3.9+, FastAPI, SQLAlchemy 2, Pydantic v2, Backtrader, React 18, TypeScript, Vite, TanStack Query, Zustand, ECharts core, app-local UI primitives.
+**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy 2, Pydantic v2, Backtrader, React 18, TypeScript, Vite, TanStack Query, Zustand, ECharts core, app-local UI primitives.
 
 ### Task 1: Redesign Plan And Product Surface
 

@@ -1,16 +1,26 @@
+[tool.stockproject]
+python = ">=3.11"
+
 [tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
 pythonpath = ["."]
 testpaths = [
-    "apps/stock_bi/codex/tests",
-    "apps/stock_backtest/tests",
-    "apps/stock_bi_v1/tests",
-    "apps/stock_data_platform/tests",
+    "apps/data_hub/tests",
+    "apps/data_hub/data_explorer/tests",
+    "apps/data_hub/data_pipeline_ts/tests",
+    "apps/data_hub/data_pipeline_ak/tests",
 ]
 norecursedirs = [
     ".git",
     ".idea",
     ".worktrees",
-    "apps/stock_data_platform/.cache",
+    ".venv",
+    ".venv-*",
+    ".next",
+    "node_modules",
+    "dist",
+    ".cache",
+    ".logs",
     "assets",
     "experiments",
     "Work",

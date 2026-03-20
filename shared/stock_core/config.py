@@ -13,8 +13,23 @@ def get_env(name: str, default: str = "") -> str:
     return value.strip()
 
 
+def require_env(name: str) -> str:
+    value = get_env(name)
+    if not value:
+        raise ValueError(f"Missing required environment variable {name}")
+    return value
+
+
 def get_int(name: str, default: int) -> int:
     raw_value = get_env(name, str(default))
+    try:
+        return int(raw_value)
+    except ValueError as exc:
+        raise ValueError(f"Environment variable {name} must be an integer, got {raw_value!r}") from exc
+
+
+def require_int(name: str) -> int:
+    raw_value = require_env(name)
     try:
         return int(raw_value)
     except ValueError as exc:
@@ -42,16 +57,18 @@ SENDER_NAME = get_env("MAIL_SENDER_NAME", "量化机器人")
 RECEVIER_NAME = get_env("MAIL_RECEIVER_NAME", "终端用户")
 RECEIVER_NAME = RECEVIER_NAME
 
-MYSQL_USER = get_env("MYSQL_USER", "root")
+MYSQL_USER = get_env("MYSQL_USER")
 MYSQL_PASSWORD = get_env("MYSQL_PASSWORD")
-MYSQL_HOST = get_env("MYSQL_HOST", "localhost")
-MYSQL_PORT = get_int("MYSQL_PORT", 3306)
-MYSQL_DATABASE = get_env("MYSQL_DATABASE", "stock_database")
-MYSQL_CHARSET = get_env("MYSQL_CHARSET", "utf8")
+MYSQL_HOST = get_env("MYSQL_HOST")
+MYSQL_PORT = get_env("MYSQL_PORT")
+MYSQL_DATABASE = get_env("MYSQL_DATABASE")
+MYSQL_CHARSET = get_env("MYSQL_CHARSET")
 
 __all__ = [
     "get_env",
+    "require_env",
     "get_int",
+    "require_int",
     "get_csv",
     "TOKEN",
     "MAIL_HOST",

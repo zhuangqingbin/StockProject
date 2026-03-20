@@ -1,1 +1,0 @@
-"""Strategy management module."""
