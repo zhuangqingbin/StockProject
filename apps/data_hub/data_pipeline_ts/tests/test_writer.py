@@ -275,6 +275,69 @@ def test_writer_repairs_existing_varchar_columns_to_text_when_schema_requires_it
     ]
 
 
+def test_writer_repairs_existing_text_columns_to_longtext_when_schema_requires_it(monkeypatch):
+    executed_sql: list[str] = []
+
+    class DummyConnection:
+        def execute(self, statement):
+            executed_sql.append(str(statement))
+
+    class DummyBegin:
+        def __enter__(self):
+            return DummyConnection()
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    class DummyEngine:
+        def begin(self):
+            return DummyBegin()
+
+    class DummyInspector:
+        def get_columns(self, table_name):
+            return [
+                {"name": "ts_code", "type": "VARCHAR(16)"},
+                {"name": "surv_date", "type": "CHAR(8)"},
+                {"name": "content", "type": "TEXT"},
+            ]
+
+        def get_indexes(self, table_name):
+            return [
+                {"column_names": ["surv_date"]},
+                {"column_names": ["surv_date", "ts_code"]},
+            ]
+
+    monkeypatch.setattr(
+        "apps.data_hub.data_pipeline_ts.execution.persistence.MetaData.create_all",
+        lambda self, bind, tables, checkfirst: None,
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_pipeline_ts.execution.persistence.inspect",
+        lambda engine: DummyInspector(),
+    )
+
+    writer = DatabaseWriter(engine=DummyEngine())
+    job_definition = replace(
+        make_job_spec(),
+        table_name="survey_notes",
+        scope_columns=("surv_date",),
+        table_schema=TableSchema(
+            columns={
+                "ts_code": ColumnDef("VARCHAR(16)", nullable=False),
+                "surv_date": ColumnDef("CHAR(8)", nullable=False),
+                "content": ColumnDef("LONGTEXT"),
+            },
+            composite_indexes=[("surv_date",), ("surv_date", "ts_code")],
+        ),
+    )
+
+    writer.ensure_table(job_definition)
+
+    assert executed_sql == [
+        "ALTER TABLE `survey_notes` MODIFY COLUMN `content` LONGTEXT NULL"
+    ]
+
+
 def test_writer_repairs_existing_columns_before_adding_missing_columns(monkeypatch):
     executed_sql: list[str] = []
     inspector_calls = {"count": 0}

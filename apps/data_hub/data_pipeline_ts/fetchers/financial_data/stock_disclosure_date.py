@@ -15,7 +15,7 @@ class DisclosureDateFetch(BaseFetcher):
         ts_code: 股票代码
         end_date: 报告期(YYYYMMDD)
         pre_date: 预计披露日期(YYYYMMDD)
-        ann_date: 公告日期(YYYYMMDD)
+        ann_date: 最新披露公告日(YYYYMMDD)
         actual_date: 实际披露日期(YYYYMMDD)
     """
     fields = [
@@ -33,7 +33,7 @@ class DisclosureDateFetch(BaseFetcher):
             "end_date": ColumnDef("CHAR(8)", nullable=True, comment="报告期"),
             "pre_date": ColumnDef("CHAR(8)", nullable=True, comment="预计披露日期"),
             "actual_date": ColumnDef("CHAR(8)", nullable=True, comment="实际披露日期"),
-            "modify_date": ColumnDef("CHAR(8)", nullable=True, comment="披露日期修正记录"),
+            "modify_date": ColumnDef("TEXT", nullable=True, comment="披露日期修正记录"),
         },
         composite_indexes=[
             ('ann_date',),

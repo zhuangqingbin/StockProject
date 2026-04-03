@@ -77,10 +77,10 @@ bash apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh \
 ### 执行 `manual` 任务
 
 ```bash
-bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh --profiles manual --jobs stock_daily_qfq --as-of 2026-03-16
+bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh --profiles manual --jobs stock_daily,stock_daily_basic --as-of 2026-03-16
 ```
 
-`manual` profile 不支持 backfill；如果要跑 manual 任务，只能用 `run_daily.sh` 并显式指定 `--jobs`，例如 `hm_list`、`pledge_detail`、`cyq_chips`、`stock_daily_qfq`。
+`manual` profile 不支持 backfill；如果要跑 manual 任务，只能用 `run_daily.sh` 并显式指定 `--jobs`，例如 `hm_list`、`pledge_detail`、`cyq_chips`、`stock_daily`、`stock_daily_basic`。
 
 ### 启动数据浏览与监控服务
 

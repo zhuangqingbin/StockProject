@@ -6,11 +6,12 @@ from functools import lru_cache
 import inspect
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from apps.data_hub.data_explorer.backend.infrastructure.db import get_engine
 from apps.data_hub.data_explorer.backend.infrastructure.catalog_loader import load_table_catalog
 from apps.data_hub.data_explorer.backend.infrastructure.mysql_introspection import (
+    get_approximate_row_count,
     get_earliest_data_date,
     get_exact_row_count,
     get_latest_data_date,
@@ -38,6 +39,7 @@ STATUS_PRIORITY = {
 }
 VALID_DATABASE_SOURCES = {"ts", "ak"}
 DEFAULT_DATABASE_SOURCE = "ts"
+RowCountMode = Literal["exact", "approximate"]
 
 
 def _derive_status(
@@ -277,16 +279,25 @@ def get_table_database_source(
     return _coerce_database_source(entry.get("database_source"), table_name=table_name)
 
 
-def get_table_stats(table_names: list[str]) -> dict[str, dict[str, object]]:
+def get_table_stats(
+    table_names: list[str],
+    *,
+    row_count_mode: RowCountMode = "exact",
+) -> dict[str, dict[str, object]]:
     registry = get_table_registry()
     stats: dict[str, dict[str, object]] = {}
+    row_count_reader = (
+        get_exact_row_count
+        if row_count_mode == "exact"
+        else get_approximate_row_count
+    )
 
     for table_name in table_names:
         engine = get_engine(get_table_database_source(table_name, registry))
         job_name = str(registry.get(table_name, {}).get("job_name", ""))
         try:
             columns = get_table_columns(engine, table_name)
-            row_count = get_exact_row_count(engine, table_name)
+            row_count = row_count_reader(engine, table_name)
             earliest_data_date = get_earliest_data_date(engine, table_name, columns)
             latest_data_date = get_latest_data_date(engine, table_name, columns)
             last_updated = get_latest_job_success_time(engine, job_name) if job_name else None
@@ -339,7 +350,10 @@ def list_tables_by_category(category_key: str) -> list[dict[str, object]]:
         for value in get_table_registry().values()
         if value["category"] == category_key
     ]
-    stats = get_table_stats([item["table_name"] for item in tables])
+    stats = get_table_stats(
+        [item["table_name"] for item in tables],
+        row_count_mode="approximate",
+    )
 
     rows = [
         {

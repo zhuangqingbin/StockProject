@@ -144,14 +144,13 @@ Profile 是调度分组，决定触发时机、执行方式和回填行为。
 | StockStFetch | stock_st | ST 标记 |
 | NewShareFetch | stock_new_share | IPO 新股 |
 
-### 行情数据（8 个）
+### 行情数据（7 个）
 
 | Fetcher | 表 | 说明 |
 |---------|-----|------|
 | StockDailyFetch | stock_daily | A 股日线 OHLCV |
 | StockDailyBasicFetch | stock_daily_basic | 日指标（换手率、PE、PB） |
 | StockSuspendDFetch | stock_suspend_d | 每日停复牌信息 |
-| StockDailyQfqFetch | stock_daily_qfq | A 股前复权日线 |
 | StkLimitFetch | stock_stk_limit | 涨跌停价 |
 | HSGTTop10Fetch | stock_hsgt_top10 | 沪深港通 Top10 |
 | GGTTop10Fetch | stock_ggt_top10 | 港股通 Top10 |

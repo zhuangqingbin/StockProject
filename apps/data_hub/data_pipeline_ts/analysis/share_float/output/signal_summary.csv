@@ -1,0 +1,11 @@
+sig_big_unlock_high,n,avg_ret,med_ret,std_ret,win_rate,avg_ret_pct,signal,sig_unlock_shrink_vol,sig_unlock_rsi_overbought,sig_unlock_bearish_ma,sig_small_unlock_bullish
+False,4102,0.1269,0.0,0.4497,0.3671,12.6858,大比例解禁+高位 (unlock>5% & near boll_upper),,,,
+True,396,0.0295,0.0,0.1837,0.2525,2.9507,大比例解禁+高位 (unlock>5% & near boll_upper),,,,
+,3409,0.1045,0.0,0.3976,0.3552,10.4464,解禁+缩量 (unlock>1% & vol_ratio<0.8),False,,,
+,1089,0.1616,0.0,0.5292,0.3627,16.156,解禁+缩量 (unlock>1% & vol_ratio<0.8),True,,,
+,4330,0.1212,0.0,0.4399,0.3589,12.122,解禁+RSI超买 (unlock>1% & RSI6>80),,False,,
+,168,0.0427,0.0,0.2114,0.3095,4.2708,解禁+RSI超买 (unlock>1% & RSI6>80),,True,,
+,3032,0.1015,0.0,0.388,0.3559,10.1461,解禁+均线空头 (unlock>2% & MA5<MA20<MA60),,,False,
+,1466,0.1531,0.0,0.5142,0.3595,15.3089,解禁+均线空头 (unlock>2% & MA5<MA20<MA60),,,True,
+,4264,0.1112,0.0,0.4231,0.3476,11.123,小比例解禁+MACD多头 (unlock<1% & DIF>DEA),,,,False
+,234,0.2469,0.0169,0.5829,0.5299,24.6886,小比例解禁+MACD多头 (unlock<1% & DIF>DEA),,,,True

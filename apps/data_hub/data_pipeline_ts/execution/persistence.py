@@ -23,6 +23,12 @@ INDEX_UNSAFE_TEXT_TYPES = {
     "MEDIUMBLOB",
     "LONGBLOB",
 }
+TEXT_TYPE_RANK = {
+    "TINYTEXT": 1,
+    "TEXT": 2,
+    "MEDIUMTEXT": 3,
+    "LONGTEXT": 4,
+}
 
 _engine: Engine | None = None
 
@@ -154,6 +160,13 @@ def _runtime_log_column_sql(column: Column, engine: Engine) -> str:
     return f"{_quote_identifier(column.name)} {compiled_type} {nullable_sql}"
 
 
+def _text_type_rank(dtype: str) -> int | None:
+    normalized_dtype = dtype.upper()
+    if normalized_dtype.startswith("VARCHAR(") or normalized_dtype.startswith("CHAR("):
+        return 0
+    return TEXT_TYPE_RANK.get(normalized_dtype)
+
+
 def _needs_column_type_repair(existing_type: object, column_def: ColumnDef) -> bool:
     desired_dtype = column_def.dtype.upper()
 
@@ -161,11 +174,10 @@ def _needs_column_type_repair(existing_type: object, column_def: ColumnDef) -> b
     if desired_dtype.startswith("CHAR(") or desired_dtype.startswith("VARCHAR("):
         return normalized_existing_type in INDEX_UNSAFE_TEXT_TYPES
 
-    if desired_dtype == "TEXT":
-        return (
-            normalized_existing_type.startswith("VARCHAR(")
-            or normalized_existing_type.startswith("CHAR(")
-        )
+    desired_rank = _text_type_rank(desired_dtype)
+    if desired_rank is not None:
+        existing_rank = _text_type_rank(normalized_existing_type)
+        return existing_rank is not None and existing_rank < desired_rank
 
     return False
 

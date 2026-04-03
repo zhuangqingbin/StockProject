@@ -69,7 +69,6 @@ from apps.data_hub.data_pipeline_ts.fetchers.stock_market_data import (
     StkLimitFetch,
     StockDailyBasicFetch,
     StockDailyFetch,
-    StockDailyQfqFetch,
     StockSuspendDFetch,
 )
 from apps.data_hub.data_pipeline_ts.jobs.profiles import (
@@ -294,7 +293,7 @@ SPECIAL_DATA_JOBS = [
     ),
     _job(
         name="cyq_chips", table_name="stock_cyq_chips", fetcher_cls=CyqChipsFetch, api_name="cyq_chips", description="每日筹码分布",
-        profile=ProfileId.MANUAL, fetch_strategies=("full_market_stock_code_fanout", "custom_rate_limit_handling"), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date", "ts_code"),
+        profile=ProfileId.MANUAL, fetch_strategies=("full_market_stock_code_fanout", "custom_rate_limit_handling"), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date",),
     ),
     _job(
         name="stk_factor_pro", table_name="stock_stk_factor_pro", fetcher_cls=StkFactorProFetch, api_name="stk_factor_pro", description="股票技术面因子(专业版)",
@@ -321,19 +320,15 @@ SPECIAL_DATA_JOBS = [
 STOCK_MARKET_DATA_JOBS = [
     _job(
         name="stock_daily", table_name="stock_daily", fetcher_cls=StockDailyFetch, api_name="daily", description="股票日线行情",
-        profile=ProfileId.TRADE_DAY_POST_CLOSE_CORE, fetch_strategies=("direct",), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date",),
+        profile=ProfileId.MANUAL, fetch_strategies=("direct",), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date",),
     ),
     _job(
         name="stock_daily_basic", table_name="stock_daily_basic", fetcher_cls=StockDailyBasicFetch, api_name="daily_basic", description="股票日线基本指标",
-        profile=ProfileId.TRADE_DAY_POST_CLOSE_CORE, fetch_strategies=("direct",), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date",),
-    ),
-    _job(
-        name="stock_daily_qfq", table_name="stock_daily_qfq", fetcher_cls=StockDailyQfqFetch, api_name="pro_bar", description="A股前复权日线增量",
-        profile=ProfileId.MANUAL, fetch_strategies=("full_market_stock_code_fanout", "transport_pro_bar"), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date",),
+        profile=ProfileId.MANUAL, fetch_strategies=("direct",), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date",),
     ),
     _job(
         name="stock_suspend_d", table_name="stock_suspend_d", fetcher_cls=StockSuspendDFetch, api_name="suspend_d", description="每日停复牌信息增量",
-        profile=ProfileId.TRADE_DAY_POST_CLOSE_CORE, fetch_strategies=("direct",), params={"trade_date": "{current_date}"}, scope_columns=("trade_date",),
+        profile=ProfileId.TRADE_DAY_POST_CLOSE_CORE, fetch_strategies=("direct",), params={"trade_date": "{trade_date}"}, scope_columns=("trade_date",),
     ),
     _job(
         name="stk_limit", table_name="stock_stk_limit", fetcher_cls=StkLimitFetch, api_name="stk_limit", description="个股涨跌停价格",

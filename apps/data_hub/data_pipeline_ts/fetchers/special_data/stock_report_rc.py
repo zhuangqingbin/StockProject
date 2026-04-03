@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import replace
+from typing import Any, ClassVar
 
 import pandas as pd
 
 from apps.data_hub.data_pipeline_ts.fetchers.base import BaseFetcher, ColumnDef, TableSchema
+from apps.data_hub.data_pipeline_ts.fetchers.client import ClientConfig, TuShareClient
+
+
+REPORT_RC_MAX_CALLS_PER_MINUTE = 2
 
 
 class ReportRCFetch(BaseFetcher):
@@ -76,6 +81,23 @@ class ReportRCFetch(BaseFetcher):
             ("ts_code",),
         ],
     )
+    _shared_client: ClassVar[TuShareClient | None] = None
+
+    @classmethod
+    def _default_client(cls) -> TuShareClient:
+        if cls._shared_client is None:
+            cls._shared_client = TuShareClient(
+                config=replace(
+                    ClientConfig(),
+                    max_calls_per_minute=REPORT_RC_MAX_CALLS_PER_MINUTE,
+                )
+            )
+        return cls._shared_client
+
+    def __init__(self, client: Any | None = None):
+        if client is None:
+            client = self._default_client()
+        super().__init__(client=client)
 
     def read_data(self, **kwargs: Any) -> pd.DataFrame:
         frame = self.client.call(

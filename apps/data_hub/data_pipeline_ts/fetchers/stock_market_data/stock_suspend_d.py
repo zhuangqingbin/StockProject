@@ -30,7 +30,7 @@ class StockSuspendDFetch(BaseFetcher):
         columns={
             "ts_code": ColumnDef("VARCHAR(16)", nullable=True, comment="TS代码"),
             "trade_date": ColumnDef("CHAR(8)", nullable=True, comment="停复牌日期"),
-            "suspend_timing": ColumnDef("VARCHAR(16)", nullable=True, comment="日内停牌时间段"),
+            "suspend_timing": ColumnDef("TEXT", nullable=True, comment="日内停牌时间段"),
             "suspend_type": ColumnDef("VARCHAR(8)", nullable=True, comment="停复牌类型"),
         },
         composite_indexes=[

@@ -10,3 +10,7 @@ jupyterlab
 fastapi>=0.128
 uvicorn[standard]>=0.30
 httpx>=0.27
+aiomysql>=0.2
+loguru>=0.7
+numpy<2
+pydantic-settings>=2.0

@@ -28,6 +28,7 @@ from apps.data_hub.data_pipeline_ts.fetchers.reference_data.stock_pledge_detail 
 from apps.data_hub.data_pipeline_ts.fetchers.reference_data.stock_pledge_stat import PledgeStatFetch
 from apps.data_hub.data_pipeline_ts.fetchers.reference_data.stock_top10_floatholders import Top10FloatHoldersFetch
 from apps.data_hub.data_pipeline_ts.fetchers.reference_data.stock_top10_holders import Top10HoldersFetch
+from apps.data_hub.data_pipeline_ts.fetchers.special_data.stock_report_rc import ReportRCFetch
 from apps.data_hub.data_pipeline_ts.fetchers.special_data.stock_stk_factor_pro import StkFactorProFetch
 from apps.data_hub.data_pipeline_ts.fetchers.stock_market_data.stock_daily import StockDailyFetch
 from apps.data_hub.data_pipeline_ts.fetchers.stock_market_data.stock_hsgt_top10 import HSGTTop10Fetch
@@ -50,7 +51,6 @@ from apps.data_hub.data_pipeline_ts.jobs.profiles import ProfileId
 EXPECTED_JOB_FETCHERS = {
     "StockDailyFetch",
     "StockSuspendDFetch",
-    "StockDailyQfqFetch",
     "StockDailyBasicFetch",
     "MoneyFlowFetch",
     "MoneyFlowHSGTFetch",
@@ -141,7 +141,6 @@ def test_all_jobs_register_non_empty_fetch_strategies():
         ("fina_audit", ("full_market_stock_code_fanout",)),
         ("pledge_detail", ("full_market_stock_code_fanout", "snapshot_column")),
         ("hm_list", ("direct", "snapshot_column")),
-        ("stock_daily_qfq", ("full_market_stock_code_fanout", "transport_pro_bar")),
         ("cyq_chips", ("full_market_stock_code_fanout", "custom_rate_limit_handling")),
         ("top_list", ("direct", "post_fetch_dedup")),
     ],
@@ -217,7 +216,8 @@ def test_special_data_jobs_register_as_trade_date_driven_jobs(job_name, table_na
     ("job_name", "table_name", "api_name", "params", "profile"),
     [
         ("stock_suspend_d", "stock_suspend_d", "suspend_d", {"trade_date": "{current_date}"}, ProfileId.TRADE_DAY_POST_CLOSE_CORE),
-        ("stock_daily_qfq", "stock_daily_qfq", "pro_bar", {"trade_date": "{trade_date}"}, ProfileId.TRADE_DAY_POST_CLOSE_CORE),
+        ("stock_daily", "stock_daily", "daily", {"trade_date": "{trade_date}"}, ProfileId.MANUAL),
+        ("stock_daily_basic", "stock_daily_basic", "daily_basic", {"trade_date": "{trade_date}"}, ProfileId.MANUAL),
     ],
 )
 def test_calendar_market_jobs_register_expected_core_jobs(job_name, table_name, api_name, params, profile):
@@ -302,13 +302,33 @@ def test_all_tushare_fetchers_no_longer_declare_source_endpoint():
     assert all("source_endpoint" not in fetcher_cls.__dict__ for fetcher_cls in tushare_fetchers)
 
 
-def test_disclosure_date_schema_uses_compact_date_for_modify_date():
-    assert DisclosureDateFetch.table_schema.columns["modify_date"].dtype == "CHAR(8)"
+def test_disclosure_date_schema_uses_text_for_modify_date():
+    assert DisclosureDateFetch.table_schema.columns["modify_date"].dtype == "TEXT"
 
 
 def test_stock_company_schema_uses_text_for_long_business_fields():
     assert StockCompanyFetch.table_schema.columns["main_business"].dtype == "TEXT"
     assert StockCompanyFetch.table_schema.columns["business_scope"].dtype == "TEXT"
+
+
+def test_stk_surv_schema_uses_wide_text_columns_for_long_survey_fields():
+    fetcher = FETCHER_REGISTRY["StkSurvFetch"]
+
+    assert fetcher.table_schema.columns["rece_place"].dtype == "TEXT"
+    assert fetcher.table_schema.columns["rece_mode"].dtype == "TEXT"
+    assert fetcher.table_schema.columns["content"].dtype == "LONGTEXT"
+
+
+def test_share_float_schema_uses_text_for_holder_name():
+    fetcher = FETCHER_REGISTRY["ShareFloatFetch"]
+
+    assert fetcher.table_schema.columns["holder_name"].dtype == "TEXT"
+
+
+def test_stk_holdertrade_schema_uses_text_for_holder_name():
+    fetcher = FETCHER_REGISTRY["StkHolderTradeFetch"]
+
+    assert fetcher.table_schema.columns["holder_name"].dtype == "TEXT"
 
 
 def test_stock_daily_fetch_keeps_column_order_and_schema():
@@ -331,7 +351,7 @@ def test_stock_suspend_d_fetch_keeps_column_order_and_schema():
         {
             "ts_code": ["000001.SZ"],
             "trade_date": ["20260317"],
-            "suspend_timing": ["09:30-10:00"],
+            "suspend_timing": ["09:43-10:13,11:08-14:55"],
             "suspend_type": ["S"],
         }
     )
@@ -340,6 +360,7 @@ def test_stock_suspend_d_fetch_keeps_column_order_and_schema():
     result = fetcher.fetch(trade_date="20260317")
 
     assert list(result.columns) == fetcher.fields
+    assert fetcher.table_schema.columns["suspend_timing"].dtype == "TEXT"
     assert fetcher.table_schema.columns["suspend_type"].dtype == "VARCHAR(8)"
     client.call.assert_called_once_with("suspend_d", fields=",".join(fetcher.fields), trade_date="20260317")
 
@@ -378,118 +399,11 @@ def test_dividend_fetch_keeps_column_order_and_schema():
     client.call.assert_called_once_with("dividend", fields=",".join(fetcher.fields), ann_date="20260317")
 
 
-def test_stock_daily_qfq_fetch_uses_trade_date_to_fan_out_all_stock_codes():
-    fetcher_name = "StockDailyQfqFetch"
-    expected_freq = "D"
-    assert fetcher_name in FETCHER_REGISTRY
-    fetcher_cls = FETCHER_REGISTRY[fetcher_name]
-    client = MagicMock()
-    client.call.side_effect = [
-        pd.DataFrame({"ts_code": ["000001.SZ", "000002.SZ", "000001.SZ"]}),
-        pd.DataFrame(columns=["ts_code"]),
-        pd.DataFrame(columns=["ts_code"]),
-    ]
-    client.pro_bar.side_effect = [
-        pd.DataFrame(
-            {
-                "ts_code": ["000001.SZ"],
-                "trade_date": ["20260318"],
-                "open": [12.0],
-                "high": [12.5],
-                "low": [11.8],
-                "close": [12.3],
-                "pre_close": [12.1],
-                "change": [0.2],
-                "pct_chg": [1.65],
-                "vol": [1000.0],
-                "amount": [2000.0],
-            }
-        ),
-        pd.DataFrame(columns=StockDailyFetch.fields),
-    ]
-
-    fetcher = fetcher_cls(client=client)
-    result = fetcher.fetch(trade_date="20260318")
-
-    assert list(result.columns) == fetcher.fields
-    assert result["ts_code"].tolist() == ["000001.SZ"]
-    assert client.call.call_args_list == [
-        call("stock_basic", exchange="", list_status="L", fields="ts_code"),
-        call("stock_basic", exchange="", list_status="D", fields="ts_code"),
-        call("stock_basic", exchange="", list_status="P", fields="ts_code"),
-    ]
-    assert client.pro_bar.call_args_list == [
-        call(
-            ts_code="000001.SZ",
-            asset="E",
-            adj="qfq",
-            freq=expected_freq,
-            start_date="20260318",
-            end_date="20260318",
-        ),
-        call(
-            ts_code="000002.SZ",
-            asset="E",
-            adj="qfq",
-            freq=expected_freq,
-            start_date="20260318",
-            end_date="20260318",
-        ),
-    ]
-
-
 def test_removed_weekly_and_monthly_market_fetchers_are_not_exported():
     assert "StockWeeklyFetch" not in FETCHER_REGISTRY
     assert "StockMonthlyFetch" not in FETCHER_REGISTRY
     assert "StockWeeklyQfqFetch" not in FETCHER_REGISTRY
     assert "StockMonthlyQfqFetch" not in FETCHER_REGISTRY
-
-
-def test_stock_daily_qfq_fetch_uses_explicit_stock_codes_without_stock_basic_fanout():
-    assert "StockDailyQfqFetch" in FETCHER_REGISTRY
-    fetcher_cls = FETCHER_REGISTRY["StockDailyQfqFetch"]
-    client = MagicMock()
-    client.pro_bar.return_value = pd.DataFrame(
-        {
-            "ts_code": ["600000.SH"],
-            "trade_date": ["20260318"],
-            "open": [10.0],
-            "high": [10.5],
-            "low": [9.8],
-            "close": [10.3],
-            "pre_close": [10.1],
-            "change": [0.2],
-            "pct_chg": [1.98],
-            "vol": [3000.0],
-            "amount": [4000.0],
-        }
-    )
-
-    fetcher = fetcher_cls(client=client)
-    result = fetcher.fetch(stock_codes=["600000.SH"], trade_date="20260318")
-
-    assert list(result.columns) == fetcher.fields
-    client.call.assert_not_called()
-    client.pro_bar.assert_called_once_with(
-        ts_code="600000.SH",
-        asset="E",
-        adj="qfq",
-        freq="D",
-        start_date="20260318",
-        end_date="20260318",
-    )
-
-
-def test_stock_daily_qfq_fetch_rejects_single_ts_code_argument():
-    fetcher_cls = FETCHER_REGISTRY["StockDailyQfqFetch"]
-    client = MagicMock()
-    fetcher = fetcher_cls(client=client)
-
-    with pytest.raises(ValueError, match="stock_daily_qfq fetches require stock_codes"):
-        fetcher.fetch(ts_code="600000.SH", trade_date="20260318")
-
-    client.call.assert_not_called()
-    client.pro_bar.assert_not_called()
 
 
 def test_report_rc_fetch_passes_kwargs_directly():
@@ -580,9 +494,30 @@ def test_report_rc_fetch_accepts_direct_report_date():
     )
 
 
+def test_report_rc_fetch_uses_rate_limited_default_client_config():
+    fetcher = ReportRCFetch()
+
+    assert fetcher.client.config.max_calls_per_minute == 2
+
+
+def test_report_rc_fetch_reuses_shared_default_client():
+    first = ReportRCFetch()
+    second = ReportRCFetch()
+
+    assert first.client is second.client
+
+
 def test_special_data_holding_fetchers_use_bigint_for_large_share_counts():
     assert FETCHER_REGISTRY["CcassHoldFetch"].table_schema.columns["shareholding"].dtype == "BIGINT"
     assert FETCHER_REGISTRY["HKHoldFetch"].table_schema.columns["vol"].dtype == "BIGINT"
+
+
+def test_ccass_hold_schema_uses_text_for_long_security_names():
+    assert FETCHER_REGISTRY["CcassHoldFetch"].table_schema.columns["name"].dtype == "TEXT"
+
+
+def test_hk_hold_schema_uses_text_for_long_security_names():
+    assert FETCHER_REGISTRY["HKHoldFetch"].table_schema.columns["name"].dtype == "TEXT"
 
 
 def test_cyq_chips_fetch_fans_out_by_stock_codes_for_trade_date_runs():
@@ -782,8 +717,6 @@ def test_fina_audit_fetch_fans_out_by_stock_codes_for_scheduled_ann_date_runs():
     client = MagicMock()
     client.call.side_effect = [
         pd.DataFrame({"ts_code": ["000001.SZ", "000002.SZ", "000001.SZ"]}),
-        pd.DataFrame(columns=["ts_code"]),
-        pd.DataFrame(columns=["ts_code"]),
         pd.DataFrame(
             {
                 "ts_code": ["000001.SZ"],
@@ -827,8 +760,6 @@ def test_fina_audit_fetch_fans_out_by_stock_codes_for_scheduled_ann_date_runs():
     assert fetcher.table_schema.columns["audit_result"].dtype == "VARCHAR(64)"
     assert client.call.call_args_list == [
         call("stock_basic", exchange="", list_status="L", fields="ts_code"),
-        call("stock_basic", exchange="", list_status="D", fields="ts_code"),
-        call("stock_basic", exchange="", list_status="P", fields="ts_code"),
         call("fina_audit", ts_code="000001.SZ", fields=",".join(fetcher.fields), ann_date="20260317"),
         call("fina_audit", ts_code="000002.SZ", fields=",".join(fetcher.fields), ann_date="20260317"),
     ]
@@ -880,10 +811,43 @@ def test_fina_audit_fetch_requires_ann_date():
     client = MagicMock()
     fetcher = fetcher_cls(client=client)
 
-    with pytest.raises(ValueError, match="fina_audit fetches require ann_date"):
+    with pytest.raises(ValueError, match="fina_audit fetches require ann_date or start_date/end_date"):
         fetcher.fetch(stock_codes=["600000.SH"])
 
     client.call.assert_not_called()
+
+
+def test_fina_audit_fetch_accepts_start_end_date_ranges_without_ann_date():
+    assert "FinaAuditFetch" in FETCHER_REGISTRY
+    fetcher_cls = FETCHER_REGISTRY["FinaAuditFetch"]
+    client = MagicMock()
+    client.call.return_value = pd.DataFrame(
+        {
+            "ts_code": ["600000.SH"],
+            "ann_date": ["20260317"],
+            "end_date": ["20241231"],
+            "audit_result": ["标准无保留意见"],
+            "audit_fees": [890000.0],
+            "audit_agency": ["会计师事务所B"],
+            "audit_sign": ["签字会计师乙"],
+        }
+    )
+
+    fetcher = fetcher_cls(client=client)
+    result = fetcher.fetch(
+        stock_codes=["600000.SH"],
+        start_date="20260301",
+        end_date="20260331",
+    )
+
+    assert list(result.columns) == fetcher.fields
+    client.call.assert_called_once_with(
+        "fina_audit",
+        ts_code="600000.SH",
+        fields=",".join(fetcher.fields),
+        start_date="20260301",
+        end_date="20260331",
+    )
 
 
 def test_stock_hsgt_fetch_fans_out_by_default_types():
@@ -941,6 +905,133 @@ def test_kpl_list_fetch_fans_out_by_default_tags():
             "kpl_list",
             tag=tag,
             trade_date="20260317",
+            fields=",".join(fetcher.fields),
+        )
+        for tag in KPL_LIST_TAGS
+    ]
+
+
+def test_kpl_list_fetch_uses_rate_limited_default_client_config():
+    fetcher = KPLListFetch()
+
+    assert fetcher.client.config.min_interval_seconds == 0.35
+    assert fetcher.client.config.max_calls_per_minute == 190
+
+
+def test_kpl_list_fetch_waits_and_retries_after_rate_limit_errors():
+    client = MagicMock()
+    rate_limit_error = RuntimeError("TuShare call failed: kpl_list")
+    rate_limit_error.__cause__ = Exception("抱歉，您每分钟最多访问该接口200次，权限的具体详情访问：https://tushare.pro/document/1?doc_id=108。")
+    client.call.side_effect = [
+        rate_limit_error,
+        *[
+            pd.DataFrame(
+                {
+                    "trade_date": ["20260317"],
+                    "ts_code": [f"00000{index}.SZ"],
+                    "name": ["name"],
+                    "lu_time": [None],
+                    "ld_time": [None],
+                    "open_time": [None],
+                    "last_time": [None],
+                    "lu_desc": ["desc"],
+                    "tag": [tag],
+                    "theme": ["theme"],
+                    "net_change": [1.0],
+                    "bid_amount": [2.0],
+                    "status": ["status"],
+                    "bid_change": [3.0],
+                    "bid_turnover": [4.0],
+                    "lu_bid_vol": [5.0],
+                    "pct_chg": [6.0],
+                    "bid_pct_chg": [7.0],
+                    "rt_pct_chg": [8.0],
+                    "limit_order": [9.0],
+                    "amount": [10.0],
+                    "turnover_rate": [11.0],
+                    "free_float": [12.0],
+                    "lu_limit_order": [13.0],
+                }
+            )
+            for index, tag in enumerate(KPL_LIST_TAGS, start=1)
+        ],
+    ]
+
+    fetcher = KPLListFetch(client=client)
+    with patch("apps.data_hub.data_pipeline_ts.fetchers.board_data.stock_kpl_list.time.sleep") as sleep_mock:
+        result = fetcher.fetch(trade_date="20260317")
+
+    assert set(result["tag"]) == set(KPL_LIST_TAGS)
+    sleep_mock.assert_called_once_with(60.0)
+    assert client.call.call_args_list == [
+        call(
+            "kpl_list",
+            tag=KPL_LIST_TAGS[0],
+            trade_date="20260317",
+            fields=",".join(fetcher.fields),
+        ),
+        call(
+            "kpl_list",
+            tag=KPL_LIST_TAGS[0],
+            trade_date="20260317",
+            fields=",".join(fetcher.fields),
+        ),
+        *[
+            call(
+                "kpl_list",
+                tag=tag,
+                trade_date="20260317",
+                fields=",".join(fetcher.fields),
+            )
+            for tag in KPL_LIST_TAGS[1:]
+        ],
+    ]
+
+
+def test_kpl_list_fetch_supports_start_end_date_range_once():
+    client = MagicMock()
+    client.call.side_effect = [
+        pd.DataFrame(
+            {
+                "trade_date": ["20191231"],
+                "ts_code": [f"00000{index}.SZ"],
+                "name": ["name"],
+                "lu_time": [None],
+                "ld_time": [None],
+                "open_time": [None],
+                "last_time": [None],
+                "lu_desc": ["desc"],
+                "tag": [tag],
+                "theme": ["theme"],
+                "net_change": [1.0],
+                "bid_amount": [2.0],
+                "status": ["status"],
+                "bid_change": [3.0],
+                "bid_turnover": [4.0],
+                "lu_bid_vol": [5.0],
+                "pct_chg": [6.0],
+                "bid_pct_chg": [7.0],
+                "rt_pct_chg": [8.0],
+                "limit_order": [9.0],
+                "amount": [10.0],
+                "turnover_rate": [11.0],
+                "free_float": [12.0],
+                "lu_limit_order": [13.0],
+            }
+        )
+        for index, tag in enumerate(KPL_LIST_TAGS, start=1)
+    ]
+
+    fetcher = KPLListFetch(client=client)
+    result = fetcher.fetch(start_date="20171201", end_date="20200101")
+
+    assert set(result["tag"]) == set(KPL_LIST_TAGS)
+    assert client.call.call_args_list == [
+        call(
+            "kpl_list",
+            tag=tag,
+            start_date="20171201",
+            end_date="20200101",
             fields=",".join(fetcher.fields),
         )
         for tag in KPL_LIST_TAGS
@@ -1029,7 +1120,7 @@ def test_kpl_list_fetch_avoids_futurewarning_when_concatenating_sparse_frames():
     ("fetcher_cls", "message"),
     [
         (StockHsgtFetch, "stock_hsgt fetches require trade_date"),
-        (KPLListFetch, "kpl_list fetches require trade_date"),
+        (KPLListFetch, "kpl_list fetches require trade_date or start_date/end_date"),
     ],
 )
 def test_trade_date_only_fetchers_require_trade_date(fetcher_cls, message):

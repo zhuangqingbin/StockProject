@@ -8,6 +8,7 @@
 |------|------|
 | `run_daily.sh` | 主入口脚本，解析 Python 后调用 `main.py`，默认模式为 `once` |
 | `run_backfill.sh` | 便捷包装，等价于 `run_daily.sh --mode backfill "$@"` |
+| `run_job.sh` | 单 job 显式参数入口，等价于 `python -m apps.data_hub.data_pipeline_ts.run_job "$@"` |
 | `sync_infrastructure.sh` | 便捷包装，等价于 `run_daily.sh --mode infrastructure "$@"` |
 | `install_launchd.sh` | macOS launchd 定时任务安装器 |
 
@@ -45,6 +46,29 @@ bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh \
 bash apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh \
   --profiles trade_day_post_close_core \
   --start 20260101 --end 20260317
+```
+
+## `run_job.sh`
+
+单 job 显式参数入口，适合：
+
+- `manual` profile 下的快照或全市场 fan-out 任务
+- `kpl_list` / `report_rc` 这类不适合混入统一 profile 回放的范围补数
+- 需要直接传 `start_date` / `end_date` / `snapshot_date` 的一次性任务
+
+参数通过重复的 `--param key=value` 传入；数组/对象/布尔值支持 JSON 解析，其余值按字符串传递。
+
+```bash
+# 触发一次 hm_list 快照
+bash apps/data_hub/data_pipeline_ts/scripts/run_job.sh \
+  --job hm_list \
+  --param snapshot_date=20260318
+
+# 单独回补 report_rc 的一个时间窗口
+bash apps/data_hub/data_pipeline_ts/scripts/run_job.sh \
+  --job report_rc \
+  --param start_date=20260101 \
+  --param end_date=20260317
 ```
 
 ## `sync_infrastructure.sh`

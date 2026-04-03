@@ -61,7 +61,6 @@ execution.runner / execution.infrastructure
 
 | fetcher | 必填入口参数 | 可选覆盖参数 | 全市场状态范围 | 说明 |
 | --- | --- | --- | --- | --- |
-| `StockDailyQfqFetch` | `trade_date` 或 `start_date/end_date` | `stock_codes` | `("L",)` | 不能传单个 `ts_code`，内部用 `pro_bar` 拉前复权日线 |
 | `FinaAuditFetch` | `ann_date` | `stock_codes` | `("L",)` | 不能传单个 `ts_code`，适配按公告日调度的增量拉取 |
 | `PledgeDetailFetch` | `snapshot_date` | `stock_codes` | `("L",)` | 不能传单个 `ts_code`，结果额外补 `snapshot_date` |
 | `CyqChipsFetch` | `trade_date` 或 `start_date/end_date` | `stock_codes` | `("L",)` | 不能传单个 `ts_code`，有额外限流与 no-data 处理 |
@@ -93,7 +92,6 @@ execution.runner / execution.infrastructure
 
 | fetcher | 特殊逻辑 | 说明 |
 | --- | --- | --- |
-| `StockDailyQfqFetch` | 使用 `client.pro_bar()` | 固定 `asset="E"`, `adj="qfq"`, `freq="D"` |
 | `CyqChipsFetch` | 自定义 client 限流配置 | `min_interval_seconds=0.35`，`max_calls_per_minute=190` |
 | `CyqChipsFetch` | 特殊错误处理 | `"指定数据不存在"` 视为无数据，限流错误会等待后重试 |
 | `TopListFetch` | 去重 | 对 `trade_date + ts_code + reason` 去重 |
@@ -116,10 +114,9 @@ execution.runner / execution.infrastructure
 
 | table_name | fetcher | 说明 | 策略 |
 | --- | --- | --- | --- |
-| `stock_daily` | `StockDailyFetch` | 股票日线行情 | direct |
-| `stock_daily_basic` | `StockDailyBasicFetch` | 股票日线基本指标 | direct |
+| `stock_daily` | `StockDailyFetch` | 股票日线行情 | manual direct |
+| `stock_daily_basic` | `StockDailyBasicFetch` | 股票日线基本指标 | manual direct |
 | `stock_suspend_d` | `StockSuspendDFetch` | 每日停复牌信息 | direct |
-| `stock_daily_qfq` | `StockDailyQfqFetch` | 股票前复权日线 | full-market `ts_code` fan-out + `pro_bar` |
 | `stock_stk_limit` | `StkLimitFetch` | 个股涨跌停价格 | direct |
 | `stock_hsgt_top10` | `HSGTTop10Fetch` | 沪深港通十大成交股 | direct |
 | `stock_ggt_top10` | `GGTTop10Fetch` | 港股通十大成交股 | direct |

@@ -62,5 +62,5 @@ def test_data_hub_readme_documents_all_scheduled_and_manual_commands():
     )
 
     assert f"--profiles {scheduled_profiles}" in readme
-    assert "run_daily.sh --profiles manual --jobs stock_daily_qfq --as-of 2026-03-16" in readme
+    assert "run_daily.sh --profiles manual --jobs stock_daily,stock_daily_basic --as-of 2026-03-16" in readme
     assert "`manual` profile 不支持 backfill" in readme

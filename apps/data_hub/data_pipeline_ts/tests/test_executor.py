@@ -195,6 +195,8 @@ def test_kpl_concept_cons_is_grouped_with_trade_day_extended_jobs():
     profiles_by_job = {job.name: job.profile for job in ALL_JOBS}
 
     assert profiles_by_job["kpl_concept_cons"] is ProfileId.TRADE_DAY_POST_CLOSE_EXTENDED
+    assert profiles_by_job["stock_daily"] is ProfileId.MANUAL
+    assert profiles_by_job["stock_daily_basic"] is ProfileId.MANUAL
     assert profiles_by_job["hm_list"] is ProfileId.MANUAL
     assert profiles_by_job["pledge_detail"] is ProfileId.MANUAL
 

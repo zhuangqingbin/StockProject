@@ -38,12 +38,14 @@ def test_data_pipeline_ts_scripts_are_self_contained():
 
     run_daily = (scripts_dir / "run_daily.sh").read_text(encoding="utf-8")
     run_backfill = (scripts_dir / "run_backfill.sh").read_text(encoding="utf-8")
+    run_job = (scripts_dir / "run_job.sh").read_text(encoding="utf-8")
     sync_infrastructure = (scripts_dir / "sync_infrastructure.sh").read_text(encoding="utf-8")
     install_launchd = (scripts_dir / "install_launchd.sh").read_text(encoding="utf-8")
 
     assert "apps.data_hub.data_pipeline_ts.main" in run_daily
     assert "--mode once" not in run_daily
     assert "--mode backfill" in run_backfill
+    assert "apps.data_hub.data_pipeline_ts.run_job" in run_job
     assert "--mode infrastructure" in sync_infrastructure
     assert "data_pipeline_ts/scripts/run_daily.sh" in install_launchd
     assert "PROFILE_SPECS" in install_launchd

@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"ARCH=\\\"$(uname -m)\\\" && /Users/qingbin.zhuang/Personal/StockProject/apps/data_hub/.venv-${ARCH}/bin/python -c \\\"import pandas; print(pandas.__version__)\\\"\",\"description\":\"Check pandas vers...",
-  "error": "Exit code 127\n(eval):1: no such file or directory: /Users/qingbin.zhuang/Personal/StockProject/apps/data_hub/.venv-arm64/bin/python",
-  "timestamp": "2026-03-20T03:19:00.552Z",
-  "retry_count": 1
-}

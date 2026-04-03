@@ -37,7 +37,6 @@
 |---|---|---|
 | `stock_daily` | A 股日线行情 | 高频核心表 |
 | `stock_daily_basic` | 每日基本面指标 | 高频核心表 |
-| `stock_daily_qfq` | A 股前复权日线 | 逐股票聚合得到 |
 | `stock_suspend_d` | 每日停复牌信息 | 盘后核心 |
 | `stock_stk_limit` | 每日涨跌停价 | 盘前同步 |
 | `stock_hsgt_top10` | 沪深港通前十大成交明细 | 盘后扩展 |

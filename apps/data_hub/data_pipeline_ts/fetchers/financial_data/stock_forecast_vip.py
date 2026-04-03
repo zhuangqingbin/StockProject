@@ -14,8 +14,8 @@ class ForecastVipFetch(BaseFetcher):
     API params:
         ts_code: 股票代码
         ann_date: 公告日期(YYYYMMDD)
-        start_date: 开始日期(YYYYMMDD)
-        end_date: 结束日期(YYYYMMDD)
+        start_date: 公告开始日期(YYYYMMDD)
+        end_date: 公告结束日期(YYYYMMDD)
         period: 报告期(YYYYMMDD)
         type: 预告类型
     """

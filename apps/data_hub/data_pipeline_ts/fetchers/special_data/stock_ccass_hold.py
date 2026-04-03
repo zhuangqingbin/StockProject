@@ -32,7 +32,7 @@ class CcassHoldFetch(BaseFetcher):
         columns={
             "trade_date": ColumnDef("CHAR(8)", nullable=True, comment="交易日期"),
             "ts_code": ColumnDef("VARCHAR(16)", nullable=True, comment="股票代码"),
-            "name": ColumnDef("VARCHAR(32)", nullable=True, comment="股票名称"),
+            "name": ColumnDef("TEXT", nullable=True, comment="股票名称"),
             "shareholding": ColumnDef("BIGINT", nullable=True, comment="持股量"),
             "hold_nums": ColumnDef("INT", nullable=True, comment="参与者数目"),
             "hold_ratio": ColumnDef("DOUBLE", nullable=True, comment="持股占比"),

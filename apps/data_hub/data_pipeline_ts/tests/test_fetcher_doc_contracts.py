@@ -24,9 +24,6 @@ DOC_API_ALIASES = {
     "forecast_vip": "forecast",
     "income_vip": "income",
 }
-QFQ_FETCHER_NAMES = {
-    "StockDailyQfqFetch",
-}
 DOC_FIELD_SUFFIXES = {
     "HMListFetch": ("snapshot_date",),
     "PledgeDetailFetch": ("snapshot_date",),
@@ -81,8 +78,6 @@ def _resolve_fetcher_doc_api(fetcher_cls: type[BaseFetcher]) -> str:
         return "pledge_detail"
     if fetcher_cls is StockStFetch:
         return "stock_st"
-    if fetcher_cls.__name__ in QFQ_FETCHER_NAMES:
-        return "daily"
 
     source = inspect.getsource(fetcher_cls)
     calls = re.findall(r'self\.client\.call\(\s*"([^"]+)"', source)
@@ -115,7 +110,6 @@ def test_new_money_flow_fetcher_is_covered_by_tushare_doc_contracts():
 
 def test_new_stock_market_fetchers_are_covered_by_tushare_doc_contracts():
     assert "StockSuspendDFetch" in FETCHER_REGISTRY
-    assert "StockDailyQfqFetch" in FETCHER_REGISTRY
     assert "StockWeeklyFetch" not in FETCHER_REGISTRY
     assert "StockMonthlyFetch" not in FETCHER_REGISTRY
     assert "StockWeeklyQfqFetch" not in FETCHER_REGISTRY

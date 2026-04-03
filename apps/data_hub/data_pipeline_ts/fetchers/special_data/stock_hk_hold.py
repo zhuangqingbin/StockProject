@@ -35,7 +35,7 @@ class HKHoldFetch(BaseFetcher):
             "code": ColumnDef("VARCHAR(16)", nullable=True, comment="原始代码"),
             "trade_date": ColumnDef("CHAR(8)", nullable=True, comment="交易日期"),
             "ts_code": ColumnDef("VARCHAR(16)", nullable=True, comment="TS代码"),
-            "name": ColumnDef("VARCHAR(32)", nullable=True, comment="股票名称"),
+            "name": ColumnDef("TEXT", nullable=True, comment="股票名称"),
             "vol": ColumnDef("BIGINT", nullable=True, comment="持股数量"),
             "ratio": ColumnDef("DOUBLE", nullable=True, comment="持股占比"),
             "exchange": ColumnDef("VARCHAR(8)", nullable=True, comment="交易所类型"),

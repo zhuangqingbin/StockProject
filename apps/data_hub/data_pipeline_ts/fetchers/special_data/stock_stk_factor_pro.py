@@ -12,6 +12,7 @@ class StkFactorProFetch(BaseFetcher):
     API: https://tushare.pro/document/2?doc_id=328
     股票技术面因子(专业版), 5000积分
         获取股票每日技术面因子, 覆盖不复权、前复权、后复权口径。
+        已经覆盖日线行情、日线基础指标以及前复权口径的日级字段能力
     API params:
         ts_code: 股票代码
         trade_date: 交易日期(YYYYMMDD)

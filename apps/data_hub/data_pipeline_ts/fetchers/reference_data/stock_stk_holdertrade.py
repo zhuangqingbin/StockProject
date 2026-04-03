@@ -38,7 +38,7 @@ class StkHolderTradeFetch(BaseFetcher):
         columns={
             "ts_code": ColumnDef("VARCHAR(16)", nullable=True, comment="TS代码"),
             "ann_date": ColumnDef("CHAR(8)", nullable=True, comment="公告日期"),
-            "holder_name": ColumnDef("VARCHAR(128)", nullable=True, comment="股东名称"),
+            "holder_name": ColumnDef("TEXT", nullable=True, comment="股东名称"),
             "holder_type": ColumnDef("VARCHAR(8)", nullable=True, comment="股东类型G高管P个人C公司"),
             "in_de": ColumnDef("VARCHAR(8)", nullable=True, comment="类型IN增持DE减持"),
             "change_vol": ColumnDef("DOUBLE", nullable=True, comment="变动数量"),

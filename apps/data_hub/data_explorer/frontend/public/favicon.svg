@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="data explorer favicon">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f1f38"/>
+      <stop offset="1" stop-color="#14345e"/>
+    </linearGradient>
+    <linearGradient id="rise" x1="0" y1="24" x2="0" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2cf0b0"/>
+      <stop offset="1" stop-color="#0bb27a"/>
+    </linearGradient>
+    <linearGradient id="fall" x1="0" y1="16" x2="0" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff8b7b"/>
+      <stop offset="1" stop-color="#e45454"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="18" x2="0" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#78b5ff"/>
+      <stop offset="1" stop-color="#1053ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#bg)"/>
+  <path d="M18 14V50" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M32 14V50" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M46 14V50" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M12 20H52" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M12 34H52" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M12 48H52" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M20 22V46" stroke="#8ef6d1" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="16.5" y="28" width="7" height="12" rx="2.4" fill="url(#rise)"/>
+  <path d="M32 18V40" stroke="#ffb4aa" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="28.5" y="22" width="7" height="14" rx="2.4" fill="url(#fall)"/>
+  <path d="M44 24V50" stroke="#c2d8ff" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="40.5" y="30" width="7" height="16" rx="2.4" fill="url(#accent)"/>
+  <path d="M13 50C18 44 23 41 28 38C33 35 39 31 51 21" fill="none" stroke="#e7f1ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="50" cy="21" r="2.4" fill="#f5fbff"/>
+</svg>

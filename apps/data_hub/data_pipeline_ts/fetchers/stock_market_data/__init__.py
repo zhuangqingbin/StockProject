@@ -10,7 +10,6 @@ Rules for this package:
 """
 
 from .stock_daily import StockDailyFetch
-from .stock_daily_qfq import StockDailyQfqFetch
 from .stock_daily_basic import StockDailyBasicFetch
 from .stock_ggt_daily import GGTDailyFetch
 from .stock_ggt_top10 import GGTTop10Fetch
@@ -20,7 +19,6 @@ from .stock_suspend_d import StockSuspendDFetch
 
 __all__ = [
     "StockDailyFetch",
-    "StockDailyQfqFetch",
     "StockDailyBasicFetch",
     "StockSuspendDFetch",
     "StkLimitFetch",

@@ -46,9 +46,6 @@ tables:
   stock_daily_basic:
     category: stock_market_data
     description: "每日基本面指标"
-  stock_daily_qfq:
-    category: stock_market_data
-    description: "A股前复权日线"
   stock_suspend_d:
     category: stock_market_data
     description: "每日停复牌信息"

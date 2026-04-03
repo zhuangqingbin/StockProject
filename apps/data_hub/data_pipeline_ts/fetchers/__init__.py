@@ -65,7 +65,6 @@ from apps.data_hub.data_pipeline_ts.fetchers.stock_market_data import (
     StkLimitFetch,
     StockDailyBasicFetch,
     StockDailyFetch,
-    StockDailyQfqFetch,
     StockSuspendDFetch,
 )
 
@@ -73,7 +72,6 @@ from apps.data_hub.data_pipeline_ts.fetchers.stock_market_data import (
 JOB_FETCHERS: tuple[type[BaseFetcher], ...] = (
     StockDailyFetch,
     StockSuspendDFetch,
-    StockDailyQfqFetch,
     StockDailyBasicFetch,
     MoneyFlowFetch,
     MoneyFlowHSGTFetch,

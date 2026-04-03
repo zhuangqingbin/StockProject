@@ -18,7 +18,7 @@ def test_list_categories_includes_counts():
     categories_by_key = {item["key"]: item for item in categories}
 
     assert categories_by_key["basic_data"]["table_count"] == 6
-    assert categories_by_key["stock_market_data"]["table_count"] == 8
+    assert categories_by_key["stock_market_data"]["table_count"] == 7
     assert categories_by_key["special_data"]["table_count"] == 8
     assert categories_by_key["runtime"]["table_count"] == 1
 
@@ -41,7 +41,12 @@ def test_list_categories_rejects_registry_entries_with_unknown_category(monkeypa
 
 
 def test_list_tables_by_category_returns_only_current_category(monkeypatch):
-    def fake_stats(table_names: list[str]) -> dict[str, dict[str, object]]:
+    def fake_stats(
+        table_names: list[str],
+        *,
+        row_count_mode: str = "exact",
+    ) -> dict[str, dict[str, object]]:
+        assert row_count_mode == "approximate"
         return {
             "stock_daily": {
                 "row_count": 5230000,
@@ -72,6 +77,36 @@ def test_list_tables_by_category_returns_only_current_category(monkeypatch):
     assert tables_by_name["stock_daily"]["api_name"] == "daily"
     assert tables_by_name["stock_daily"]["job_description"] == "股票日线行情"
     assert tables_by_name["stock_daily"]["api_url"] == "https://tushare.pro/document/2?doc_id=27"
+
+
+def test_list_tables_by_category_uses_approximate_row_counts(monkeypatch):
+    captured: dict[str, object] = {}
+
+    def fake_stats(
+        table_names: list[str],
+        *,
+        row_count_mode: str,
+    ) -> dict[str, dict[str, object]]:
+        captured["row_count_mode"] = row_count_mode
+        return {
+            table_name: {
+                "row_count": 1,
+                "earliest_data_date": "19901219",
+                "latest_data_date": "20260317",
+                "last_updated": "2026-03-17T18:05:00",
+                "status": "normal",
+            }
+            for table_name in table_names
+        }
+
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_table_stats",
+        fake_stats,
+    )
+
+    list_tables_by_category("stock_market_data")
+
+    assert captured["row_count_mode"] == "approximate"
 
 
 def test_get_table_detail_aggregates_structure_and_summary(monkeypatch):
@@ -176,6 +211,55 @@ def test_get_table_stats_reads_exact_counts_date_range_and_last_successful_updat
         "latest_data_date": "20260318",
         "last_updated": None,
         "status": "manual",
+    }
+
+
+def test_get_table_stats_can_use_approximate_row_counts(monkeypatch):
+    sentinel_engine = object()
+
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_engine",
+        lambda source: sentinel_engine,
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_table_columns",
+        lambda engine, table_name: [{"name": "trade_date"}, {"name": "ts_code"}],
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_exact_row_count",
+        lambda engine, table_name: (_ for _ in ()).throw(AssertionError("exact count should not be used")),
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_approximate_row_count",
+        lambda engine, table_name: 5200000,
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_latest_data_date",
+        lambda engine, table_name, columns: "20260317",
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_earliest_data_date",
+        lambda engine, table_name, columns: "19901219",
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_latest_job_success_time",
+        lambda engine, job_name: "2026-03-17T18:05:00",
+    )
+    monkeypatch.setattr(
+        "apps.data_hub.data_explorer.backend.services.catalog_service.get_table_registry",
+        lambda: {
+            "stock_daily": {"job_name": "stock_daily", "database_source": "ts"},
+        },
+    )
+
+    stats = get_table_stats(["stock_daily"], row_count_mode="approximate")
+
+    assert stats["stock_daily"] == {
+        "row_count": 5200000,
+        "earliest_data_date": "19901219",
+        "latest_data_date": "20260317",
+        "last_updated": "2026-03-17T18:05:00",
+        "status": "normal",
     }
 
 

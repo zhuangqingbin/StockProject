@@ -168,6 +168,20 @@ def get_exact_row_count(engine: Engine, table_name: str) -> int:
         return int(connection.execute(text(f"SELECT COUNT(*) FROM `{safe_table_name}`")).scalar() or 0)
 
 
+def get_approximate_row_count(engine: Engine, table_name: str) -> int:
+    safe_table_name = _validate_identifier(table_name)
+    with engine.connect() as connection:
+        value = connection.execute(
+            text(
+                "SELECT TABLE_ROWS "
+                "FROM information_schema.tables "
+                "WHERE table_schema = DATABASE() AND table_name = :table_name"
+            ),
+            {"table_name": safe_table_name},
+        ).scalar()
+    return int(value or 0)
+
+
 def get_latest_data_date(
     engine: Engine,
     table_name: str,

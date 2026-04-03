@@ -62,7 +62,7 @@ Expected: FAIL because the qfq fetchers and `TuShareClient.pro_bar` support are 
 - Create: `apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/stock_weekly.py`
 - Create: `apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/stock_monthly.py`
 - Create: `apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/stock_suspend_d.py`
-- Create: `apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/stock_daily_qfq.py`
+- Create: the daily front-adjusted quote fetcher under `apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/`
 - Create: `apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/stock_weekly_qfq.py`
 - Create: `apps/data_hub/data_pipeline_ts/fetchers/stock_market_data/stock_monthly_qfq.py`
 - Modify: `apps/data_hub/data_pipeline_ts/fetchers/client.py`
@@ -97,11 +97,11 @@ Export the six new fetchers and register six new jobs:
 - `stock_weekly`
 - `stock_monthly`
 - `stock_suspend_d`
-- `stock_daily_qfq`
+- the daily front-adjusted quote job
 - `stock_weekly_qfq`
 - `stock_monthly_qfq`
 
-Use `ProfileId.FINANCIAL_CALENDAR_NIGHTLY` for all six. Direct endpoint jobs should pass `trade_date={current_date}`; qfq jobs should pass `start_date={current_date}` and `end_date={current_date}`. Keep `scope_columns=("trade_date",)`.
+Use `ProfileId.FINANCIAL_CALENDAR_NIGHTLY` for all six. Direct endpoint jobs should pass `trade_date={current_date}`; front-adjusted jobs should pass `start_date={current_date}` and `end_date={current_date}`. Keep `scope_columns=("trade_date",)`.
 
 **Step 2: Run focused tests**
 

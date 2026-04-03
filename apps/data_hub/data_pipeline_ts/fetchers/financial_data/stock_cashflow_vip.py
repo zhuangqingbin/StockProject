@@ -12,11 +12,15 @@ class CashflowVipFetch(BaseFetcher):
     现金流量表(VIP), 5000积分
         按公告日期提取每日增量现金流量表数据。
     API params:
+        ts_code: 股票代码
         ann_date: 公告日期(YYYYMMDD)
+        f_ann_date: 实际公告日期(YYYYMMDD)
+        start_date: 公告日开始日期(YYYYMMDD)
+        end_date: 公告日结束日期(YYYYMMDD)
         period: 报告期(YYYYMMDD)
-        report_type: 报表类型
+        report_type: 报告类型
         comp_type: 公司类型
-        is_calc: 是否展示计算字段
+        is_calc: 是否计算报表
     """
     fields = [
         "ts_code",  # TS股票代码

@@ -34,7 +34,7 @@ class ShareFloatFetch(BaseFetcher):
             "float_date": ColumnDef("CHAR(8)", nullable=True, comment="解禁日期"),
             "float_share": ColumnDef("DOUBLE", nullable=True, comment="解禁数量"),
             "float_ratio": ColumnDef("DOUBLE", nullable=True, comment="解禁比例"),
-            "holder_name": ColumnDef("VARCHAR(64)", nullable=True, comment="股东名称"),
+            "holder_name": ColumnDef("TEXT", nullable=True, comment="股东名称"),
             "share_type": ColumnDef("VARCHAR(64)", nullable=True, comment="股份类型"),
         },
         composite_indexes=[

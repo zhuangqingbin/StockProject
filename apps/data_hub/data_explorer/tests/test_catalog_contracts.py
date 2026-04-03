@@ -140,7 +140,7 @@ def test_get_table_registry_current_contract_exposes_job_and_infrastructure_entr
     registry = catalog_service.get_table_registry()
 
     assert registry["stock_daily"]["job_name"] == "stock_daily"
-    assert registry["stock_daily"]["trigger_profile"] == "trade_day_post_close_core"
+    assert registry["stock_daily"]["trigger_profile"] == "manual"
     assert registry["trade_cal"]["category"] == "basic_data"
     assert registry["trade_cal"]["job_name"] == ""
 

@@ -16,6 +16,7 @@ class StockDailyBasicFetch(BaseFetcher):
         trade_date: 交易日期(YYYYMMDD) (ts_code 二选一)
         start_date: 开始日期(YYYYMMDD)
         end_date: 结束日期(YYYYMMDD)
+    弃用, 被 API: https://tushare.pro/document/2?doc_id=328 覆盖了, 被 StkFactorProFetch 替代了
     """
     fields = [
         "ts_code",         # TS股票代码

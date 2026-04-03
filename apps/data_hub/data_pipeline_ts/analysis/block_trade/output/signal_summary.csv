@@ -1,0 +1,11 @@
+sig_discount_vol,n,avg_ret,med_ret,std_ret,win_rate,avg_ret_pct,signal,sig_premium_macd,sig_high_block_low_turn,sig_discount_rsi_oversold,sig_premium_boll_upper
+False,54082,0.0217,0.0,0.1581,0.2695,2.1745,折价放量 (discount<-5% & vol_ratio>1.5),,,,
+True,10202,0.0114,0.0,0.1104,0.1379,1.1361,折价放量 (discount<-5% & vol_ratio>1.5),,,,
+,63409,0.0196,0.0,0.15,0.2457,1.9634,溢价+MACD金叉,False,,,
+,875,0.0536,0.0,0.2368,0.4606,5.3631,溢价+MACD金叉,True,,,
+,53599,0.0176,0.0,0.1397,0.2324,1.7567,大宗占比高+低换手 (block>5% & turn<3%),,False,,
+,10685,0.0328,0.0,0.2007,0.3297,3.2789,大宗占比高+低换手 (block>5% & turn<3%),,True,,
+,61160,0.0197,0.0,0.1492,0.2485,1.9715,折价+RSI超卖 (discount<-3% & RSI6<30),,,False,
+,3124,0.0276,0.0,0.1926,0.2506,2.7569,折价+RSI超卖 (discount<-3% & RSI6<30),,,True,
+,64006,0.0201,0.0,0.1516,0.2476,2.006,溢价+接近布林上轨,,,,False
+,278,0.0286,0.0,0.144,0.4748,2.8617,溢价+接近布林上轨,,,,True

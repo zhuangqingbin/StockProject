@@ -58,7 +58,7 @@ class JobRunResult:
     status: Literal["success", "failed", "skipped"]
     error: str | None = None
     run_id: str | None = None
-    run_mode: Literal["once", "backfill", "infrastructure"] | None = None
+    run_mode: Literal["once", "backfill", "infrastructure", "direct"] | None = None
     trigger_profile: str | None = None
     as_of_date: str | None = None
     effective_date: str | None = None

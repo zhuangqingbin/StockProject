@@ -8,11 +8,14 @@ from apps.data_hub.data_pipeline_ts.fetchers.base import BaseFetcher, ColumnDef,
 
 class FinaIndicatorVipFetch(BaseFetcher):
     """
-    API: https://tushare.pro/document/2?doc_id=16
+    API: https://tushare.pro/document/2?doc_id=79
     财务指标(VIP), 5000积分
         按公告日期提取每日增量核心财务指标数据。
     API params:
+        ts_code: 股票代码
         ann_date: 公告日期(YYYYMMDD)
+        start_date: 报告期开始日期(YYYYMMDD)
+        end_date: 报告期结束日期(YYYYMMDD)
         period: 报告期(YYYYMMDD)
     """
     fields = [
