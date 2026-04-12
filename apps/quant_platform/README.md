@@ -2,6 +2,16 @@
 
 股票数据可视化 + 量化策略回测平台，基于 FastAPI + React + MySQL。
 
+## 项目边界
+
+`quant_platform` 是仓库中的量化研究与应用项目，负责：
+
+- 量化研究与因子分析
+- 策略回测与结果展示
+- 面向量化场景的前后端 API 与页面
+
+它会使用 `data_hub` 管理的市场数据，但并不拥有 `data_hub` 的采集、调度或数据治理逻辑。
+
 ## 功能
 
 - **市场总览** — 四大指数实时行情、迷你走势图
@@ -106,6 +116,6 @@ apps/quant_platform/
 
 ## 数据说明
 
-- 数据存储在独立的 `quantviz_database` 数据库中，不影响 `tushare_database` 和 `akshare_database`
-- 首次查询某只股票时会自动从 TuShare API 拉取并缓存到本地数据库
-- 后续相同查询直接读取本地缓存，不再消耗 API 积分
+- `quant_platform` 使用独立的 `quantviz_database` 保存自身应用数据，不影响 `TS_MYSQL_DATABASE` 和 `AK_MYSQL_DATABASE`
+- 研究模块会直接读取 `data_hub` 管理的数据源，例如 `tushare_database`
+- 这种关系是数据消费关系，不代表 `quant_platform` 拥有 `data_hub` 的抓取和调度职责
