@@ -114,7 +114,8 @@ python -m pytest -q
 The following are local, reproducible artifacts and are usually safe to delete when cleaning disk usage:
 
 - `.pytest_cache/`
-- `.omc/`
+- `.omc/sessions/`
+- `.omc/state/`
 - `.superpowers/`
 - `.venv-*`
 - `apps/.venv/`

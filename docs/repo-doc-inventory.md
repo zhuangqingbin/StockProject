@@ -1,5 +1,7 @@
 # Repo Doc Inventory
 
+This is a first-pass classification for representative `docs/` content, not an exhaustive inventory of the entire tree.
+
 ## Clearly Repo-Level
 
 - `docs/repo-governance.md`

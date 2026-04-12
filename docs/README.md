@@ -9,9 +9,11 @@ Use `docs/` for:
 - repo-wide migration and upgrade plans
 
 Some existing files and directories under `docs/` are historical and mixed, so classify them separately instead of assuming every subtree is repo-level.
+Use `docs/repo-doc-inventory.md` for the current first-pass classification of mixed historical material.
 
 Do not use `docs/` for project-specific design or implementation docs when those notes only affect `apps/data_hub` or `apps/quant_platform`; keep them under the owning project.
 
 Repo-level docs currently include:
 
 - `repo-governance.md`
+- `repo-doc-inventory.md`
