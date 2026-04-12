@@ -1,12 +1,15 @@
 # Repo Doc Inventory
 
-## Keep as Repo-Level
+## Clearly Repo-Level
 
 - `docs/repo-governance.md`
 - `docs/README.md`
 - `docs/superpowers/specs/2026-04-12-dual-project-repo-governance-design.md`
 - `docs/superpowers/plans/2026-04-12-dual-project-repo-governance-implementation.md`
 - `docs/plans/2026-03-15-python-311-upgrade.md`
+
+## Historical or Mixed Repo-Wide Material
+
 - `docs/plans/2026-03-15-python-default-and-cleanup.md`
 
 ## Review for Project-Local Placement
