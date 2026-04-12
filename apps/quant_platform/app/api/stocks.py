@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query, HTTPException
-from app.services.tushare_service import DataService
+from ..services.tushare_service import DataService
 from loguru import logger
 
 router = APIRouter(prefix="/api/stocks", tags=["stocks"])

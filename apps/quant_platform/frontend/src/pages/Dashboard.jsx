@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Activity, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, BarChart3, Sigma, Radar } from 'lucide-react';
 import { stockApi } from '../utils/api';
 
 function MiniChart({ data, color }) {
@@ -108,21 +108,26 @@ export default function Dashboard() {
       ) : null}
 
       {/* Quick Actions */}
-      <div className="mt-8 grid grid-cols-3 gap-4">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <a href="/chart" className="glass-card p-5 hover:border-blue-500/50 transition-all group cursor-pointer">
           <Activity size={20} className="text-blue-400 mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="font-medium text-sm">K线分析</h3>
           <p className="text-xs text-slate-500 mt-1">技术指标 · MA / MACD / KDJ / BOLL</p>
+        </a>
+        <a href="/research" className="glass-card p-5 hover:border-cyan-500/50 transition-all group cursor-pointer">
+          <Sigma size={20} className="text-cyan-300 mb-3 group-hover:scale-110 transition-transform" />
+          <h3 className="font-medium text-sm">因子研究</h3>
+          <p className="text-xs text-slate-500 mt-1">IC分析 · 分层回测 · 组合因子 · 研究报告</p>
         </a>
         <a href="/backtest" className="glass-card p-5 hover:border-blue-500/50 transition-all group cursor-pointer">
           <BarChart3 size={20} className="text-cyan-400 mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="font-medium text-sm">策略回测</h3>
           <p className="text-xs text-slate-500 mt-1">5种内置策略 · 完整回测报告</p>
         </a>
-        <div className="glass-card p-5 opacity-50">
-          <TrendingUp size={20} className="text-amber-400 mb-3" />
-          <h3 className="font-medium text-sm">实盘监控</h3>
-          <p className="text-xs text-slate-500 mt-1">即将上线</p>
+        <div className="glass-card p-5 opacity-75">
+          <Radar size={20} className="text-amber-400 mb-3" />
+          <h3 className="font-medium text-sm">研究联动</h3>
+          <p className="text-xs text-slate-500 mt-1">研究结果可直接切到组合回测与产出浏览</p>
         </div>
       </div>
 
@@ -133,8 +138,8 @@ export default function Dashboard() {
           {[
             { label: '覆盖股票', value: '5000+', sub: 'A股全覆盖' },
             { label: '技术指标', value: '7+', sub: 'MA/EMA/MACD/KDJ/RSI/BOLL' },
+            { label: '候选因子', value: '1000+', sub: '技术/资金/事件/市场/组合' },
             { label: '量化策略', value: '5', sub: '双均线/MACD/布林带/海龟/RSI' },
-            { label: '数据积分', value: '5000', sub: 'Tushare Pro' },
           ].map((stat, i) => (
             <div key={i} className="text-center">
               <p className="text-2xl font-bold text-blue-400 font-mono">{stat.value}</p>

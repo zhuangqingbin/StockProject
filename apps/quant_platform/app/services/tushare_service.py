@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from typing import List
 from loguru import logger
 from sqlalchemy import select
-from app.core.config import TUSHARE_TOKEN
-from app.core.database import StockBasic, StockDaily, async_session
+from ..core.config import TUSHARE_TOKEN
+from ..core.database import StockBasic, StockDaily, async_session
 import asyncio
 import time
 

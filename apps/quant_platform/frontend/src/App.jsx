@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
-import { BarChart3, TrendingUp, FlaskConical, LayoutDashboard, Grid3X3, GitCompare, Trophy, Database } from 'lucide-react';
+import { BarChart3, TrendingUp, FlaskConical, LayoutDashboard, Grid3X3, GitCompare, Trophy, Database, Sigma } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import StockChart from './pages/StockChart';
 import Backtest from './pages/Backtest';
 import Heatmap from './pages/Heatmap';
 import Compare from './pages/Compare';
 import Ranking from './pages/Ranking';
+import Research from './pages/Research';
 
 const navSections = [
   {
@@ -27,6 +28,7 @@ const navSections = [
   {
     title: '量化',
     items: [
+      { path: '/research', icon: Sigma, label: '因子研究' },
       { path: '/backtest', icon: FlaskConical, label: '策略回测' },
     ]
   },
@@ -81,7 +83,7 @@ export default function App() {
               <p className="text-xs text-blue-300/80">Tushare 5000积分</p>
             </div>
             <p className="text-[10px] text-slate-500">数据自动缓存 · 增量更新</p>
-            <p className="text-[10px] text-slate-600 mt-1">6个页面 · 5种策略 · 7+指标</p>
+            <p className="text-[10px] text-slate-600 mt-1">7个页面 · 5种策略 · 1000+候选因子</p>
           </div>
         </aside>
 
@@ -90,6 +92,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/chart" element={<StockChart />} />
+            <Route path="/research" element={<Research />} />
             <Route path="/backtest" element={<Backtest />} />
             <Route path="/heatmap" element={<Heatmap />} />
             <Route path="/compare" element={<Compare />} />

@@ -42,3 +42,18 @@ export const strategyApi = {
   backtest: (params) => api.post('/strategy/backtest', params),
   compare: (params) => api.post('/strategy/compare', params),
 };
+
+// === Research API ===
+export const researchApi = {
+  overview: () => api.get('/research/overview'),
+  snapshot: () => api.get('/research/snapshot/latest'),
+  factors: (limit = 30, qualifiedOnly = false) =>
+    api.get('/research/factors', { params: { limit, qualified_only: qualifiedOnly } }),
+  factorDetail: (factorName) => api.get(`/research/factors/${encodeURIComponent(factorName)}`),
+  factorPicks: (factorName, limit = 20) =>
+    api.get(`/research/factors/${encodeURIComponent(factorName)}/picks`, { params: { limit } }),
+  factorStock: (factorName, tsCode, historyWindow = 120) =>
+    api.get(`/research/factors/${encodeURIComponent(factorName)}/stocks/${encodeURIComponent(tsCode)}`, {
+      params: { history_window: historyWindow },
+    }),
+};

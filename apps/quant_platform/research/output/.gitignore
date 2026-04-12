@@ -1,0 +1,19 @@
+# Ignore generated research artifacts but keep the directory structure.
+*
+!.gitignore
+!ic_reports/
+!layered_reports/
+!correlation_matrices/
+!backtest_results/
+
+ic_reports/*
+!ic_reports/.gitkeep
+
+layered_reports/*
+!layered_reports/.gitkeep
+
+correlation_matrices/*
+!correlation_matrices/.gitkeep
+
+backtest_results/*
+!backtest_results/.gitkeep

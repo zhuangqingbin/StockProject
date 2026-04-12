@@ -9,6 +9,7 @@ testpaths = [
     "apps/data_hub/data_explorer/tests",
     "apps/data_hub/data_pipeline_ts/tests",
     "apps/data_hub/data_pipeline_ak/tests",
+    "apps/quant_platform/tests",
 ]
 norecursedirs = [
     ".git",

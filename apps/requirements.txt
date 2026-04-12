@@ -14,3 +14,9 @@ aiomysql>=0.2
 loguru>=0.7
 numpy<2
 pydantic-settings>=2.0
+scikit-learn>=1.5
+scipy>=1.11
+matplotlib>=3.8
+seaborn>=0.13
+lightgbm>=4.5
+xgboost>=2.1

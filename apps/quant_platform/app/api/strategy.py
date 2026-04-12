@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any
-from app.services.tushare_service import DataService
-from app.strategies.engine import BacktestEngine, BacktestConfig, BUILTIN_STRATEGIES
+from ..services.tushare_service import DataService
+from ..strategies.engine import BacktestEngine, BacktestConfig, BUILTIN_STRATEGIES
 from loguru import logger
 
 router = APIRouter(prefix="/api/strategy", tags=["strategy"])

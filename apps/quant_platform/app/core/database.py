@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import Column, String, Float, Integer, DateTime, Text, Index
 from datetime import datetime
 
-from app.core.config import DATABASE_URL, DEBUG
+from .config import DATABASE_URL, DEBUG
 
 engine = create_async_engine(DATABASE_URL, echo=DEBUG)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException
-from app.services.tushare_service import TushareService, DataService
-from app.core.database import async_session, StockBasic, StockDaily
+from ..services.tushare_service import TushareService, DataService
+from ..core.database import async_session, StockBasic, StockDaily
 from sqlalchemy import select, func, text
 from loguru import logger
 from datetime import datetime

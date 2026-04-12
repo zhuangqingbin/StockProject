@@ -1,8 +1,11 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
-from app.core.database import init_db
-from app.api import stocks, strategy, market
+from .core.database import init_db
+from .api import market, research, stocks, strategy
 from loguru import logger
 import sys
 
@@ -37,6 +40,11 @@ app.add_middleware(
 app.include_router(stocks.router)
 app.include_router(strategy.router)
 app.include_router(market.router)
+app.include_router(research.router)
+
+research_output_dir = Path(__file__).resolve().parents[1] / "research" / "output"
+if research_output_dir.exists():
+    app.mount("/research-assets", StaticFiles(directory=str(research_output_dir)), name="research-assets")
 
 
 @app.get("/")

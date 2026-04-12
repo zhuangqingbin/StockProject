@@ -17,7 +17,12 @@ dist/
 .codex-runlogs/
 .omc/sessions/
 .omc/state/
-apps/quant_platform/research/output/
+# Ignore generated research outputs but allow placeholder files to keep the directory shape.
+apps/quant_platform/research/output/*
+!apps/quant_platform/research/output/.gitignore
+!apps/quant_platform/research/output/*/
+apps/quant_platform/research/output/*/*
+!apps/quant_platform/research/output/*/.gitkeep
 
 
 # files

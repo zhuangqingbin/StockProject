@@ -9,6 +9,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8202',
         changeOrigin: true,
+      },
+      '/research-assets': {
+        target: 'http://localhost:8202',
+        changeOrigin: true,
       }
     }
   }
