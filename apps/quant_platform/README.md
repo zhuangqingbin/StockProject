@@ -117,5 +117,6 @@ apps/quant_platform/
 ## 数据说明
 
 - `quant_platform` 使用独立的 `quantviz_database` 保存自身应用数据，不影响 `TS_MYSQL_DATABASE` 和 `AK_MYSQL_DATABASE`
+- 主应用链路在查询时仍会直接从 TuShare API 拉取数据，并缓存到 `quantviz_database`
 - 研究模块会直接读取 `data_hub` 管理的数据源，例如 `tushare_database`
-- 这种关系是数据消费关系，不代表 `quant_platform` 拥有 `data_hub` 的抓取和调度职责
+- 这种关系是数据消费关系，不代表 `quant_platform` 拥有 `data_hub` 的抓取、调度或数据治理职责
