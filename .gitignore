@@ -13,6 +13,10 @@ dist/
 .next/
 .cache/
 .logs/
+.codex-runlogs/
+.omc/sessions/
+.omc/state/
+apps/quant_platform/research/output/
 
 
 # files

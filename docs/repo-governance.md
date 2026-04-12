@@ -47,3 +47,14 @@ Non-canonical:
 Default rule:
 
 Do not commit reproducible generated artifacts unless there is an explicit reason to version them.
+
+Examples in this repository include:
+
+- `node_modules/`
+- `dist/`
+- `.cache/`
+- `.pytest_cache/`
+- `.codex-runlogs/`
+- `.omc/sessions/`
+- `.omc/state/`
+- `apps/quant_platform/research/output/`
