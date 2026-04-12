@@ -1,6 +1,6 @@
 # Repository Docs
 
-This directory is reserved for repo-level documentation.
+This directory is intended for repo-level documentation going forward.
 
 Use `docs/` for:
 
@@ -8,11 +8,10 @@ Use `docs/` for:
 - cross-project dependency rules
 - repo-wide migration and upgrade plans
 
-Do not use `docs/` for one-project architecture notes when those notes only affect `apps/data_hub` or `apps/quant_platform`.
+Some existing files and directories under `docs/` are historical and mixed, so classify them separately instead of assuming every subtree is repo-level.
 
-Current repo-level docs:
+Do not use `docs/` for project-specific design or implementation docs when those notes only affect `apps/data_hub` or `apps/quant_platform`; keep them under the owning project.
+
+Repo-level docs currently include:
 
 - `repo-governance.md`
-- `plans/`
-- `superpowers/specs/`
-- `superpowers/plans/`
