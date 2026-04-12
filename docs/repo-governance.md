@@ -55,6 +55,7 @@ Examples in this repository include:
 - `.cache/`
 - `.pytest_cache/`
 - `.codex-runlogs/`
-- `.omc/sessions/`
-- `.omc/state/`
+- local OMC runtime/session/state files under `.omc/sessions/` and `.omc/state/`
 - `apps/quant_platform/research/output/`
+
+Some historical tracked files may still exist in `.omc/` and should be cleaned up separately.
