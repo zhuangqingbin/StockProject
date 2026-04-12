@@ -93,6 +93,30 @@ bash apps/data_hub/data_pipeline_ts/scripts/sync_infrastructure.sh \
 5. `DatabaseWriter` 按 `scope_columns` 删除旧切片 → 写入新数据
 6. 结果记录到 `job_run_log`
 
+### Quant Research 自动发布
+
+通过 `scripts/run_daily.sh` 触发 profile 时，会默认导出：
+
+```bash
+QV_RESEARCH_AUTO_PUBLISH_ENABLED=1
+```
+
+这表示当 `reference_calendar_nightly` 整个 profile 成功完成后，会自动执行一次 quant research 发布流程：
+
+- 调用 `apps.quant_platform.research.scripts.run_factor_research::run_full_factor_research`
+- 重新生成 `apps/quant_platform/research/output/full_research/`
+- 发布 `apps/quant_platform/research/output/serving/latest/` 快照
+- 供 `http://localhost:3001/research` 直接读取因子、推荐股票和单股钻取数据
+
+可选环境变量：
+
+| 环境变量 | 默认值 | 说明 |
+|---------|--------|------|
+| `QV_RESEARCH_AUTO_PUBLISH_ENABLED` | `1`（仅 `run_daily.sh` 默认开启） | 设为 `0/false` 可关闭自动发布 |
+| `QV_RESEARCH_AUTO_START_DATE` | `2018-01-01` | 自动研究的起始日期 |
+| `QV_RESEARCH_AUTO_OUTPUT_DIR` | `apps/quant_platform/research/output/full_research` | 研究输出目录 |
+| `QV_RESEARCH_AUTO_PICKS_LIMIT` | `20` | 每个因子发布多少只候选股票 |
+
 ### 模板变量
 
 | 变量 | 含义 | 示例 |

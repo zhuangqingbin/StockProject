@@ -6,14 +6,33 @@ from typing import Any
 
 from apps.data_hub.data_pipeline_ts.fetchers.base import BaseFetcher, ColumnDef, TableSchema
 from apps.data_hub.data_pipeline_ts.fetchers.client import ClientConfig, TuShareClient
+from shared.stock_core.config import get_env, get_int
 
 
 CYQ_CHIPS_FETCH_ATTEMPTS = 2                 # 控的是“重试次数”
-CYQ_CHIPS_MIN_INTERVAL_SECONDS = 0.35        # 控的是“单次请求之间的最小间隔”
+CYQ_CHIPS_MIN_INTERVAL_SECONDS = 0.32        # 控的是“单次请求之间的最小间隔”
 CYQ_CHIPS_MAX_CALLS_PER_MINUTE = 190         # 控的是“每分钟最多访问该接口的次数”
 CYQ_CHIPS_RATE_LIMIT_BACKOFF_SECONDS = 60.0  # 控的是“如果达到限制，等待多久后重试”
 CYQ_CHIPS_NO_DATA_MESSAGE = "指定数据不存在"
 CYQ_CHIPS_RATE_LIMIT_MESSAGE = "每分钟最多访问该接口200次"
+CYQ_CHIPS_MIN_INTERVAL_ENV = "TS_CYQ_CHIPS_MIN_INTERVAL_SECONDS"
+CYQ_CHIPS_MAX_CALLS_ENV = "TS_CYQ_CHIPS_MAX_CALLS_PER_MINUTE"
+
+
+def _resolve_cyq_chips_min_interval_seconds() -> float:
+    raw_value = get_env(CYQ_CHIPS_MIN_INTERVAL_ENV)
+    if not raw_value:
+        return CYQ_CHIPS_MIN_INTERVAL_SECONDS
+    try:
+        return float(raw_value)
+    except ValueError as exc:
+        raise ValueError(
+            f"Environment variable {CYQ_CHIPS_MIN_INTERVAL_ENV} must be a float, got {raw_value!r}"
+        ) from exc
+
+
+def _resolve_cyq_chips_max_calls_per_minute() -> int:
+    return get_int(CYQ_CHIPS_MAX_CALLS_ENV, CYQ_CHIPS_MAX_CALLS_PER_MINUTE)
 
 
 class CyqChipsFetch(BaseFetcher):
@@ -53,8 +72,8 @@ class CyqChipsFetch(BaseFetcher):
             client = TuShareClient(
                 config=replace(
                     ClientConfig(),
-                    min_interval_seconds=CYQ_CHIPS_MIN_INTERVAL_SECONDS, 
-                    max_calls_per_minute=CYQ_CHIPS_MAX_CALLS_PER_MINUTE,
+                    min_interval_seconds=_resolve_cyq_chips_min_interval_seconds(),
+                    max_calls_per_minute=_resolve_cyq_chips_max_calls_per_minute(),
                 )
             )
         super().__init__(client=client)

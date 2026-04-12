@@ -80,9 +80,10 @@ class BaseFetcher(ABC):
         frames: list[pd.DataFrame] = []
         for stock_code in resolved_stock_codes:
             frame = fetch_one(stock_code)
-            if frame is None or pd.DataFrame(frame).empty:
+            normalized_frame = pd.DataFrame(frame)
+            if frame is None or normalized_frame.empty:
                 continue
-            frames.append(pd.DataFrame(frame).reindex(columns=columns))
+            frames.append(normalized_frame.dropna(axis=1, how="all"))
 
         if not frames:
             return pd.DataFrame(columns=columns)

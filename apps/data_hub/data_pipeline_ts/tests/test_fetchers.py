@@ -700,6 +700,23 @@ def test_cyq_chips_fetch_waits_and_retries_after_rate_limit_errors():
     ]
 
 
+def test_cyq_chips_fetch_uses_tighter_default_rate_limit_config():
+    fetcher = FETCHER_REGISTRY["CyqChipsFetch"]()
+
+    assert fetcher.client.config.min_interval_seconds == 0.32
+    assert fetcher.client.config.max_calls_per_minute == 190
+
+
+def test_cyq_chips_fetch_allows_env_overrides_for_rate_limit(monkeypatch):
+    monkeypatch.setenv("TS_CYQ_CHIPS_MIN_INTERVAL_SECONDS", "0.25")
+    monkeypatch.setenv("TS_CYQ_CHIPS_MAX_CALLS_PER_MINUTE", "175")
+
+    fetcher = FETCHER_REGISTRY["CyqChipsFetch"]()
+
+    assert fetcher.client.config.min_interval_seconds == 0.25
+    assert fetcher.client.config.max_calls_per_minute == 175
+
+
 def test_cyq_chips_fetch_rejects_single_ts_code_argument():
     fetcher_cls = FETCHER_REGISTRY["CyqChipsFetch"]
     client = MagicMock()
@@ -1783,6 +1800,49 @@ def test_pledge_detail_fetch_uses_snapshot_date_from_params_and_fans_out_by_stoc
         "ts_code": "000002.SZ",
         "fields": ",".join(fetcher.fields[:-1]),
     }
+
+
+def test_pledge_detail_fetch_fanout_concat_avoids_futurewarning_for_all_na_numeric_columns():
+    client = MagicMock()
+    client.call.side_effect = [
+        pd.DataFrame({"ts_code": ["000001.SZ", "000002.SZ"]}),
+        pd.DataFrame(
+            {
+                "ts_code": ["000001.SZ"],
+                "ann_date": ["20260317"],
+                "holder_name": ["holder_a"],
+                "pledge_amount": [1000.0],
+                "start_date": ["20260301"],
+                "end_date": ["20260401"],
+                "is_release": [0],
+                "pledged_amount": [pd.NA],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "ts_code": ["000002.SZ"],
+                "ann_date": ["20260316"],
+                "holder_name": ["holder_b"],
+                "pledge_amount": [500.0],
+                "start_date": ["20260201"],
+                "end_date": ["20260501"],
+                "is_release": [1],
+                "pledged_amount": [2.5],
+            }
+        ),
+    ]
+
+    fetcher = PledgeDetailFetch(client=client)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = fetcher.fetch(snapshot_date="20260318")
+
+    assert list(result["ts_code"]) == ["000001.SZ", "000002.SZ"]
+    assert list(result["snapshot_date"]) == ["20260318", "20260318"]
+    assert result["pledged_amount"].isna().tolist() == [True, False]
+    assert result["pledged_amount"].tolist()[1] == 2.5
+    assert not [warning for warning in caught if isinstance(warning.message, FutureWarning)]
 
 
 def test_pledge_detail_fetch_uses_explicit_stock_codes_without_stock_basic_fanout():

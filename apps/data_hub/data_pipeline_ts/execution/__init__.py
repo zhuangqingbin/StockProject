@@ -8,6 +8,7 @@ from apps.data_hub.data_pipeline_ts.execution.persistence import (
     get_engine,
     validate_frame_columns,
 )
+from apps.data_hub.data_pipeline_ts.execution.post_hooks import maybe_run_quant_research_publish
 from apps.data_hub.data_pipeline_ts.execution.runner import run_backfill, run_once
 from apps.data_hub.data_pipeline_ts.execution.selection import (
     _parse_csv_values,
@@ -23,6 +24,7 @@ __all__ = [
     "build_mysql_url",
     "get_engine",
     "validate_frame_columns",
+    "maybe_run_quant_research_publish",
     "run_once",
     "run_backfill",
     "run_infrastructure",

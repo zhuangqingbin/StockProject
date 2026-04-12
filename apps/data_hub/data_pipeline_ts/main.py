@@ -5,6 +5,8 @@ from typing import Sequence
 
 from apps.data_hub.data_pipeline_ts.execution import (
     _parse_csv_values,
+    DatabaseWriter,
+    maybe_run_quant_research_publish,
     run_backfill,
     run_infrastructure,
     run_once,
@@ -48,11 +50,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0
 
-    run_once(
+    database_writer = DatabaseWriter()
+    results = run_once(
         as_of=args.as_of,
         profiles=profiles,
         job_names=jobs,
+        writer=database_writer,
         max_workers=args.max_workers,
+    )
+    hook_results = maybe_run_quant_research_publish(
+        mode="once",
+        profiles=profiles,
+        job_names=jobs,
+        results=results,
+        as_of=args.as_of,
+        writer=database_writer,
     )
     return 0
 
