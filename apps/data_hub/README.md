@@ -2,6 +2,18 @@
 
 `data_hub` 负责 A 股数据抓取、写库、调度、数据浏览与监控。
 
+## 项目边界
+
+`data_hub` 是仓库中的数据生产与数据可观测项目，负责：
+
+- A 股数据抓取与写库
+- 日常调度、回溯、基础表同步
+- 只读数据浏览与运行监控
+
+它不负责量化研究、策略回测或量化应用层页面。这些能力属于 `apps/quant_platform`。
+
+`quant_platform` 可以消费 `data_hub` 管理的数据，但它不是 `data_hub` 的子模块。
+
 ## 组件
 
 | 路径 | 作用 |
@@ -111,3 +123,4 @@ PYTHONPATH=$(pwd) apps/.venv/bin/python -m jupyter lab apps/data_hub/data_pipeli
 - `data_pipeline_ak/` 负责 AkShare 侧导入能力，当前主要提供交易日历等辅助数据入口。
 - 当前任务链路只负责抓取、写库和记录 `job_run_log`。
 - `data_explorer/` 提供数据库浏览与监控界面，当前会从 `TS_MYSQL_DATABASE` 和 `AK_MYSQL_DATABASE` 建立只读连接。
+- `quant_platform` 可读取 `data_hub` 管理的数据表做研究与展示，但 `data_hub` 不依赖 `quant_platform` 的代码或运行时。
