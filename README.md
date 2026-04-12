@@ -76,9 +76,9 @@ Common infrastructure variables:
 `quant_platform` variables:
 
 - `QV_MYSQL_DATABASE`
-- `QV_API_PORT`
-- `QV_API_HOST`
-- `QV_DEBUG`
+- `QV_API_PORT` (optional; default defined in `apps/quant_platform/README.md`)
+- `QV_API_HOST` (optional; default defined in `apps/quant_platform/README.md`)
+- `QV_DEBUG` (optional; default defined in `apps/quant_platform/README.md`)
 
 See the project READMEs for project-specific setup details.
 
@@ -98,24 +98,10 @@ Create the shared `apps/.venv` and install dependencies:
 bash apps/setup.sh
 ```
 
-Run daily jobs:
+For project-specific workflows, use the project READMEs:
 
-```bash
-bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh --help
-```
-
-Run a backfill:
-
-```bash
-bash apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh --help
-```
-
-Run the data explorer:
-
-```bash
-./apps/data_hub/data_explorer/scripts/run.sh backend
-./apps/data_hub/data_explorer/scripts/run.sh frontend
-```
+- `apps/data_hub/README.md`
+- `apps/quant_platform/README.md`
 
 Run the maintained tests:
 
