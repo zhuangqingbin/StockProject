@@ -1,54 +1,86 @@
 # StockProject
 
-This repository currently centers on `apps/data_hub`, a Python-first A-share data platform for fetch, write, scheduling, read-only exploration, and monitoring.
+This repository is a monorepo with two independent projects:
 
-## Active Layout
+- `apps/data_hub`: A-share data ingestion, persistence, scheduling, read-only exploration, and monitoring
+- `apps/quant_platform`: Quant research, backtesting, visualization, and application APIs
+
+They are related through data usage, not through shared application ownership:
+
+- data_hub produces and manages market datasets
+- quant_platform consumes some of those datasets for research and product workflows
+
+The repository also contains `shared/stock_core`, a minimal shared infrastructure layer for env loading, DB helpers, and Python runtime resolution.
+
+## Repository Layout
 
 ```text
 .
 |-- apps/
-|   `-- data_hub/
-|       |-- data_pipeline_ts/   # TuShare fetchers, jobs, notebooks, execution
-|       |-- data_pipeline_ak/   # AkShare-side helpers and imports
-|       |-- data_explorer/      # read-only data explorer backend + frontend
-|       `-- tests/              # app-level composition tests
+|   |-- data_hub/
+|   `-- quant_platform/
 |-- shared/
-|   |-- scripts/
-|   |   `-- resolve_project_python.sh
-|   `-- stock_core/             # shared env, db, python runtime helpers
-|-- docs/                       # plans and design documents
-|-- experiments/                # exploratory notebooks, prototypes, notes
+|   `-- stock_core/
+|-- docs/
+|-- experiments/
 |-- env.example
 |-- .gitignore
 |-- pyproject.toml
 `-- README.md
 ```
 
-Detailed app structure and commands live in [apps/data_hub/README.md](apps/data_hub/README.md).
+## Project Entry Points
 
-## Key Directories
+### `apps/data_hub`
 
-- `apps/data_hub/data_pipeline_ts/`: TuShare daily jobs, backfill, infrastructure sync, notebooks, and related tests.
-- `apps/data_hub/data_pipeline_ak/`: AkShare-side imports and auxiliary data flows.
-- `apps/data_hub/data_explorer/`: read-only schema/data explorer and monitoring UI.
-- `shared/stock_core/`: shared env loading, DB helpers, and Python runtime resolution.
-- `docs/`: durable plans and design notes.
-- `experiments/`: non-canonical experiments and research material.
+- Scope: data ingestion, persistence, scheduling, exploration, monitoring
+- Docs: `apps/data_hub/README.md`
+- Example commands:
+  - `bash apps/data_hub/setup.sh`
+  - `bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh --help`
+  - `./apps/data_hub/data_explorer/scripts/run.sh backend`
+  - `python -m pytest -q apps/data_hub/tests apps/data_hub/data_explorer/tests apps/data_hub/data_pipeline_ts/tests apps/data_hub/data_pipeline_ak/tests`
 
-## Local Configuration
+### `apps/quant_platform`
 
-Copy `env.example` to `.env` and fill in the required variables:
+- Scope: quant visualization, strategy workflows, research tooling, application APIs
+- Docs: `apps/quant_platform/README.md`
+- Example commands:
+  - `bash apps/quant_platform/scripts/run.sh backend`
+  - `bash apps/quant_platform/scripts/run.sh frontend`
+  - `bash apps/quant_platform/scripts/run.sh init`
+  - `python -m pytest -q apps/quant_platform/tests`
 
-- `TUSHARE_TOKEN`
+## Shared Infrastructure
+
+- `shared/stock_core`: env loading, DB URL construction, Python runtime helpers
+- `docs/`: repo-level governance and cross-project plans
+- `experiments/`: exploratory, non-canonical work
+
+## Configuration Overview
+
+Common infrastructure variables:
+
 - `MYSQL_USER`
 - `MYSQL_PASSWORD`
 - `MYSQL_HOST`
 - `MYSQL_PORT`
-- `TS_MYSQL_DATABASE`
-- `AK_MYSQL_DATABASE`
 - `MYSQL_CHARSET`
 
-There are no code defaults for these values.
+`data_hub` variables:
+
+- `TUSHARE_TOKEN`
+- `TS_MYSQL_DATABASE`
+- `AK_MYSQL_DATABASE`
+
+`quant_platform` variables:
+
+- `QV_MYSQL_DATABASE`
+- `QV_API_PORT`
+- `QV_API_HOST`
+- `QV_DEBUG`
+
+See the project READMEs for project-specific setup details.
 
 ## Quick Start
 
