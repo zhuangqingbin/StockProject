@@ -9,6 +9,8 @@ from apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies import bottom
 from apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies.bottom_volume_matrix import (
     build_bottom_rule_defs,
     build_features,
+    build_latest_hits,
+    build_strategy_ranking,
     build_volume_rule_defs,
     summarize_signal_matrix,
     write_outputs,
@@ -244,6 +246,86 @@ def test_summarize_signal_matrix_returns_combo_and_family_aggregates():
     assert summary_df["sample_count"].max() >= 1
 
 
+def test_strategy_ranking_and_latest_hits_use_1d_priority():
+    summary_df = pd.DataFrame(
+        [
+            {
+                "bottom_family": "pos120",
+                "bottom_code": "B_a",
+                "volume_family": "volume_ratio",
+                "volume_code": "V_a",
+                "signal_code": "A",
+                "sample_count": 20,
+                "avg_ret_1d": 0.08,
+                "median_ret_1d": 0.04,
+                "win_rate_1d": 0.7,
+                "avg_ret_3d": 0.03,
+                "median_ret_3d": 0.02,
+                "win_rate_3d": 0.6,
+                "is_low_sample": False,
+            },
+            {
+                "bottom_family": "near_120_low",
+                "bottom_code": "B_b",
+                "volume_family": "vol_spike_5",
+                "volume_code": "V_b",
+                "signal_code": "B",
+                "sample_count": 20,
+                "avg_ret_1d": 0.03,
+                "median_ret_1d": 0.02,
+                "win_rate_1d": 0.6,
+                "avg_ret_3d": 0.09,
+                "median_ret_3d": 0.08,
+                "win_rate_3d": 0.7,
+                "is_low_sample": False,
+            },
+        ]
+    )
+    trigger_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240110",
+                "bottom_family": "pos120",
+                "bottom_code": "B_a",
+                "volume_family": "volume_ratio",
+                "volume_code": "V_a",
+                "signal_code": "A",
+                "close_qfq": 10.0,
+                "pct_chg": 2.0,
+                "volume_ratio": 1.8,
+                "turnover_rate_f": 2.4,
+                "ret_1d": 0.01,
+                "ret_3d": 0.02,
+            },
+            {
+                "ts_code": "000002.SZ",
+                "trade_date": "20240110",
+                "bottom_family": "near_120_low",
+                "bottom_code": "B_b",
+                "volume_family": "vol_spike_5",
+                "volume_code": "V_b",
+                "signal_code": "B",
+                "close_qfq": 11.0,
+                "pct_chg": 3.0,
+                "volume_ratio": 1.9,
+                "turnover_rate_f": 2.2,
+                "ret_1d": 0.02,
+                "ret_3d": 0.03,
+            },
+        ]
+    )
+
+    ranking_df = build_strategy_ranking(summary_df)
+    latest_hits_df = build_latest_hits(trigger_df, ranking_df)
+
+    assert ranking_df.iloc[0]["signal_code"] == "A"
+    assert ranking_df.iloc[0]["strategy_rank_1d"] == 1
+    assert set(["avg_ret_1d", "win_rate_1d", "avg_ret_3d", "win_rate_3d"]).issubset(ranking_df.columns)
+    assert latest_hits_df.iloc[0]["signal_code"] == "A"
+    assert latest_hits_df.iloc[0]["strategy_avg_ret_1d"] >= latest_hits_df.iloc[-1]["strategy_avg_ret_1d"]
+
+
 def test_write_outputs_creates_summary_and_trigger_files(tmp_path: Path, monkeypatch):
     summary_df = pd.DataFrame(
         [
@@ -281,6 +363,29 @@ def test_write_outputs_creates_summary_and_trigger_files(tmp_path: Path, monkeyp
     volume_family_df = pd.DataFrame(
         [{"volume_family": "volume_ratio", "best_signal_code": "B_pos120_le_20__V_vr_gt_15", "best_avg_ret_3d": 0.03}]
     )
+    strategy_ranking_df = pd.DataFrame(
+        [
+            {
+                "strategy_rank_1d": 1,
+                "strategy_rank_3d": 1,
+                "signal_code": "B_pos120_le_20__V_vr_gt_15",
+                "avg_ret_1d": 0.01,
+                "win_rate_1d": 0.5,
+                "avg_ret_3d": 0.03,
+                "win_rate_3d": 1.0,
+            }
+        ]
+    )
+    latest_hits_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240101",
+                "signal_code": "B_pos120_le_20__V_vr_gt_15",
+                "strategy_avg_ret_1d": 0.01,
+            }
+        ]
+    )
 
     monkeypatch.setattr(module, "datetime", _fixed_datetime_class())
 
@@ -289,15 +394,19 @@ def test_write_outputs_creates_summary_and_trigger_files(tmp_path: Path, monkeyp
         trigger_df=trigger_df,
         bottom_family_df=bottom_family_df,
         volume_family_df=volume_family_df,
+        strategy_ranking_df=strategy_ranking_df,
+        latest_hits_df=latest_hits_df,
         output_dir=tmp_path,
         top_n=10,
     )
 
-    assert (tmp_path / "0418_1630.cvs").exists()
+    assert (tmp_path / "0418_1630.csv").exists()
     assert (tmp_path / "0418_1630.md").exists()
     assert (tmp_path / "0418_1630_bottom_family.csv").exists()
     assert (tmp_path / "0418_1630_volume_family.csv").exists()
     assert (tmp_path / "0418_1630_triggers.csv").exists()
+    assert (tmp_path / "0418_1630_strategy_ranking.csv").exists()
+    assert (tmp_path / "0418_1630_latest_hits.csv").exists()
     assert output_paths["summary_md"].name == "0418_1630.md"
 
 
@@ -422,25 +531,25 @@ def test_run_analysis_uses_query_df_and_returns_non_empty_summary(monkeypatch, t
             {
                 "ts_code": "000001.SZ",
                 "trade_date": "20240108",
-                "open_qfq": 10.3,
-                "high_qfq": 10.8,
-                "low_qfq": 10.2,
-                "close_qfq": 10.7,
+                "open_qfq": 9.5,
+                "high_qfq": 9.8,
+                "low_qfq": 9.2,
+                "close_qfq": 9.6,
                 "pct_chg": 2.9,
                 "vol": 280.0,
                 "amount": 3200.0,
                 "turnover_rate": 3.0,
                 "turnover_rate_f": 3.0,
                 "volume_ratio": 2.0,
-                "boll_lower_qfq": 9.8,
-                "boll_mid_qfq": 10.1,
-                "boll_upper_qfq": 10.6,
-                "rsi_qfq_6": 47.0,
-                "rsi_qfq_12": 45.0,
+                "boll_lower_qfq": 9.4,
+                "boll_mid_qfq": 9.8,
+                "boll_upper_qfq": 10.1,
+                "rsi_qfq_6": 28.0,
+                "rsi_qfq_12": 35.0,
                 "ma_qfq_20": 10.0,
-                "ma_qfq_60": 10.1,
-                "downdays": 0,
-                "updays": 3,
+                "ma_qfq_60": 10.2,
+                "downdays": 5,
+                "updays": 0,
             },
         ]
     )
@@ -457,7 +566,12 @@ def test_run_analysis_uses_query_df_and_returns_non_empty_summary(monkeypatch, t
     )
 
     assert not result["summary_df"].empty
-    assert (tmp_path / "0418_1630.cvs").exists()
+    assert not result["strategy_ranking_df"].empty
+    assert not result["latest_hits_df"].empty
+    assert (tmp_path / "0418_1630.csv").exists()
+    assert (tmp_path / "0418_1630_strategy_ranking.csv").exists()
+    assert (tmp_path / "0418_1630_latest_hits.csv").exists()
+    assert result["latest_hits_df"].iloc[0]["strategy_avg_ret_1d"] >= result["latest_hits_df"].iloc[-1]["strategy_avg_ret_1d"]
 
 
 def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
@@ -468,7 +582,10 @@ def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
             "summary_df": pd.DataFrame(
                 [{"signal_code": "demo", "sample_count": 1, "avg_ret_3d": 0.02, "win_rate_3d": 1.0}]
             ),
-            "output_paths": {"summary_csv": tmp_path / "0418_1630.cvs"},
+            "strategy_ranking_df": pd.DataFrame(
+                [{"signal_code": "demo", "strategy_rank_1d": 1, "avg_ret_1d": 0.03, "win_rate_1d": 1.0}]
+            ),
+            "output_paths": {"summary_csv": tmp_path / "0418_1630.csv"},
         },
     )
 
@@ -489,5 +606,5 @@ def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
 
     stdout = capsys.readouterr().out
     assert exit_code == 0
-    assert "0418_1630.cvs" in stdout
+    assert "0418_1630.csv" in stdout
     assert "demo" in stdout

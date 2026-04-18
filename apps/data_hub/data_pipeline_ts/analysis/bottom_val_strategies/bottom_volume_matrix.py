@@ -45,6 +45,10 @@ def _series_win_rate(series: pd.Series) -> float:
     return float(valid.gt(0).mean()) if not valid.empty else float("nan")
 
 
+def _select_existing_columns(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    return frame[[column for column in columns if column in frame.columns]].copy()
+
+
 def build_features(frame: pd.DataFrame) -> pd.DataFrame:
     result = frame.sort_values(["ts_code", "trade_date"]).copy()
     grouped = result.groupby("ts_code", sort=False)
@@ -247,6 +251,146 @@ def build_family_summary(summary_df: pd.DataFrame, family_col: str) -> pd.DataFr
     return pd.DataFrame(rows)
 
 
+def build_strategy_ranking(summary_df: pd.DataFrame) -> pd.DataFrame:
+    if summary_df.empty:
+        return pd.DataFrame(
+            columns=[
+                "strategy_rank_1d",
+                "strategy_rank_3d",
+                "bottom_family",
+                "bottom_code",
+                "volume_family",
+                "volume_code",
+                "signal_code",
+                "sample_count",
+                "avg_ret_1d",
+                "median_ret_1d",
+                "win_rate_1d",
+                "avg_ret_3d",
+                "median_ret_3d",
+                "win_rate_3d",
+                "is_low_sample",
+            ]
+        )
+
+    ranking_df = summary_df.sort_values(
+        ["avg_ret_1d", "win_rate_1d", "avg_ret_3d", "win_rate_3d", "sample_count"],
+        ascending=[False, False, False, False, False],
+        na_position="last",
+    ).reset_index(drop=True)
+    ranking_df["strategy_rank_1d"] = ranking_df.index + 1
+
+    ranking_3d = summary_df.sort_values(
+        ["avg_ret_3d", "win_rate_3d", "avg_ret_1d", "win_rate_1d", "sample_count"],
+        ascending=[False, False, False, False, False],
+        na_position="last",
+    ).reset_index(drop=True)
+    ranking_3d["strategy_rank_3d"] = ranking_3d.index + 1
+
+    ranking_df = ranking_df.merge(
+        ranking_3d[["signal_code", "strategy_rank_3d"]],
+        on="signal_code",
+        how="left",
+    )
+    leading_cols = [
+        "strategy_rank_1d",
+        "strategy_rank_3d",
+        "bottom_family",
+        "bottom_code",
+        "volume_family",
+        "volume_code",
+        "signal_code",
+        "sample_count",
+        "avg_ret_1d",
+        "median_ret_1d",
+        "win_rate_1d",
+        "avg_ret_3d",
+        "median_ret_3d",
+        "win_rate_3d",
+        "is_low_sample",
+    ]
+    return ranking_df[leading_cols]
+
+
+def build_latest_hits(trigger_df: pd.DataFrame, strategy_ranking_df: pd.DataFrame) -> pd.DataFrame:
+    if trigger_df.empty or strategy_ranking_df.empty:
+        return pd.DataFrame(
+            columns=[
+                "ts_code",
+                "trade_date",
+                "bottom_family",
+                "bottom_code",
+                "volume_family",
+                "volume_code",
+                "signal_code",
+                "close_qfq",
+                "pct_chg",
+                "volume_ratio",
+                "turnover_rate_f",
+                "strategy_rank_1d",
+                "strategy_rank_3d",
+                "strategy_avg_ret_1d",
+                "strategy_win_rate_1d",
+                "strategy_avg_ret_3d",
+                "strategy_win_rate_3d",
+                "strategy_sample_count",
+            ]
+        )
+
+    latest_date = trigger_df["trade_date"].max()
+    latest_hits = trigger_df[trigger_df["trade_date"] == latest_date].copy()
+    latest_hits = latest_hits.merge(
+        strategy_ranking_df[
+            [
+                "signal_code",
+                "strategy_rank_1d",
+                "strategy_rank_3d",
+                "sample_count",
+                "avg_ret_1d",
+                "win_rate_1d",
+                "avg_ret_3d",
+                "win_rate_3d",
+            ]
+        ].rename(
+            columns={
+                "sample_count": "strategy_sample_count",
+                "avg_ret_1d": "strategy_avg_ret_1d",
+                "win_rate_1d": "strategy_win_rate_1d",
+                "avg_ret_3d": "strategy_avg_ret_3d",
+                "win_rate_3d": "strategy_win_rate_3d",
+            }
+        ),
+        on="signal_code",
+        how="left",
+    )
+    latest_hits = latest_hits.sort_values(
+        ["strategy_avg_ret_1d", "strategy_win_rate_1d", "strategy_avg_ret_3d", "strategy_win_rate_3d", "signal_code", "ts_code"],
+        ascending=[False, False, False, False, True, True],
+        na_position="last",
+    ).reset_index(drop=True)
+    leading_cols = [
+        "ts_code",
+        "trade_date",
+        "bottom_family",
+        "bottom_code",
+        "volume_family",
+        "volume_code",
+        "signal_code",
+        "close_qfq",
+        "pct_chg",
+        "volume_ratio",
+        "turnover_rate_f",
+        "strategy_rank_1d",
+        "strategy_rank_3d",
+        "strategy_avg_ret_1d",
+        "strategy_win_rate_1d",
+        "strategy_avg_ret_3d",
+        "strategy_win_rate_3d",
+        "strategy_sample_count",
+    ]
+    return latest_hits[leading_cols]
+
+
 def summarize_signal_matrix(
     frame: pd.DataFrame,
     min_sample: int = 30,
@@ -277,7 +421,8 @@ def summarize_signal_matrix(
             triggered["volume_code"] = volume_rule.code
             triggered["signal_code"] = signal_code
             trigger_frames.append(
-                triggered[
+                _select_existing_columns(
+                    triggered,
                     [
                         "ts_code",
                         "trade_date",
@@ -286,10 +431,14 @@ def summarize_signal_matrix(
                         "volume_family",
                         "volume_code",
                         "signal_code",
+                        "close_qfq",
+                        "pct_chg",
+                        "volume_ratio",
+                        "turnover_rate_f",
                         "ret_1d",
                         "ret_3d",
-                    ]
-                ]
+                    ],
+                )
             )
             summary_rows.append(
                 {
@@ -401,23 +550,29 @@ def write_outputs(
     trigger_df: pd.DataFrame,
     bottom_family_df: pd.DataFrame,
     volume_family_df: pd.DataFrame,
+    strategy_ranking_df: pd.DataFrame,
+    latest_hits_df: pd.DataFrame,
     output_dir: Path,
     top_n: int,
 ) -> dict[str, Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     output_stem = _build_output_stem()
-    summary_csv = output_dir / f"{output_stem}.cvs"
+    summary_csv = output_dir / f"{output_stem}.csv"
     summary_md = output_dir / f"{output_stem}.md"
     bottom_family_csv = output_dir / f"{output_stem}_bottom_family.csv"
     volume_family_csv = output_dir / f"{output_stem}_volume_family.csv"
     trigger_csv = output_dir / f"{output_stem}_triggers.csv"
+    strategy_ranking_csv = output_dir / f"{output_stem}_strategy_ranking.csv"
+    latest_hits_csv = output_dir / f"{output_stem}_latest_hits.csv"
 
     summary_df.to_csv(summary_csv, index=False)
     trigger_df.to_csv(trigger_csv, index=False)
     bottom_family_df.to_csv(bottom_family_csv, index=False)
     volume_family_df.to_csv(volume_family_csv, index=False)
+    strategy_ranking_df.to_csv(strategy_ranking_csv, index=False)
+    latest_hits_df.to_csv(latest_hits_csv, index=False)
 
-    top_view = summary_df.head(top_n)
+    top_view = strategy_ranking_df.head(top_n)
     summary_md.write_text(_dataframe_to_markdown(top_view), encoding="utf-8")
     return {
         "summary_csv": summary_csv,
@@ -425,6 +580,8 @@ def write_outputs(
         "bottom_family_csv": bottom_family_csv,
         "volume_family_csv": volume_family_csv,
         "trigger_csv": trigger_csv,
+        "strategy_ranking_csv": strategy_ranking_csv,
+        "latest_hits_csv": latest_hits_csv,
     }
 
 
@@ -442,11 +599,15 @@ def run_analysis(
         analysis_df,
         min_sample=min_sample,
     )
+    strategy_ranking_df = build_strategy_ranking(summary_df)
+    latest_hits_df = build_latest_hits(trigger_df, strategy_ranking_df)
     output_paths = write_outputs(
         summary_df=summary_df,
         trigger_df=trigger_df,
         bottom_family_df=bottom_family_df,
         volume_family_df=volume_family_df,
+        strategy_ranking_df=strategy_ranking_df,
+        latest_hits_df=latest_hits_df,
         output_dir=output_dir,
         top_n=top_n,
     )
@@ -457,6 +618,8 @@ def run_analysis(
         "trigger_df": trigger_df,
         "bottom_family_df": bottom_family_df,
         "volume_family_df": volume_family_df,
+        "strategy_ranking_df": strategy_ranking_df,
+        "latest_hits_df": latest_hits_df,
         "output_paths": output_paths,
     }
 
@@ -480,8 +643,8 @@ def main(argv: list[str] | None = None) -> int:
         top_n=args.top_n,
         output_dir=args.output_dir,
     )
-    summary_df = result["summary_df"]
-    print(summary_df.head(args.top_n).to_string(index=False))
+    strategy_ranking_df = result["strategy_ranking_df"]
+    print(strategy_ranking_df.head(args.top_n).to_string(index=False))
     print(f"summary_csv={result['output_paths']['summary_csv']}")
     return 0
 
