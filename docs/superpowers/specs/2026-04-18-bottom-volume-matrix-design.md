@@ -1,412 +1,333 @@
-# 底部放量信号矩阵分析设计
+# 底部放量策略紧凑输出设计
 
 ## 背景
 
-目标是在 `apps/data_hub/data_pipeline_ts` 中新增一个单独的 Python 分析脚本，只使用主表 `stock_stk_factor_pro`，批量评估“底部开始放量”股票在信号当日后的次日和第 3 个交易日收益表现。
+现有 `bottom_volume_matrix.py` 已经可以基于主表 `stock_stk_factor_pro` 生成底部放量组合策略，并输出多份中间结果文件。但当前输出过多，且不符合本轮分析需求。
 
-这次不预设唯一正确口径，而是同时定义多组“底部”条件和多组“放量启动”条件，做笛卡尔组合后统一输出结果，避免因为先验定义过强而错过有效区间。
+这次改动的目标是把输出契约收敛为两份文件：
+
+- 一份 `mmdd_hhmm.csv`
+- 一份 `mmdd_hhmm.md`
+
+其中 `csv` 直接给出策略表现排名与最新交易日命中股票集合，`md` 只负责解释策略编码含义。
 
 ## 目标与非目标
 
 ### 目标
 
-- 只依赖 `stock_stk_factor_pro`
-- 单脚本执行，一次性输出全部定义组组合结果
-- 统一使用前复权价格 `close_qfq`
-- 输出次日收益和第 3 个交易日收益
-- 输出每组组合的样本数、均值、中位数、胜率
-- 保留可扩展配置，后续可继续增加定义组
+- 继续只依赖 `stock_stk_factor_pro`
+- 保持现有底部规则与放量规则生成逻辑
+- 每行只保留一个唯一策略编码 `signal_code`
+- 输出每个策略的样本数、1 日与 3 日收益/胜率/方差
+- 输出最新交易日该策略命中的股票集合
+- 落盘时只生成一份 `csv` 和一份 `md`
 
 ### 非目标
 
-- 不接入 TuShare/AkShare 实时接口
-- 不依赖 `stock_daily`、`stock_daily_basic` 或其他侧表
-- 第一版不做机器学习排序，不做复杂打分模型
-- 第一版不做前端展示，只做命令行和文件输出
+- 不引入新的数据表或实时接口
+- 不新增前端页面
+- 不输出 family 汇总、trigger 明细、latest hits 明细等额外文件
+- 不改单策略定义数量和阈值网格
 
-## 单脚本方案
+## 现有实现保持不变的部分
 
-建议新增脚本：
+以下能力继续沿用当前脚本：
 
-- `analysis/bottom_volume_matrix.py`
+- 数据源：`stock_stk_factor_pro`
+- 收益口径：`close_qfq`
+- 特征工程：
+  - `ret_1d`
+  - `ret_3d`
+  - `rolling_low_120`
+  - `rolling_high_120`
+  - `pos120`
+  - `close_to_low_120`
+  - 量能、换手、成交额相关前置均值与跳升指标
+- 规则生成：
+  - `18` 组底部规则
+  - `18` 组放量规则
+  - 共 `324` 组 `signal_code = bottom_code__volume_code`
 
-脚本职责：
+## 输出方案
 
-1. 从 `stock_stk_factor_pro` 查询所需列
-2. 在 pandas 内计算滚动底部位置和放量特征
-3. 定义多组底部条件和多组放量条件
-4. 对全部组合做信号筛选和收益统计
-5. 输出终端摘要和落盘文件
+### 方案对比
 
-## 数据来源与字段
+#### 方案 A：只调整落盘层
 
-查询字段仅来自主表：
+- 内部仍然保留 `summary_df`、`trigger_df` 等中间数据结构
+- 仅在最终输出前合成一张紧凑汇总表
+- 只把这张汇总表写入 `csv`
+- 只把策略编码释义写入 `md`
 
-- 标识字段：`ts_code`, `trade_date`
-- 价格字段：`open_qfq`, `high_qfq`, `low_qfq`, `close_qfq`
-- 日线字段：`pct_chg`, `vol`, `amount`
-- 量能字段：`turnover_rate`, `turnover_rate_f`, `volume_ratio`
-- 技术字段：`boll_lower_qfq`, `boll_mid_qfq`, `boll_upper_qfq`, `rsi_qfq_6`, `rsi_qfq_12`, `ma_qfq_20`, `ma_qfq_60`, `downdays`, `updays`
+优点：
 
-注意：
+- 复用现有计算链路最多
+- 改动面最小
+- 回归风险最低
 
-- 主表没有现成的 `rolling_low_120` / `rolling_high_120` 字段，脚本需要基于 `low_qfq`、`high_qfq` 在股票维度自行滚动计算
-- 所有收益口径都以 `close_qfq` 为准，不使用 `pre_close`
+缺点：
 
-## 派生特征
+- 内部仍有部分不再对外暴露的中间结构
 
-脚本在按 `ts_code, trade_date` 排序后，按股票分组派生：
+#### 方案 B：彻底改成单表驱动
+
+- 删除原有 ranking/latest hits/family summary 概念
+- 所有处理都围绕最终单表组织
+
+优点：
+
+- 结构更纯粹
+
+缺点：
+
+- 重构范围偏大
+- 容易引入回归
+
+#### 方案 C：增加输出模式参数
+
+- 支持 `compact/full`
+
+优点：
+
+- 灵活
+
+缺点：
+
+- 复杂度增加
+- 当前需求明确只要紧凑版，额外模式没有必要
+
+### 采用方案
+
+采用 `方案 A：只调整落盘层`。
+
+## CSV 输出定义
+
+`csv` 文件名格式：
+
+- `mmdd_hhmm.csv`
+
+每行代表一个唯一 `signal_code`，列固定为：
+
+- `signal_code`
+- `sample_count`
+- `win_rate_1d`
+- `avg_ret_1d`
+- `var_ret_1d`
+- `win_rate_3d`
+- `avg_ret_3d`
+- `var_ret_3d`
+- `latest_trade_date`
+- `latest_hit_stocks`
+
+列含义：
+
+- `signal_code`
+  - 组合策略唯一编码
+  - 格式：`bottom_code__volume_code`
+- `sample_count`
+  - 历史上该策略触发的样本数
+- `win_rate_1d`
+  - `ret_1d > 0` 的占比
+- `avg_ret_1d`
+  - `ret_1d` 的均值
+- `var_ret_1d`
+  - `ret_1d` 的样本方差
+- `win_rate_3d`
+  - `ret_3d > 0` 的占比
+- `avg_ret_3d`
+  - `ret_3d` 的均值
+- `var_ret_3d`
+  - `ret_3d` 的样本方差
+- `latest_trade_date`
+  - 分析样本里的最新交易日
+  - 该列在整张表中是统一日期
+- `latest_hit_stocks`
+  - 在 `latest_trade_date` 当天触发该策略的 `ts_code` 集合
+  - 多个股票用英文逗号拼接
+  - 若当日未触发则为空字符串
+
+### 排序规则
+
+`csv` 按如下优先级排序：
+
+1. `win_rate_1d` 降序
+2. `avg_ret_1d` 降序
+3. `win_rate_3d` 降序
+4. `avg_ret_3d` 降序
+5. `sample_count` 降序
+6. `signal_code` 升序
+
+## MD 输出定义
+
+`md` 文件名格式：
+
+- `mmdd_hhmm.md`
+
+文件内容只用于解释策略编码，不再输出排行榜表格。
+
+建议结构：
+
+## Signal Codes
+
+- `B_pos120_le_10__V_vr_gt_15`
+  - 底部规则：`pos120` 家族，收盘价位于 120 日区间位置 `<= 0.10`
+  - 放量规则：`volume_ratio` 家族，当日量比 `> 1.50`
+- `B_boll_rsi_medium__V_shrink_expand_medium`
+  - 底部规则：布林下轨附近且 RSI 超跌
+  - 放量规则：前 3 日缩量后当日重新放量
+
+文档应覆盖全部生成出来的 `signal_code`，每个 code 一条说明。
+
+## 最新交易日命中集合口径
+
+最新交易日定义为：
+
+- `analysis_df["trade_date"].max()`
+
+不是“每个策略最近一次触发日”，也不是“数据库全局最新日但忽略 `end_date`”。
+
+当脚本传入 `--end-date` 时：
+
+- 统计样本仍然只使用 `trade_date <= end_date`
+- `latest_trade_date` 也以这个截断后的分析样本为准
+
+这样用户看到的“最新这个交易日触发的股票集合”始终和本次分析区间一致。
+
+## 代码层设计
+
+### 保留的函数
+
+- `build_features()`
+- `build_bottom_rule_defs()`
+- `build_volume_rule_defs()`
+- `summarize_signal_matrix()`
+- `load_base_frame()`
+- `run_analysis()`
+
+### 需要新增或重写的函数
+
+#### `build_compact_summary(summary_df, trigger_df) -> pd.DataFrame`
+
+职责：
+
+- 基于现有 `summary_df` 补充 `var_ret_1d` 和 `var_ret_3d`
+- 从 `trigger_df` 中提取最新交易日命中股票集合
+- 合成最终落盘用的紧凑汇总表
+- 执行最终排序
+
+建议实现：
+
+1. 先从 `trigger_df` 计算每个 `signal_code` 的 `ret_1d` / `ret_3d` 方差
+2. 取 `latest_trade_date = trigger_df["trade_date"].max()`
+3. 过滤出该日期的触发行
+4. 对每个 `signal_code` 聚合 `ts_code`
+   - 去重
+   - 排序
+   - 用逗号拼接
+5. 回填到 `summary_df`
+6. 为未命中的策略填充空字符串
+7. 输出固定列顺序
+
+#### `build_signal_code_markdown(bottom_rules, volume_rules) -> str`
+
+职责：
+
+- 为全部 `signal_code` 生成说明文档
+- 根据 `RuleDef.description` 组合出可读描述
+
+建议实现：
+
+- 遍历全部底部规则和放量规则
+- 生成 `signal_code`
+- 生成两段释义：
+  - 底部规则含义
+  - 放量规则含义
+- 以 Markdown 列表落盘
+
+### 需要删除的对外输出
+
+脚本不再写出以下文件：
+
+- `*_bottom_family.csv`
+- `*_volume_family.csv`
+- `*_triggers.csv`
+- `*_strategy_ranking.csv`
+- `*_latest_hits.csv`
+
+对应地，`write_outputs()` 的返回值也只保留：
+
+- `summary_csv`
+- `summary_md`
+
+## 统计口径
+
+### 收益定义
 
 - `ret_1d = close_qfq[t+1] / close_qfq[t] - 1`
 - `ret_3d = close_qfq[t+3] / close_qfq[t] - 1`
-- `rolling_low_120 = 过去 120 个交易日 low_qfq 最小值`
-- `rolling_high_120 = 过去 120 个交易日 high_qfq 最大值`
-- `pos120 = (close_qfq - rolling_low_120) / (rolling_high_120 - rolling_low_120)`
-- `close_to_low_120 = close_qfq / rolling_low_120`
-- `vol_ma_3_prev = 前 3 日 vol 均值`
-- `vol_ma_5_prev = 前 5 日 vol 均值`
-- `volume_ratio_ma_3_prev = 前 3 日 volume_ratio 均值`
-- `prev_volume_ratio = 前 1 日 volume_ratio`
-- `volume_expand_ratio_3 = volume_ratio / volume_ratio_ma_3_prev`
-- `turnover_rate_f_ma_3_prev = 前 3 日 turnover_rate_f 均值`
-- `turnover_jump_3 = turnover_rate_f / turnover_rate_f_ma_3_prev`
-- `amount_ma_5_prev = 前 5 日 amount 均值`
-- `vol_spike_5 = vol / vol_ma_5_prev`
-- `amount_spike_5 = amount / amount_ma_5_prev`
 
-所有“前 N 日均值”都不包含当日，避免信号穿越。
+### 胜率定义
 
-## 信号定义
+- `win_rate_1d = mean(ret_1d > 0)`
+- `win_rate_3d = mean(ret_3d > 0)`
 
-第一版不再把规则硬编码成少量固定组，而是采用“规则模板 + 阈值网格自动生成”的方式。这样脚本仍然只读一次数据库，但可以在本地批量生成几十组底部定义、几十组放量定义，再做组合回测。
+### 方差定义
 
-默认配置建议生成：
+- `var_ret_1d = ret_1d` 的样本方差
+- `var_ret_3d = ret_3d` 的样本方差
 
-- `18` 组底部定义
-- `18` 组放量定义
-- `324` 组组合结果
+若有效样本数不足 2 条，方差允许为 `NaN`。
 
-如果后续还想继续扩容，只需要给模板补阈值，不需要改主流程。
+## 测试设计
 
-### 底部定义模板
+需要更新或新增的测试点：
 
-#### `pos120` 低位模板
-
-按 `pos120 <= threshold` 生成 5 组：
-
-- `0.10`
-- `0.15`
-- `0.20`
-- `0.25`
-- `0.30`
-
-示例编码：
-
-- `B_pos120_le_10`
-- `B_pos120_le_20`
-- `B_pos120_le_30`
-
-#### `near_120_low` 贴近阶段低点模板
-
-按 `close_to_low_120 <= threshold` 生成 4 组：
-
-- `1.03`
-- `1.05`
-- `1.08`
-- `1.10`
-
-示例编码：
-
-- `B_near120_low_03`
-- `B_near120_low_08`
-
-#### `boll_rsi_oversold` 超跌模板
-
-按 `close_qfq <= boll_lower_qfq * price_mult` 且 `rsi_qfq_6 < rsi_th` 生成 3 组：
-
-- `(1.00, 30)`
-- `(1.03, 35)`
-- `(1.05, 40)`
-
-示例编码：
-
-- `B_boll_rsi_strict`
-- `B_boll_rsi_medium`
-- `B_boll_rsi_loose`
-
-#### `below_ma_zone` 弱势均线模板
-
-生成 3 组：
-
-- `close_qfq < ma_qfq_20 and close_qfq < ma_qfq_60`
-- `close_qfq < ma_qfq_20 and ma_qfq_20 < ma_qfq_60`
-- `close_qfq < ma_qfq_60 and rsi_qfq_12 < 45`
-
-示例编码：
-
-- `B_below_ma_both`
-- `B_below_ma_trend_weak`
-- `B_below_ma60_rsi45`
-
-#### `exhaustion` 衰竭低位模板
-
-按 `downdays >= d` 且 `rsi_qfq_6 < r` 生成 3 组：
-
-- `(3, 40)`
-- `(4, 35)`
-- `(5, 30)`
-
-示例编码：
-
-- `B_exhaustion_d3_r40`
-- `B_exhaustion_d5_r30`
-
-底部模板合计：`5 + 4 + 3 + 3 + 3 = 18` 组。
-
-### 放量启动模板
-
-#### `volume_ratio` 绝对量比模板
-
-按 `volume_ratio > threshold` 生成 4 组：
-
-- `1.20`
-- `1.50`
-- `1.80`
-- `2.00`
-
-示例编码：
-
-- `V_vr_gt_12`
-- `V_vr_gt_15`
-- `V_vr_gt_20`
-
-#### `shrink_to_expand` 缩量转放量模板
-
-按 `volume_ratio > now_th` 且 `volume_ratio_ma_3_prev <= prev_th` 生成 3 组：
-
-- `(1.20, 0.80)`
-- `(1.50, 1.00)`
-- `(1.80, 1.20)`
-
-示例编码：
-
-- `V_shrink_expand_strict`
-- `V_shrink_expand_medium`
-- `V_shrink_expand_loose`
-
-#### `vol_spike_5` 原始成交量跳升模板
-
-按 `vol_spike_5 >= threshold` 生成 3 组：
-
-- `1.30`
-- `1.50`
-- `1.80`
-
-示例编码：
-
-- `V_vol_spike5_13`
-- `V_vol_spike5_18`
-
-#### `turnover_jump` 换手跳升模板
-
-按 `turnover_rate_f > min_turnover` 且 `turnover_jump_3 >= jump_th` 生成 3 组：
-
-- `(1.5, 1.30)`
-- `(2.0, 1.50)`
-- `(3.0, 2.00)`
-
-示例编码：
-
-- `V_turnover_jump_15_13`
-- `V_turnover_jump_30_20`
-
-#### `amount_spike_5` 成交额跳升模板
-
-按 `amount_spike_5 >= threshold` 生成 3 组：
-
-- `1.30`
-- `1.50`
-- `2.00`
-
-示例编码：
-
-- `V_amount_spike5_13`
-- `V_amount_spike5_20`
-
-#### `consecutive_expand` 连续放量模板
-
-生成 2 组：
-
-- `volume_ratio > 1.20 and prev_volume_ratio > 1.00`
-- `volume_ratio > 1.50 and prev_volume_ratio > 1.20`
-
-示例编码：
-
-- `V_consecutive_expand_loose`
-- `V_consecutive_expand_strict`
-
-放量模板合计：`4 + 3 + 3 + 3 + 3 + 2 = 18` 组。
-
-### 组合方式
-
-执行 `底部定义 x 放量定义` 的全组合矩阵，默认共 `324` 组：
-
-- `signal = bottom_mask & volume_mask`
-
-每条结果保留：
-
-- `bottom_family`
-- `bottom_code`
-- `volume_family`
-- `volume_code`
-- `signal_code`
-- `sample_count`
-- `avg_ret_1d`
-- `median_ret_1d`
-- `win_rate_1d`
-- `avg_ret_3d`
-- `median_ret_3d`
-- `win_rate_3d`
-
-## 数据过滤
-
-基础过滤：
-
-- `close_qfq` 非空
-- `vol > 0`
-- 未来 1 日或未来 3 日价格存在时才纳入对应收益统计
-
-结果过滤：
-
-- 默认增加 `min_sample` 参数，初始值建议为 `30`
-- 摘要输出按 `avg_ret_3d` 或 `win_rate_3d` 降序展示，但不隐藏低样本组合，只单独标注
-- 终端默认只展示 `top_n`，完整结果全部写入文件
-
-## 输出形式
-
-### 终端输出
-
-脚本运行后打印：
-
-- 回测区间
-- 股票样本总行数
-- 可用于 `ret_1d` / `ret_3d` 的有效样本数
-- 各模板家族生成的规则数量
-- Top N 组合
-- 分 `bottom_family` 的最佳组合
-- 分 `volume_family` 的最佳组合
-- 样本量不足但收益显著的组合提醒
-
-### 落盘文件
-
-建议输出到：
-
-- `analysis/output/bottom_volume_matrix_summary.csv`
-- `analysis/output/bottom_volume_matrix_summary.md`
-- `analysis/output/bottom_volume_matrix_bottom_family_summary.csv`
-- `analysis/output/bottom_volume_matrix_volume_family_summary.csv`
-- `analysis/output/bottom_volume_matrix_triggers.csv`
-
-其中：
-
-- `summary.csv` 保存完整组合统计
-- `summary.md` 便于直接阅读
-- `bottom_family_summary.csv` 汇总每个底部模板家族的最优组合
-- `volume_family_summary.csv` 汇总每个放量模板家族的最优组合
-- `triggers.csv` 保存命中的逐条明细，便于后续复盘
-
-## 命令行参数
-
-建议支持：
-
-- `--start-date`
-- `--end-date`
-- `--min-sample`
-- `--top-n`
-- `--bottom-mode`
-- `--volume-mode`
-- `--output-dir`
-
-默认行为：
-
-- 若未传日期，则默认从 `20180101` 分析到库中最新交易日
-- `--bottom-mode all`，即启用全部底部模板
-- `--volume-mode all`，即启用全部放量模板
-- 若未传输出目录，则落到 `analysis/output`
-
-## 实现结构
-
-脚本内部建议拆成以下函数，保持清晰但不额外抽象成新模块：
-
-- `load_base_frame(...)`
-- `build_features(...)`
-- `build_bottom_rule_defs(...)`
-- `build_volume_rule_defs(...)`
-- `build_bottom_masks(...)`
-- `build_volume_masks(...)`
-- `summarize_signal_matrix(...)`
-- `write_outputs(...)`
-- `main()`
-
-信号定义采用模板配置：
-
-```python
-BOTTOM_RULE_TEMPLATES = [
-    {
-        "family": "pos120",
-        "thresholds": [0.10, 0.15, 0.20, 0.25, 0.30],
-        "builder": build_pos120_rules,
-    },
-]
-```
-
-这样后续新增规则只改模板参数，不改主流程。
-
-## 验证与测试
-
-第一版至少补两类验证：
-
-- 单元测试：用小样本 DataFrame 校验 `pos120`、`vol_spike_5`、`ret_1d`、`ret_3d` 计算没有穿越和错位
-- 回归测试：用构造数据校验规则矩阵输出列完整、样本数正确、排序稳定
-
-建议新增测试文件：
-
-- `tests/test_bottom_volume_matrix.py`
+1. `build_compact_summary()`：
+   - 能输出固定列
+   - 能按最新交易日拼接股票集合
+   - 能生成 `var_ret_1d` / `var_ret_3d`
+   - 能按 `win_rate_1d`、`avg_ret_1d` 降序排序
+2. `write_outputs()`：
+   - 只创建 `mmdd_hhmm.csv` 和 `mmdd_hhmm.md`
+   - 不再断言其他 `csv` 存在
+3. `run_analysis()`：
+   - 返回的结果对象中包含新的紧凑汇总表
+   - 输出路径只有两项
+4. `md` 内容：
+   - 包含 `signal_code`
+   - 包含底部与放量规则解释文本
 
 ## 风险与处理
 
-### 风险 1：底部定义之间高度重叠
+### 风险 1：方差列全是空
+
+原因：
+
+- 某些策略命中数过少
 
 处理：
 
-- 输出每组样本数
-- 保留逐条命中明细，后续可分析组合重叠度
-- 同时输出 `bottom_family` / `volume_family` 维度汇总，避免只看单条组合
+- 接受 `NaN`
+- 不因为方差为空而丢弃策略
 
-### 风险 2：小样本导致均值失真
-
-处理：
-
-- 默认最小样本阈值
-- 同时展示均值、中位数、胜率，避免只看均值
-- 终端只展示 Top N，全量矩阵交给文件，避免人工误读长尾噪声
-
-### 风险 3：滚动窗口引入前视偏差
+### 风险 2：最新交易日没有任何策略命中
 
 处理：
 
-- 所有滚动特征严格只用当日及历史数据
-- 所有前 N 日均值特征使用 shift 后再 rolling
+- `latest_trade_date` 仍写入统一最新日期
+- `latest_hit_stocks` 全部为空字符串
 
-## 推荐结论
+### 风险 3：股票集合顺序不稳定
 
-推荐按这个设计实现第一版：
+处理：
 
-- 单脚本
-- 主表直查
-- 基于模板自动生成 18 组底部定义
-- 基于模板自动生成 18 组放量定义
-- 324 组组合一次性评估
-- 终端摘要 + CSV/Markdown 明细双输出
+- 聚合前对 `ts_code` 去重并排序
 
-这样能最快得到一版可解释、可扩展、可复盘的研究结果，并且后续要继续加定义组时不会破坏已有结构。
+## 实施边界
+
+这次实现只改：
+
+- `apps/data_hub/data_pipeline_ts/analysis/bottom_val_strategies/bottom_volume_matrix.py`
+- `apps/data_hub/data_pipeline_ts/tests/test_bottom_volume_matrix.py`
+
+不触碰其他分析脚本，不改数据库结构，不改 CLI 参数语义。
