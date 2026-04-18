@@ -616,44 +616,15 @@ def load_base_frame(start_date: str, end_date: str | None = None) -> pd.DataFram
     return query_df(sql, params)
 
 
-def write_outputs(
-    summary_df: pd.DataFrame,
-    trigger_df: pd.DataFrame,
-    bottom_family_df: pd.DataFrame,
-    volume_family_df: pd.DataFrame,
-    strategy_ranking_df: pd.DataFrame,
-    latest_hits_df: pd.DataFrame,
-    output_dir: Path,
-    top_n: int,
-) -> dict[str, Path]:
+def write_outputs(compact_df: pd.DataFrame, signal_code_markdown: str, output_dir: Path) -> dict[str, Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     output_stem = _build_output_stem()
     summary_csv = output_dir / f"{output_stem}.csv"
     summary_md = output_dir / f"{output_stem}.md"
-    bottom_family_csv = output_dir / f"{output_stem}_bottom_family.csv"
-    volume_family_csv = output_dir / f"{output_stem}_volume_family.csv"
-    trigger_csv = output_dir / f"{output_stem}_triggers.csv"
-    strategy_ranking_csv = output_dir / f"{output_stem}_strategy_ranking.csv"
-    latest_hits_csv = output_dir / f"{output_stem}_latest_hits.csv"
 
-    summary_df.to_csv(summary_csv, index=False)
-    trigger_df.to_csv(trigger_csv, index=False)
-    bottom_family_df.to_csv(bottom_family_csv, index=False)
-    volume_family_df.to_csv(volume_family_csv, index=False)
-    strategy_ranking_df.to_csv(strategy_ranking_csv, index=False)
-    latest_hits_df.to_csv(latest_hits_csv, index=False)
-
-    top_view = strategy_ranking_df.head(top_n)
-    summary_md.write_text(_dataframe_to_markdown(top_view), encoding="utf-8")
-    return {
-        "summary_csv": summary_csv,
-        "summary_md": summary_md,
-        "bottom_family_csv": bottom_family_csv,
-        "volume_family_csv": volume_family_csv,
-        "trigger_csv": trigger_csv,
-        "strategy_ranking_csv": strategy_ranking_csv,
-        "latest_hits_csv": latest_hits_csv,
-    }
+    compact_df.to_csv(summary_csv, index=False)
+    summary_md.write_text(signal_code_markdown, encoding="utf-8")
+    return {"summary_csv": summary_csv, "summary_md": summary_md}
 
 
 def run_analysis(
@@ -666,31 +637,23 @@ def run_analysis(
     source_df = load_base_frame(start_date=start_date, end_date=end_date)
     featured_df = build_features(source_df)
     analysis_df = featured_df[featured_df["trade_date"] <= end_date].copy() if end_date else featured_df
-    summary_df, trigger_df, bottom_family_df, volume_family_df = summarize_signal_matrix(
+    summary_df, trigger_df, _, _ = summarize_signal_matrix(
         analysis_df,
         min_sample=min_sample,
     )
-    strategy_ranking_df = build_strategy_ranking(summary_df)
-    latest_hits_df = build_latest_hits(trigger_df, strategy_ranking_df)
+    compact_df = build_compact_summary(summary_df, trigger_df)
+    signal_code_markdown = build_signal_code_markdown(build_bottom_rule_defs(), build_volume_rule_defs())
     output_paths = write_outputs(
-        summary_df=summary_df,
-        trigger_df=trigger_df,
-        bottom_family_df=bottom_family_df,
-        volume_family_df=volume_family_df,
-        strategy_ranking_df=strategy_ranking_df,
-        latest_hits_df=latest_hits_df,
+        compact_df=compact_df,
+        signal_code_markdown=signal_code_markdown,
         output_dir=output_dir,
-        top_n=top_n,
     )
     return {
         "source_df": source_df,
         "featured_df": featured_df,
         "summary_df": summary_df,
         "trigger_df": trigger_df,
-        "bottom_family_df": bottom_family_df,
-        "volume_family_df": volume_family_df,
-        "strategy_ranking_df": strategy_ranking_df,
-        "latest_hits_df": latest_hits_df,
+        "compact_df": compact_df,
         "output_paths": output_paths,
     }
 
@@ -714,8 +677,7 @@ def main(argv: list[str] | None = None) -> int:
         top_n=args.top_n,
         output_dir=args.output_dir,
     )
-    strategy_ranking_df = result["strategy_ranking_df"]
-    print(strategy_ranking_df.head(args.top_n).to_string(index=False))
+    print(result["compact_df"].head(args.top_n).to_string(index=False))
     print(f"summary_csv={result['output_paths']['summary_csv']}")
     return 0
 

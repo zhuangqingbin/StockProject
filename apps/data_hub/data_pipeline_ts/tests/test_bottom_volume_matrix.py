@@ -463,91 +463,45 @@ def test_strategy_ranking_and_latest_hits_use_1d_priority():
     assert latest_hits_df.iloc[0]["strategy_avg_ret_1d"] >= latest_hits_df.iloc[-1]["strategy_avg_ret_1d"]
 
 
-def test_write_outputs_creates_summary_and_trigger_files(tmp_path: Path, monkeypatch):
-    summary_df = pd.DataFrame(
+def test_write_outputs_creates_only_compact_csv_and_md(tmp_path: Path, monkeypatch):
+    compact_df = pd.DataFrame(
         [
             {
-                "bottom_family": "pos120",
-                "bottom_code": "B_pos120_le_20",
-                "volume_family": "volume_ratio",
-                "volume_code": "V_vr_gt_15",
                 "signal_code": "B_pos120_le_20__V_vr_gt_15",
                 "sample_count": 2,
-                "avg_ret_1d": 0.01,
-                "median_ret_1d": 0.01,
                 "win_rate_1d": 0.5,
-                "avg_ret_3d": 0.03,
-                "median_ret_3d": 0.03,
-                "win_rate_3d": 1.0,
-                "is_low_sample": True,
-            }
-        ]
-    )
-    trigger_df = pd.DataFrame(
-        [
-            {
-                "ts_code": "000001.SZ",
-                "trade_date": "20240101",
-                "signal_code": "B_pos120_le_20__V_vr_gt_15",
-                "ret_1d": 0.02,
-                "ret_3d": 0.05,
-            }
-        ]
-    )
-    bottom_family_df = pd.DataFrame(
-        [{"bottom_family": "pos120", "best_signal_code": "B_pos120_le_20__V_vr_gt_15", "best_avg_ret_3d": 0.03}]
-    )
-    volume_family_df = pd.DataFrame(
-        [{"volume_family": "volume_ratio", "best_signal_code": "B_pos120_le_20__V_vr_gt_15", "best_avg_ret_3d": 0.03}]
-    )
-    strategy_ranking_df = pd.DataFrame(
-        [
-            {
-                "strategy_rank_1d": 1,
-                "strategy_rank_3d": 1,
-                "signal_code": "B_pos120_le_20__V_vr_gt_15",
                 "avg_ret_1d": 0.01,
-                "win_rate_1d": 0.5,
-                "avg_ret_3d": 0.03,
+                "var_ret_1d": 0.001,
                 "win_rate_3d": 1.0,
+                "avg_ret_3d": 0.03,
+                "var_ret_3d": 0.002,
+                "latest_trade_date": "20240101",
+                "latest_hit_stocks": "000001.SZ",
             }
         ]
     )
-    latest_hits_df = pd.DataFrame(
-        [
-            {
-                "ts_code": "000001.SZ",
-                "trade_date": "20240101",
-                "signal_code": "B_pos120_le_20__V_vr_gt_15",
-                "strategy_avg_ret_1d": 0.01,
-            }
-        ]
-    )
+    markdown_text = "## Signal Codes\n\n- `B_pos120_le_20__V_vr_gt_15`"
 
     monkeypatch.setattr(module, "datetime", _fixed_datetime_class())
 
     output_paths = write_outputs(
-        summary_df=summary_df,
-        trigger_df=trigger_df,
-        bottom_family_df=bottom_family_df,
-        volume_family_df=volume_family_df,
-        strategy_ranking_df=strategy_ranking_df,
-        latest_hits_df=latest_hits_df,
+        compact_df=compact_df,
+        signal_code_markdown=markdown_text,
         output_dir=tmp_path,
-        top_n=10,
     )
 
     assert (tmp_path / "0418_1630.csv").exists()
     assert (tmp_path / "0418_1630.md").exists()
-    assert (tmp_path / "0418_1630_bottom_family.csv").exists()
-    assert (tmp_path / "0418_1630_volume_family.csv").exists()
-    assert (tmp_path / "0418_1630_triggers.csv").exists()
-    assert (tmp_path / "0418_1630_strategy_ranking.csv").exists()
-    assert (tmp_path / "0418_1630_latest_hits.csv").exists()
-    assert output_paths["summary_md"].name == "0418_1630.md"
+    assert not (tmp_path / "0418_1630_strategy_ranking.csv").exists()
+    assert not (tmp_path / "0418_1630_latest_hits.csv").exists()
+    assert (tmp_path / "0418_1630.md").read_text(encoding="utf-8") == markdown_text
+    assert output_paths == {
+        "summary_csv": tmp_path / "0418_1630.csv",
+        "summary_md": tmp_path / "0418_1630.md",
+    }
 
 
-def test_run_analysis_uses_query_df_and_returns_non_empty_summary(monkeypatch, tmp_path: Path):
+def test_run_analysis_returns_final_compact_contract(monkeypatch, tmp_path: Path):
     source = pd.DataFrame(
         [
             {
@@ -703,12 +657,14 @@ def test_run_analysis_uses_query_df_and_returns_non_empty_summary(monkeypatch, t
     )
 
     assert not result["summary_df"].empty
-    assert not result["strategy_ranking_df"].empty
-    assert not result["latest_hits_df"].empty
+    assert not result["compact_df"].empty
+    assert "latest_hit_stocks" in result["compact_df"].columns
     assert (tmp_path / "0418_1630.csv").exists()
-    assert (tmp_path / "0418_1630_strategy_ranking.csv").exists()
-    assert (tmp_path / "0418_1630_latest_hits.csv").exists()
-    assert result["latest_hits_df"].iloc[0]["strategy_avg_ret_1d"] >= result["latest_hits_df"].iloc[-1]["strategy_avg_ret_1d"]
+    assert (tmp_path / "0418_1630.md").exists()
+    assert result["output_paths"] == {
+        "summary_csv": tmp_path / "0418_1630.csv",
+        "summary_md": tmp_path / "0418_1630.md",
+    }
 
 
 def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
@@ -719,8 +675,21 @@ def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
             "summary_df": pd.DataFrame(
                 [{"signal_code": "demo", "sample_count": 1, "avg_ret_3d": 0.02, "win_rate_3d": 1.0}]
             ),
-            "strategy_ranking_df": pd.DataFrame(
-                [{"signal_code": "demo", "strategy_rank_1d": 1, "avg_ret_1d": 0.03, "win_rate_1d": 1.0}]
+            "compact_df": pd.DataFrame(
+                [
+                    {
+                        "signal_code": "demo",
+                        "sample_count": 1,
+                        "win_rate_1d": 1.0,
+                        "avg_ret_1d": 0.03,
+                        "var_ret_1d": 0.0,
+                        "win_rate_3d": 1.0,
+                        "avg_ret_3d": 0.02,
+                        "var_ret_3d": 0.0,
+                        "latest_trade_date": "20240131",
+                        "latest_hit_stocks": "000001.SZ",
+                    }
+                ]
             ),
             "output_paths": {"summary_csv": tmp_path / "0418_1630.csv"},
         },
