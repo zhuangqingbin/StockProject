@@ -62,11 +62,14 @@
 - `rolling_low_120 = 过去 120 个交易日 low_qfq 最小值`
 - `rolling_high_120 = 过去 120 个交易日 high_qfq 最大值`
 - `pos120 = (close_qfq - rolling_low_120) / (rolling_high_120 - rolling_low_120)`
+- `close_to_low_120 = close_qfq / rolling_low_120`
 - `vol_ma_3_prev = 前 3 日 vol 均值`
 - `vol_ma_5_prev = 前 5 日 vol 均值`
 - `volume_ratio_ma_3_prev = 前 3 日 volume_ratio 均值`
 - `prev_volume_ratio = 前 1 日 volume_ratio`
+- `volume_expand_ratio_3 = volume_ratio / volume_ratio_ma_3_prev`
 - `turnover_rate_f_ma_3_prev = 前 3 日 turnover_rate_f 均值`
+- `turnover_jump_3 = turnover_rate_f / turnover_rate_f_ma_3_prev`
 - `amount_ma_5_prev = 前 5 日 amount 均值`
 - `vol_spike_5 = vol / vol_ma_5_prev`
 - `amount_spike_5 = amount / amount_ma_5_prev`
@@ -75,83 +78,186 @@
 
 ## 信号定义
 
-第一版默认提供 8 组底部定义和 8 组放量定义。规则按“严格 / 中等 / 宽松”三层组织，既方便一次性覆盖更多口径，也便于后续筛出最稳定的阈值区间。具体阈值集中写在脚本顶部字典中，后续直接加组即可。
+第一版不再把规则硬编码成少量固定组，而是采用“规则模板 + 阈值网格自动生成”的方式。这样脚本仍然只读一次数据库，但可以在本地批量生成几十组底部定义、几十组放量定义，再做组合回测。
 
-### 底部定义组
+默认配置建议生成：
 
-- `B1_pos120_low`
-  - `pos120 <= 0.20`
-  - 表示股价位于过去 120 日区间底部 20% 以内
+- `18` 组底部定义
+- `18` 组放量定义
+- `324` 组组合结果
 
-- `B2_near_120_low`
-  - `close_qfq <= rolling_low_120 * 1.08`
-  - 表示现价距离 120 日低点不超过 8%
+如果后续还想继续扩容，只需要给模板补阈值，不需要改主流程。
 
-- `B3_boll_rsi_oversold`
-  - `close_qfq <= boll_lower_qfq * 1.03` 且 `rsi_qfq_6 < 35`
-  - 表示短期技术超跌
+### 底部定义模板
 
-- `B4_below_ma20_ma60`
-  - `close_qfq < ma_qfq_20` 且 `close_qfq < ma_qfq_60`
-  - 表示仍在中短期弱势区
+#### `pos120` 低位模板
 
-- `B5_exhaustion_bottom`
-  - `downdays >= 3` 且 `rsi_qfq_6 < 40`
-  - 表示连续回落后的衰竭式低位
+按 `pos120 <= threshold` 生成 5 组：
 
-- `B6_pos120_extreme_low`
-  - `pos120 <= 0.10`
-  - 表示位于过去 120 日极端低位，属于更严格版本
+- `0.10`
+- `0.15`
+- `0.20`
+- `0.25`
+- `0.30`
 
-- `B7_trend_weak_oversold`
-  - `ma_qfq_20 < ma_qfq_60` 且 `close_qfq < boll_mid_qfq` 且 `rsi_qfq_12 < 45`
-  - 表示趋势仍弱，但已经进入中周期超跌区
+示例编码：
 
-- `B8_loose_bottom_zone`
-  - `pos120 <= 0.30` 且 `close_qfq < ma_qfq_60` 且 `downdays >= 2`
-  - 表示更宽松的底部区域定义，用于扩大样本
+- `B_pos120_le_10`
+- `B_pos120_le_20`
+- `B_pos120_le_30`
 
-### 放量启动定义组
+#### `near_120_low` 贴近阶段低点模板
 
-- `V1_volume_ratio_gt_1_5`
-  - `volume_ratio > 1.5`
+按 `close_to_low_120 <= threshold` 生成 4 组：
 
-- `V2_turnover_gt_3`
-  - `turnover_rate_f > 3`
+- `1.03`
+- `1.05`
+- `1.08`
+- `1.10`
 
-- `V3_from_shrink_to_expand`
-  - `volume_ratio > 1.5` 且 `volume_ratio_ma_3_prev <= 1.0`
-  - 表示前期缩量后当日开始放量
+示例编码：
 
-- `V4_raw_vol_spike`
-  - `vol_spike_5 >= 1.5`
-  - 表示原始成交量明显高于前 5 日水平
+- `B_near120_low_03`
+- `B_near120_low_08`
 
-- `V5_expand_with_positive_price`
-  - `volume_ratio > 1.5` 且 `pct_chg > 0`
-  - 表示放量伴随价格确认
+#### `boll_rsi_oversold` 超跌模板
 
-- `V6_turnover_jump`
-  - `turnover_rate_f > 2` 且 `turnover_rate_f >= turnover_rate_f_ma_3_prev * 1.5`
-  - 表示自由流通换手率相对近 3 日显著抬升
+按 `close_qfq <= boll_lower_qfq * price_mult` 且 `rsi_qfq_6 < rsi_th` 生成 3 组：
 
-- `V7_amount_spike_5`
-  - `amount_spike_5 >= 1.5`
-  - 表示成交额明显高于前 5 日均值
+- `(1.00, 30)`
+- `(1.03, 35)`
+- `(1.05, 40)`
 
-- `V8_consecutive_expand`
-  - `volume_ratio > 1.2` 且 `prev_volume_ratio > 1.0`
-  - 表示不是单日异动，而是进入连续放量启动状态
+示例编码：
+
+- `B_boll_rsi_strict`
+- `B_boll_rsi_medium`
+- `B_boll_rsi_loose`
+
+#### `below_ma_zone` 弱势均线模板
+
+生成 3 组：
+
+- `close_qfq < ma_qfq_20 and close_qfq < ma_qfq_60`
+- `close_qfq < ma_qfq_20 and ma_qfq_20 < ma_qfq_60`
+- `close_qfq < ma_qfq_60 and rsi_qfq_12 < 45`
+
+示例编码：
+
+- `B_below_ma_both`
+- `B_below_ma_trend_weak`
+- `B_below_ma60_rsi45`
+
+#### `exhaustion` 衰竭低位模板
+
+按 `downdays >= d` 且 `rsi_qfq_6 < r` 生成 3 组：
+
+- `(3, 40)`
+- `(4, 35)`
+- `(5, 30)`
+
+示例编码：
+
+- `B_exhaustion_d3_r40`
+- `B_exhaustion_d5_r30`
+
+底部模板合计：`5 + 4 + 3 + 3 + 3 = 18` 组。
+
+### 放量启动模板
+
+#### `volume_ratio` 绝对量比模板
+
+按 `volume_ratio > threshold` 生成 4 组：
+
+- `1.20`
+- `1.50`
+- `1.80`
+- `2.00`
+
+示例编码：
+
+- `V_vr_gt_12`
+- `V_vr_gt_15`
+- `V_vr_gt_20`
+
+#### `shrink_to_expand` 缩量转放量模板
+
+按 `volume_ratio > now_th` 且 `volume_ratio_ma_3_prev <= prev_th` 生成 3 组：
+
+- `(1.20, 0.80)`
+- `(1.50, 1.00)`
+- `(1.80, 1.20)`
+
+示例编码：
+
+- `V_shrink_expand_strict`
+- `V_shrink_expand_medium`
+- `V_shrink_expand_loose`
+
+#### `vol_spike_5` 原始成交量跳升模板
+
+按 `vol_spike_5 >= threshold` 生成 3 组：
+
+- `1.30`
+- `1.50`
+- `1.80`
+
+示例编码：
+
+- `V_vol_spike5_13`
+- `V_vol_spike5_18`
+
+#### `turnover_jump` 换手跳升模板
+
+按 `turnover_rate_f > min_turnover` 且 `turnover_jump_3 >= jump_th` 生成 3 组：
+
+- `(1.5, 1.30)`
+- `(2.0, 1.50)`
+- `(3.0, 2.00)`
+
+示例编码：
+
+- `V_turnover_jump_15_13`
+- `V_turnover_jump_30_20`
+
+#### `amount_spike_5` 成交额跳升模板
+
+按 `amount_spike_5 >= threshold` 生成 3 组：
+
+- `1.30`
+- `1.50`
+- `2.00`
+
+示例编码：
+
+- `V_amount_spike5_13`
+- `V_amount_spike5_20`
+
+#### `consecutive_expand` 连续放量模板
+
+生成 2 组：
+
+- `volume_ratio > 1.20 and prev_volume_ratio > 1.00`
+- `volume_ratio > 1.50 and prev_volume_ratio > 1.20`
+
+示例编码：
+
+- `V_consecutive_expand_loose`
+- `V_consecutive_expand_strict`
+
+放量模板合计：`4 + 3 + 3 + 3 + 3 + 2 = 18` 组。
 
 ### 组合方式
 
-执行 `底部定义 x 放量定义` 的全组合矩阵，默认共 64 组：
+执行 `底部定义 x 放量定义` 的全组合矩阵，默认共 `324` 组：
 
 - `signal = bottom_mask & volume_mask`
 
 每条结果保留：
 
+- `bottom_family`
 - `bottom_code`
+- `volume_family`
 - `volume_code`
 - `signal_code`
 - `sample_count`
@@ -174,6 +280,7 @@
 
 - 默认增加 `min_sample` 参数，初始值建议为 `30`
 - 摘要输出按 `avg_ret_3d` 或 `win_rate_3d` 降序展示，但不隐藏低样本组合，只单独标注
+- 终端默认只展示 `top_n`，完整结果全部写入文件
 
 ## 输出形式
 
@@ -184,8 +291,10 @@
 - 回测区间
 - 股票样本总行数
 - 可用于 `ret_1d` / `ret_3d` 的有效样本数
-- 所有组合的摘要表
-- Top 10 组合
+- 各模板家族生成的规则数量
+- Top N 组合
+- 分 `bottom_family` 的最佳组合
+- 分 `volume_family` 的最佳组合
 - 样本量不足但收益显著的组合提醒
 
 ### 落盘文件
@@ -194,12 +303,16 @@
 
 - `analysis/output/bottom_volume_matrix_summary.csv`
 - `analysis/output/bottom_volume_matrix_summary.md`
+- `analysis/output/bottom_volume_matrix_bottom_family_summary.csv`
+- `analysis/output/bottom_volume_matrix_volume_family_summary.csv`
 - `analysis/output/bottom_volume_matrix_triggers.csv`
 
 其中：
 
 - `summary.csv` 保存完整组合统计
 - `summary.md` 便于直接阅读
+- `bottom_family_summary.csv` 汇总每个底部模板家族的最优组合
+- `volume_family_summary.csv` 汇总每个放量模板家族的最优组合
 - `triggers.csv` 保存命中的逐条明细，便于后续复盘
 
 ## 命令行参数
@@ -210,11 +323,15 @@
 - `--end-date`
 - `--min-sample`
 - `--top-n`
+- `--bottom-mode`
+- `--volume-mode`
 - `--output-dir`
 
 默认行为：
 
 - 若未传日期，则默认从 `20180101` 分析到库中最新交易日
+- `--bottom-mode all`，即启用全部底部模板
+- `--volume-mode all`，即启用全部放量模板
 - 若未传输出目录，则落到 `analysis/output`
 
 ## 实现结构
@@ -223,21 +340,27 @@
 
 - `load_base_frame(...)`
 - `build_features(...)`
+- `build_bottom_rule_defs(...)`
+- `build_volume_rule_defs(...)`
 - `build_bottom_masks(...)`
 - `build_volume_masks(...)`
 - `summarize_signal_matrix(...)`
 - `write_outputs(...)`
 - `main()`
 
-信号定义采用字典配置：
+信号定义采用模板配置：
 
 ```python
-BOTTOM_RULES = {
-    "B1_pos120_low": lambda df: df["pos120"] <= 0.20,
-}
+BOTTOM_RULE_TEMPLATES = [
+    {
+        "family": "pos120",
+        "thresholds": [0.10, 0.15, 0.20, 0.25, 0.30],
+        "builder": build_pos120_rules,
+    },
+]
 ```
 
-这样后续新增规则只改配置，不改主流程。
+这样后续新增规则只改模板参数，不改主流程。
 
 ## 验证与测试
 
@@ -258,6 +381,7 @@ BOTTOM_RULES = {
 
 - 输出每组样本数
 - 保留逐条命中明细，后续可分析组合重叠度
+- 同时输出 `bottom_family` / `volume_family` 维度汇总，避免只看单条组合
 
 ### 风险 2：小样本导致均值失真
 
@@ -265,6 +389,7 @@ BOTTOM_RULES = {
 
 - 默认最小样本阈值
 - 同时展示均值、中位数、胜率，避免只看均值
+- 终端只展示 Top N，全量矩阵交给文件，避免人工误读长尾噪声
 
 ### 风险 3：滚动窗口引入前视偏差
 
@@ -279,9 +404,9 @@ BOTTOM_RULES = {
 
 - 单脚本
 - 主表直查
-- 8 组底部定义
-- 8 组放量定义
-- 64 组组合一次性评估
+- 基于模板自动生成 18 组底部定义
+- 基于模板自动生成 18 组放量定义
+- 324 组组合一次性评估
 - 终端摘要 + CSV/Markdown 明细双输出
 
 这样能最快得到一版可解释、可扩展、可复盘的研究结果，并且后续要继续加定义组时不会破坏已有结构。
