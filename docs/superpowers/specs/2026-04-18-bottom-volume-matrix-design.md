@@ -65,14 +65,17 @@
 - `vol_ma_3_prev = 前 3 日 vol 均值`
 - `vol_ma_5_prev = 前 5 日 vol 均值`
 - `volume_ratio_ma_3_prev = 前 3 日 volume_ratio 均值`
+- `prev_volume_ratio = 前 1 日 volume_ratio`
 - `turnover_rate_f_ma_3_prev = 前 3 日 turnover_rate_f 均值`
+- `amount_ma_5_prev = 前 5 日 amount 均值`
 - `vol_spike_5 = vol / vol_ma_5_prev`
+- `amount_spike_5 = amount / amount_ma_5_prev`
 
 所有“前 N 日均值”都不包含当日，避免信号穿越。
 
 ## 信号定义
 
-第一版默认提供 5 组底部定义和 5 组放量定义。具体阈值集中写在脚本顶部字典中，后续直接加组即可。
+第一版默认提供 8 组底部定义和 8 组放量定义。规则按“严格 / 中等 / 宽松”三层组织，既方便一次性覆盖更多口径，也便于后续筛出最稳定的阈值区间。具体阈值集中写在脚本顶部字典中，后续直接加组即可。
 
 ### 底部定义组
 
@@ -96,6 +99,18 @@
   - `downdays >= 3` 且 `rsi_qfq_6 < 40`
   - 表示连续回落后的衰竭式低位
 
+- `B6_pos120_extreme_low`
+  - `pos120 <= 0.10`
+  - 表示位于过去 120 日极端低位，属于更严格版本
+
+- `B7_trend_weak_oversold`
+  - `ma_qfq_20 < ma_qfq_60` 且 `close_qfq < boll_mid_qfq` 且 `rsi_qfq_12 < 45`
+  - 表示趋势仍弱，但已经进入中周期超跌区
+
+- `B8_loose_bottom_zone`
+  - `pos120 <= 0.30` 且 `close_qfq < ma_qfq_60` 且 `downdays >= 2`
+  - 表示更宽松的底部区域定义，用于扩大样本
+
 ### 放量启动定义组
 
 - `V1_volume_ratio_gt_1_5`
@@ -116,9 +131,21 @@
   - `volume_ratio > 1.5` 且 `pct_chg > 0`
   - 表示放量伴随价格确认
 
+- `V6_turnover_jump`
+  - `turnover_rate_f > 2` 且 `turnover_rate_f >= turnover_rate_f_ma_3_prev * 1.5`
+  - 表示自由流通换手率相对近 3 日显著抬升
+
+- `V7_amount_spike_5`
+  - `amount_spike_5 >= 1.5`
+  - 表示成交额明显高于前 5 日均值
+
+- `V8_consecutive_expand`
+  - `volume_ratio > 1.2` 且 `prev_volume_ratio > 1.0`
+  - 表示不是单日异动，而是进入连续放量启动状态
+
 ### 组合方式
 
-执行 `底部定义 x 放量定义` 的全组合矩阵，默认共 25 组：
+执行 `底部定义 x 放量定义` 的全组合矩阵，默认共 64 组：
 
 - `signal = bottom_mask & volume_mask`
 
@@ -252,9 +279,9 @@ BOTTOM_RULES = {
 
 - 单脚本
 - 主表直查
-- 5 组底部定义
-- 5 组放量定义
-- 25 组组合一次性评估
+- 8 组底部定义
+- 8 组放量定义
+- 64 组组合一次性评估
 - 终端摘要 + CSV/Markdown 明细双输出
 
-这样能最快得到一版可解释、可扩展、可复盘的研究结果，并且后续要加定义组时不会破坏已有结构。
+这样能最快得到一版可解释、可扩展、可复盘的研究结果，并且后续要继续加定义组时不会破坏已有结构。
