@@ -8,9 +8,9 @@ import pandas as pd
 from apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies import bottom_volume_matrix as module
 from apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies.bottom_volume_matrix import (
     build_bottom_rule_defs,
+    build_compact_summary,
     build_features,
-    build_latest_hits,
-    build_strategy_ranking,
+    build_signal_code_markdown,
     build_volume_rule_defs,
     summarize_signal_matrix,
     write_outputs,
@@ -160,6 +160,143 @@ def test_rule_builders_generate_expected_counts_and_family_labels():
         "amount_spike_5",
         "consecutive_expand",
     }
+
+
+def test_build_compact_summary_adds_variance_and_latest_hit_stocks():
+    summary_df = pd.DataFrame(
+        [
+            {
+                "signal_code": "A",
+                "sample_count": 10,
+                "win_rate_1d": 0.90,
+                "avg_ret_1d": 0.10,
+                "win_rate_3d": 0.60,
+                "avg_ret_3d": 0.09,
+            },
+            {
+                "signal_code": "B",
+                "sample_count": 10,
+                "win_rate_1d": 0.80,
+                "avg_ret_1d": 0.30,
+                "win_rate_3d": 0.60,
+                "avg_ret_3d": 0.09,
+            },
+            {
+                "signal_code": "C",
+                "sample_count": 10,
+                "win_rate_1d": 0.80,
+                "avg_ret_1d": 0.20,
+                "win_rate_3d": 0.70,
+                "avg_ret_3d": 0.09,
+            },
+            {
+                "signal_code": "D",
+                "sample_count": 10,
+                "win_rate_1d": 0.80,
+                "avg_ret_1d": 0.20,
+                "win_rate_3d": 0.50,
+                "avg_ret_3d": 0.09,
+            },
+            {
+                "signal_code": "E",
+                "sample_count": 20,
+                "win_rate_1d": 0.80,
+                "avg_ret_1d": 0.20,
+                "win_rate_3d": 0.50,
+                "avg_ret_3d": 0.08,
+            },
+            {
+                "signal_code": "F",
+                "sample_count": 10,
+                "win_rate_1d": 0.80,
+                "avg_ret_1d": 0.20,
+                "win_rate_3d": 0.50,
+                "avg_ret_3d": 0.08,
+            },
+            {
+                "signal_code": "G",
+                "sample_count": 10,
+                "win_rate_1d": 0.80,
+                "avg_ret_1d": 0.20,
+                "win_rate_3d": 0.50,
+                "avg_ret_3d": 0.08,
+            },
+        ]
+    )
+    trigger_df = pd.DataFrame(
+        [
+            {"signal_code": "A", "trade_date": "20240110", "ts_code": "000003.SZ", "ret_1d": 0.07, "ret_3d": 0.10},
+            {"signal_code": "A", "trade_date": "20240110", "ts_code": "000002.SZ", "ret_1d": 0.03, "ret_3d": 0.06},
+            {"signal_code": "A", "trade_date": "20240110", "ts_code": "000002.SZ", "ret_1d": 0.05, "ret_3d": 0.07},
+            {"signal_code": "B", "trade_date": "20240109", "ts_code": "000004.SZ", "ret_1d": 0.02, "ret_3d": 0.03},
+            {"signal_code": "C", "trade_date": "20240109", "ts_code": "000006.SZ", "ret_1d": -0.01, "ret_3d": -0.02},
+        ]
+    )
+
+    result = build_compact_summary(summary_df, trigger_df)
+
+    assert list(result.columns) == [
+        "signal_code",
+        "sample_count",
+        "win_rate_1d",
+        "avg_ret_1d",
+        "var_ret_1d",
+        "win_rate_3d",
+        "avg_ret_3d",
+        "var_ret_3d",
+        "latest_trade_date",
+        "latest_hit_stocks",
+    ]
+    assert result["signal_code"].tolist() == ["A", "B", "C", "D", "E", "F", "G"]
+    assert result.iloc[0]["latest_trade_date"] == "20240110"
+    assert result.iloc[0]["latest_hit_stocks"] == "000002.SZ,000003.SZ"
+    assert result.iloc[0]["var_ret_1d"] == pd.Series([0.03, 0.07, 0.05]).var()
+    assert result.iloc[1]["latest_hit_stocks"] == ""
+    assert result.iloc[2]["latest_hit_stocks"] == ""
+    assert result.iloc[3]["latest_hit_stocks"] == ""
+    assert result.iloc[4]["latest_hit_stocks"] == ""
+    assert result.iloc[5]["latest_hit_stocks"] == ""
+    assert result.iloc[6]["latest_hit_stocks"] == ""
+
+
+def test_build_compact_summary_uses_empty_strings_for_empty_trigger_frames():
+    summary_df = pd.DataFrame(
+        [
+            {
+                "signal_code": "A",
+                "sample_count": 1,
+                "win_rate_1d": 1.0,
+                "avg_ret_1d": 0.02,
+                "win_rate_3d": 1.0,
+                "avg_ret_3d": 0.03,
+            }
+        ]
+    )
+
+    result = build_compact_summary(summary_df, pd.DataFrame())
+
+    assert result.iloc[0]["latest_trade_date"] == ""
+    assert result.iloc[0]["latest_hit_stocks"] == ""
+    assert pd.isna(result.iloc[0]["var_ret_1d"])
+    assert pd.isna(result.iloc[0]["var_ret_3d"])
+
+
+def test_build_signal_code_markdown_describes_signal_code_meanings():
+    markdown = build_signal_code_markdown(build_bottom_rule_defs(), build_volume_rule_defs())
+    lines = markdown.splitlines()
+    top_level_bullets = [line for line in lines if line.startswith("- `")]
+    first_signal = "B_pos120_le_10__V_vr_gt_12"
+
+    assert lines[:5] == [
+        "## Signal Codes",
+        "",
+        f"- `{first_signal}`",
+        "  - 底部规则：`pos120`，pos120 <= 0.10",
+        "  - 放量规则：`volume_ratio`，volume_ratio > 1.20",
+    ]
+    assert len(top_level_bullets) == len(build_bottom_rule_defs()) * len(build_volume_rule_defs())
+    assert markdown.count("底部规则：") == len(top_level_bullets)
+    assert markdown.count("放量规则：") == len(top_level_bullets)
 
 
 def test_summarize_signal_matrix_returns_combo_and_family_aggregates():
@@ -316,8 +453,8 @@ def test_strategy_ranking_and_latest_hits_use_1d_priority():
         ]
     )
 
-    ranking_df = build_strategy_ranking(summary_df)
-    latest_hits_df = build_latest_hits(trigger_df, ranking_df)
+    ranking_df = module.build_strategy_ranking(summary_df)
+    latest_hits_df = module.build_latest_hits(trigger_df, ranking_df)
 
     assert ranking_df.iloc[0]["signal_code"] == "A"
     assert ranking_df.iloc[0]["strategy_rank_1d"] == 1

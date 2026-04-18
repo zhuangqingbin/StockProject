@@ -40,6 +40,11 @@ def _series_median(series: pd.Series) -> float:
     return float(valid.median()) if not valid.empty else float("nan")
 
 
+def _series_variance(series: pd.Series) -> float:
+    valid = series.dropna()
+    return float(valid.var()) if len(valid) >= 2 else float("nan")
+
+
 def _series_win_rate(series: pd.Series) -> float:
     valid = series.dropna()
     return float(valid.gt(0).mean()) if not valid.empty else float("nan")
@@ -226,6 +231,72 @@ def build_volume_rule_defs() -> list[RuleDef]:
         )
 
     return rules
+
+
+def build_compact_summary(summary_df: pd.DataFrame, trigger_df: pd.DataFrame) -> pd.DataFrame:
+    columns = [
+        "signal_code",
+        "sample_count",
+        "win_rate_1d",
+        "avg_ret_1d",
+        "var_ret_1d",
+        "win_rate_3d",
+        "avg_ret_3d",
+        "var_ret_3d",
+        "latest_trade_date",
+        "latest_hit_stocks",
+    ]
+    if summary_df.empty:
+        return pd.DataFrame(columns=columns)
+
+    result = summary_df.copy()
+    if trigger_df.empty:
+        latest_trade_date = ""
+        latest_hit_map: dict[str, str] = {}
+    else:
+        latest_trade_date = str(trigger_df["trade_date"].max())
+        latest_hits = (
+            trigger_df.loc[trigger_df["trade_date"] == latest_trade_date, ["signal_code", "ts_code"]]
+            .drop_duplicates()
+            .sort_values(["signal_code", "ts_code"])
+        )
+        latest_hit_map = (
+            latest_hits.groupby("signal_code", sort=False)["ts_code"]
+            .apply(lambda series: ",".join(series.astype(str)))
+            .to_dict()
+        )
+
+    variance_df = (
+        trigger_df.groupby("signal_code", sort=False)[["ret_1d", "ret_3d"]]
+        .agg({"ret_1d": _series_variance, "ret_3d": _series_variance})
+        .rename(columns={"ret_1d": "var_ret_1d", "ret_3d": "var_ret_3d"})
+        .reset_index()
+        if not trigger_df.empty
+        else pd.DataFrame(columns=["signal_code", "var_ret_1d", "var_ret_3d"])
+    )
+
+    result = result.merge(variance_df, on="signal_code", how="left")
+    result["latest_trade_date"] = latest_trade_date
+    result["latest_hit_stocks"] = result["signal_code"].map(latest_hit_map).fillna("")
+
+    result = result.sort_values(
+        ["win_rate_1d", "avg_ret_1d", "win_rate_3d", "avg_ret_3d", "sample_count", "signal_code"],
+        ascending=[False, False, False, False, False, True],
+        na_position="last",
+    ).reset_index(drop=True)
+    return result[columns]
+
+
+def build_signal_code_markdown(bottom_rules: list[RuleDef], volume_rules: list[RuleDef]) -> str:
+    lines = ["## Signal Codes", ""]
+    for bottom_rule in bottom_rules:
+        for volume_rule in volume_rules:
+            signal_code = f"{bottom_rule.code}__{volume_rule.code}"
+            lines.append(f"- `{signal_code}`")
+            lines.append(f"  - 底部规则：`{bottom_rule.family}`，{bottom_rule.description}")
+            lines.append(f"  - 放量规则：`{volume_rule.family}`，{volume_rule.description}")
+            lines.append("")
+    return "\n".join(lines).rstrip()
 
 
 def build_family_summary(summary_df: pd.DataFrame, family_col: str) -> pd.DataFrame:
