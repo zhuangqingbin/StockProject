@@ -2,6 +2,7 @@ sqlalchemy>=2.0
 pymysql>=1.1
 cryptography
 pandas<3
+tqdm>=4.66
 tushare
 akshare
 pyyaml>=6.0

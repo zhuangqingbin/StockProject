@@ -8,6 +8,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from apps.data_hub.data_pipeline_ts.analysis.common.db import query_df
 
@@ -467,66 +468,82 @@ def summarize_signal_matrix(
     min_sample: int = 30,
     bottom_rules: list[RuleDef] | None = None,
     volume_rules: list[RuleDef] | None = None,
+    show_progress: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     bottom_rules = bottom_rules or build_bottom_rule_defs()
     volume_rules = volume_rules or build_volume_rule_defs()
 
     summary_rows: list[dict[str, object]] = []
     trigger_frames: list[pd.DataFrame] = []
+    progress_bar = (
+        tqdm(total=len(bottom_rules) * len(volume_rules), desc="Scanning strategies", unit="combo")
+        if show_progress
+        else None
+    )
 
-    for bottom_rule in bottom_rules:
-        bottom_mask = bottom_rule.predicate(frame).fillna(False)
-        for volume_rule in volume_rules:
-            volume_mask = volume_rule.predicate(frame).fillna(False)
-            signal_mask = bottom_mask & volume_mask
-            triggered = frame.loc[signal_mask].copy()
-            if triggered.empty:
-                continue
-            if triggered["ret_1d"].notna().sum() == 0 and triggered["ret_3d"].notna().sum() == 0:
-                continue
+    try:
+        for bottom_rule in bottom_rules:
+            bottom_mask = bottom_rule.predicate(frame).fillna(False)
+            for volume_rule in volume_rules:
+                volume_mask = volume_rule.predicate(frame).fillna(False)
+                signal_mask = bottom_mask & volume_mask
+                triggered = frame.loc[signal_mask].copy()
+                if triggered.empty:
+                    if progress_bar is not None:
+                        progress_bar.update(1)
+                    continue
+                if triggered["ret_1d"].notna().sum() == 0 and triggered["ret_3d"].notna().sum() == 0:
+                    if progress_bar is not None:
+                        progress_bar.update(1)
+                    continue
 
-            signal_code = f"{bottom_rule.code}__{volume_rule.code}"
-            triggered["bottom_family"] = bottom_rule.family
-            triggered["bottom_code"] = bottom_rule.code
-            triggered["volume_family"] = volume_rule.family
-            triggered["volume_code"] = volume_rule.code
-            triggered["signal_code"] = signal_code
-            trigger_frames.append(
-                _select_existing_columns(
-                    triggered,
-                    [
-                        "ts_code",
-                        "trade_date",
-                        "bottom_family",
-                        "bottom_code",
-                        "volume_family",
-                        "volume_code",
-                        "signal_code",
-                        "close_qfq",
-                        "pct_chg",
-                        "volume_ratio",
-                        "turnover_rate_f",
-                        "ret_1d",
-                        "ret_3d",
-                    ],
+                signal_code = f"{bottom_rule.code}__{volume_rule.code}"
+                triggered["bottom_family"] = bottom_rule.family
+                triggered["bottom_code"] = bottom_rule.code
+                triggered["volume_family"] = volume_rule.family
+                triggered["volume_code"] = volume_rule.code
+                triggered["signal_code"] = signal_code
+                trigger_frames.append(
+                    _select_existing_columns(
+                        triggered,
+                        [
+                            "ts_code",
+                            "trade_date",
+                            "bottom_family",
+                            "bottom_code",
+                            "volume_family",
+                            "volume_code",
+                            "signal_code",
+                            "close_qfq",
+                            "pct_chg",
+                            "volume_ratio",
+                            "turnover_rate_f",
+                            "ret_1d",
+                            "ret_3d",
+                        ],
+                    )
                 )
-            )
-            summary_rows.append(
-                {
-                    "bottom_family": bottom_rule.family,
-                    "bottom_code": bottom_rule.code,
-                    "volume_family": volume_rule.family,
-                    "volume_code": volume_rule.code,
-                    "signal_code": signal_code,
-                    "sample_count": int(len(triggered)),
-                    "avg_ret_1d": _series_mean(triggered["ret_1d"]),
-                    "median_ret_1d": _series_median(triggered["ret_1d"]),
-                    "win_rate_1d": _series_win_rate(triggered["ret_1d"]),
-                    "avg_ret_3d": _series_mean(triggered["ret_3d"]),
-                    "median_ret_3d": _series_median(triggered["ret_3d"]),
-                    "win_rate_3d": _series_win_rate(triggered["ret_3d"]),
-                }
-            )
+                summary_rows.append(
+                    {
+                        "bottom_family": bottom_rule.family,
+                        "bottom_code": bottom_rule.code,
+                        "volume_family": volume_rule.family,
+                        "volume_code": volume_rule.code,
+                        "signal_code": signal_code,
+                        "sample_count": int(len(triggered)),
+                        "avg_ret_1d": _series_mean(triggered["ret_1d"]),
+                        "median_ret_1d": _series_median(triggered["ret_1d"]),
+                        "win_rate_1d": _series_win_rate(triggered["ret_1d"]),
+                        "avg_ret_3d": _series_mean(triggered["ret_3d"]),
+                        "median_ret_3d": _series_median(triggered["ret_3d"]),
+                        "win_rate_3d": _series_win_rate(triggered["ret_3d"]),
+                    }
+                )
+                if progress_bar is not None:
+                    progress_bar.update(1)
+    finally:
+        if progress_bar is not None:
+            progress_bar.close()
 
     if summary_rows:
         summary_df = pd.DataFrame(summary_rows).sort_values(
@@ -633,6 +650,7 @@ def run_analysis(
     min_sample: int,
     top_n: int,
     output_dir: Path,
+    show_progress: bool = False,
 ) -> dict[str, object]:
     source_df = load_base_frame(start_date=start_date, end_date=end_date)
     featured_df = build_features(source_df)
@@ -640,6 +658,7 @@ def run_analysis(
     summary_df, trigger_df, _, _ = summarize_signal_matrix(
         analysis_df,
         min_sample=min_sample,
+        show_progress=show_progress,
     )
     compact_df = build_compact_summary(summary_df, trigger_df)
     signal_code_markdown = build_signal_code_markdown(build_bottom_rule_defs(), build_volume_rule_defs())
@@ -676,9 +695,11 @@ def main(argv: list[str] | None = None) -> int:
         min_sample=args.min_sample,
         top_n=args.top_n,
         output_dir=args.output_dir,
+        show_progress=True,
     )
-    print(result["compact_df"].head(args.top_n).to_string(index=False))
     print(f"summary_csv={result['output_paths']['summary_csv']}")
+    print(f"summary_md={result['output_paths']['summary_md']}")
+    print(f"rows={len(result['compact_df'])}")
     return 0
 
 

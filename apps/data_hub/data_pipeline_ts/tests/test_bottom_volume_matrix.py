@@ -383,6 +383,91 @@ def test_summarize_signal_matrix_returns_combo_and_family_aggregates():
     assert summary_df["sample_count"].max() >= 1
 
 
+def test_summarize_signal_matrix_uses_tqdm_when_progress_enabled(monkeypatch):
+    frame = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240101",
+                "ret_1d": 0.02,
+                "ret_3d": 0.05,
+                "pos120": 0.10,
+                "close_to_low_120": 1.04,
+                "close_qfq": 10.0,
+                "boll_lower_qfq": 10.0,
+                "rsi_qfq_6": 28.0,
+                "rsi_qfq_12": 40.0,
+                "ma_qfq_20": 11.0,
+                "ma_qfq_60": 12.0,
+                "downdays": 4,
+                "volume_ratio": 1.8,
+                "volume_ratio_ma_3_prev": 0.9,
+                "prev_volume_ratio": 1.1,
+                "vol_spike_5": 1.6,
+                "turnover_rate_f": 2.5,
+                "turnover_jump_3": 1.6,
+                "amount_spike_5": 1.7,
+                "pct_chg": 3.0,
+            }
+        ]
+    )
+    bottom_rules = [
+        module.RuleDef(
+            family="bottom",
+            code="B_true",
+            description="always true",
+            predicate=lambda df: pd.Series([True] * len(df), index=df.index),
+        )
+    ]
+    volume_rules = [
+        module.RuleDef(
+            family="volume",
+            code="V_true",
+            description="always true",
+            predicate=lambda df: pd.Series([True] * len(df), index=df.index),
+        ),
+        module.RuleDef(
+            family="volume",
+            code="V_false",
+            description="always false",
+            predicate=lambda df: pd.Series([False] * len(df), index=df.index),
+        ),
+    ]
+    progress = {"updates": 0, "closed": False}
+
+    class DummyTqdm:
+        def __init__(self, total, desc, unit):
+            progress["total"] = total
+            progress["desc"] = desc
+            progress["unit"] = unit
+
+        def update(self, amount=1):
+            progress["updates"] += amount
+
+        def close(self):
+            progress["closed"] = True
+
+    monkeypatch.setattr(module, "tqdm", DummyTqdm)
+
+    summary_df, trigger_df, _, _ = module.summarize_signal_matrix(
+        frame,
+        min_sample=1,
+        bottom_rules=bottom_rules,
+        volume_rules=volume_rules,
+        show_progress=True,
+    )
+
+    assert progress == {
+        "updates": 2,
+        "closed": True,
+        "total": 2,
+        "desc": "Scanning strategies",
+        "unit": "combo",
+    }
+    assert not summary_df.empty
+    assert not trigger_df.empty
+
+
 def test_strategy_ranking_and_latest_hits_use_1d_priority():
     summary_df = pd.DataFrame(
         [
@@ -671,7 +756,7 @@ def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
     monkeypatch.setattr(
         module,
         "run_analysis",
-        lambda start_date, end_date, min_sample, top_n, output_dir: {
+        lambda start_date, end_date, min_sample, top_n, output_dir, show_progress=False: {
             "summary_df": pd.DataFrame(
                 [{"signal_code": "demo", "sample_count": 1, "avg_ret_3d": 0.02, "win_rate_3d": 1.0}]
             ),
@@ -691,7 +776,10 @@ def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
                     }
                 ]
             ),
-            "output_paths": {"summary_csv": tmp_path / "0418_1630.csv"},
+            "output_paths": {
+                "summary_csv": tmp_path / "0418_1630.csv",
+                "summary_md": tmp_path / "0418_1630.md",
+            },
         },
     )
 
@@ -713,4 +801,6 @@ def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
     stdout = capsys.readouterr().out
     assert exit_code == 0
     assert "0418_1630.csv" in stdout
-    assert "demo" in stdout
+    assert "0418_1630.md" in stdout
+    assert "rows=1" in stdout
+    assert "demo" not in stdout
