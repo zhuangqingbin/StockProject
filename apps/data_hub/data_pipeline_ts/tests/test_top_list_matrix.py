@@ -286,3 +286,68 @@ def test_missing_technical_inputs_do_not_create_false_state_flags(monkeypatch):
     assert row["bottom_oversold"] == 0
     assert row["bottom_strict"] == 0
     assert row["bottom_weak_ma"] == 0
+
+
+def test_summarize_signal_matrix_builds_compact_ranking_and_latest_hits():
+    features = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "ret_1d": 0.05,
+                "ret_3d": 0.07,
+                "inst_net_buy": 20000000.0,
+                "top_list_net_rate": 4.0,
+                "top_list_amount_rate": 15.0,
+                "reason_up_deviation": 1,
+                "top_list_count_3d": 2.0,
+                "bottom_soft": 1,
+                "ma_reclaim_state": 1,
+                "strong_trend_state": 1,
+                "volume_expand_state": 1,
+                "high_turnover_state": 1,
+                "oversold_state": 0,
+                "pullback_state": 0,
+            },
+            {
+                "ts_code": "000002.SZ",
+                "trade_date": "20240130",
+                "ret_1d": -0.02,
+                "ret_3d": 0.01,
+                "inst_net_buy": 18000000.0,
+                "top_list_net_rate": 3.2,
+                "top_list_amount_rate": 16.0,
+                "reason_up_deviation": 1,
+                "top_list_count_3d": 1.0,
+                "bottom_soft": 0,
+                "ma_reclaim_state": 0,
+                "strong_trend_state": 1,
+                "volume_expand_state": 1,
+                "high_turnover_state": 1,
+                "oversold_state": 0,
+                "pullback_state": 0,
+            },
+        ]
+    )
+    rule_defs = [
+        module.SignalRuleDef(
+            strategy_family="plain_inst_follow_through",
+            signal_code="plain_inst_follow_through__demo",
+            description="demo",
+            predicate="(inst_net_buy >= 15000000) & (reason_up_deviation == 1)",
+        )
+    ]
+
+    compact_df = module.summarize_signal_matrix(features, rule_defs, min_sample=1)
+
+    row = compact_df.iloc[0]
+    assert row["signal_code"] == "plain_inst_follow_through__demo"
+    assert row["sample_count"] == 2
+    assert round(row["win_rate_1d"], 4) == 0.5
+    assert round(row["avg_ret_1d"], 4) == 0.015
+    assert row["latest_trade_date"] == "20240130"
+    assert row["latest_hit_stocks"] == "000001.SZ,000002.SZ"
+
+    markdown = module.build_signal_code_markdown(rule_defs)
+    assert "plain_inst_follow_through__demo" in markdown
+    assert "demo" in markdown

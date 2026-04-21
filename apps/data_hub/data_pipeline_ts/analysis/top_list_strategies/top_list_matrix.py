@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -557,6 +558,125 @@ def build_signal_rule_defs() -> list[SignalRuleDef]:
     for rule in rules:
         deduped.setdefault(rule.signal_code, rule)
     return list(deduped.values())
+
+
+def _series_mean(series: pd.Series) -> float:
+    numeric = pd.to_numeric(series, errors="coerce").dropna()
+    if numeric.empty:
+        return float("nan")
+    return float(numeric.mean())
+
+
+def _series_variance(series: pd.Series) -> float:
+    numeric = pd.to_numeric(series, errors="coerce").dropna()
+    if numeric.empty:
+        return float("nan")
+    return float(numeric.var(ddof=0))
+
+
+def _series_win_rate(series: pd.Series) -> float:
+    numeric = pd.to_numeric(series, errors="coerce").dropna()
+    if numeric.empty:
+        return float("nan")
+    return float((numeric > 0).mean())
+
+
+def summarize_signal_matrix(
+    features_df: pd.DataFrame,
+    rule_defs: list[SignalRuleDef] | None = None,
+    *,
+    min_sample: int,
+    show_progress: bool = False,
+) -> pd.DataFrame:
+    rules = build_signal_rule_defs() if rule_defs is None else rule_defs
+    latest_trade_date = str(features_df["trade_date"].max()) if not features_df.empty else ""
+    rows: list[dict[str, object]] = []
+    iterator = tqdm(rules, desc="Scanning strategies", disable=not show_progress)
+    for rule in iterator:
+        matched = features_df.query(rule.predicate, engine="python")
+        if matched.empty:
+            continue
+        latest_hits = matched.loc[matched["trade_date"] == latest_trade_date, "ts_code"].drop_duplicates().tolist()
+        rows.append(
+            {
+                "strategy_family": rule.strategy_family,
+                "signal_code": rule.signal_code,
+                "sample_count": int(len(matched)),
+                "win_rate_1d": _series_win_rate(matched["ret_1d"]),
+                "avg_ret_1d": _series_mean(matched["ret_1d"]),
+                "var_ret_1d": _series_variance(matched["ret_1d"]),
+                "win_rate_3d": _series_win_rate(matched["ret_3d"]),
+                "avg_ret_3d": _series_mean(matched["ret_3d"]),
+                "var_ret_3d": _series_variance(matched["ret_3d"]),
+                "latest_trade_date": latest_trade_date,
+                "latest_hit_stocks": ",".join(sorted(latest_hits)),
+                "is_low_sample": int(len(matched) < min_sample),
+            }
+        )
+    compact_df = pd.DataFrame(rows)
+    if compact_df.empty:
+        return pd.DataFrame(
+            columns=[
+                "strategy_family",
+                "signal_code",
+                "sample_count",
+                "win_rate_1d",
+                "avg_ret_1d",
+                "var_ret_1d",
+                "win_rate_3d",
+                "avg_ret_3d",
+                "var_ret_3d",
+                "latest_trade_date",
+                "latest_hit_stocks",
+                "is_low_sample",
+            ]
+        )
+    return compact_df.sort_values(
+        [
+            "win_rate_1d",
+            "avg_ret_1d",
+            "win_rate_3d",
+            "avg_ret_3d",
+            "sample_count",
+            "signal_code",
+        ],
+        ascending=[False, False, False, False, False, True],
+        kind="mergesort",
+    ).reset_index(drop=True)
+
+
+def build_signal_code_markdown(rule_defs: list[SignalRuleDef]) -> str:
+    lines = [
+        "# Top List Matrix Signal Codes",
+        "",
+        "| family | signal_code | description |",
+        "| --- | --- | --- |",
+    ]
+    for rule in sorted(rule_defs, key=lambda item: (item.strategy_family, item.signal_code)):
+        lines.append(f"| {rule.strategy_family} | {rule.signal_code} | {rule.description} |")
+    return "\n".join(lines)
+
+
+def _build_output_stem(now: datetime | None = None) -> str:
+    current = now or datetime.now()
+    return current.strftime("%m%d_%H%M")
+
+
+def write_outputs(
+    compact_df: pd.DataFrame,
+    markdown_text: str,
+    *,
+    output_dir: Path,
+    now: datetime | None = None,
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    stem = _build_output_stem(now)
+    summary_csv = output_dir / f"{stem}.csv"
+    summary_md = output_dir / f"{stem}.md"
+
+    compact_df.to_csv(summary_csv, index=False)
+    summary_md.write_text(markdown_text, encoding="utf-8")
+    return {"summary_csv": summary_csv, "summary_md": summary_md}
 
 
 def run_analysis(
