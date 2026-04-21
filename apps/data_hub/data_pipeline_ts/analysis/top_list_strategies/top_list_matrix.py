@@ -195,20 +195,25 @@ def aggregate_top_list_frame(frame: pd.DataFrame) -> pd.DataFrame:
     if frame.empty:
         return pd.DataFrame(columns=columns)
 
+    deduped = (
+        frame.sort_values(["ts_code", "trade_date", "reason"])
+        .drop_duplicates(["ts_code", "trade_date", "reason"], keep="first")
+        .copy()
+    )
     grouped = (
-        frame.groupby(["ts_code", "trade_date"], as_index=False)
+        deduped.groupby(["ts_code", "trade_date"], as_index=False)
         .agg(
-            top_list_net_amount=("net_amount", "sum"),
+            top_list_net_amount=("net_amount", "first"),
             top_list_net_rate=("net_rate", "mean"),
             top_list_amount_rate=("amount_rate", "mean"),
-            top_list_buy=("l_buy", "sum"),
-            top_list_sell=("l_sell", "sum"),
-            top_list_amount=("l_amount", "sum"),
+            top_list_buy=("l_buy", "first"),
+            top_list_sell=("l_sell", "first"),
+            top_list_amount=("l_amount", "first"),
             top_list_event_count=("reason", "count"),
         )
     )
-    flags = normalize_reason_flags(frame["reason"])
-    grouped_flags = pd.concat([frame[["ts_code", "trade_date"]], flags], axis=1)
+    flags = normalize_reason_flags(deduped["reason"])
+    grouped_flags = pd.concat([deduped[["ts_code", "trade_date"]], flags], axis=1)
     grouped_flags = grouped_flags.groupby(["ts_code", "trade_date"], as_index=False).max()
     return grouped.merge(grouped_flags, on=["ts_code", "trade_date"], how="left").reindex(columns=columns)
 

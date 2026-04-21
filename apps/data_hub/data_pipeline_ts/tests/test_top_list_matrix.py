@@ -153,6 +153,17 @@ def test_loaders_merge_and_build_core_top_list_features(monkeypatch):
             },
             {
                 "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "net_amount": 30000000.0,
+                "net_rate": 8.5,
+                "amount_rate": 23.0,
+                "l_buy": 50000000.0,
+                "l_sell": 20000000.0,
+                "l_amount": 70000000.0,
+                "reason": "连续三个交易日内，涨幅偏离值累计达到20%的证券",
+            },
+            {
+                "ts_code": "000001.SZ",
                 "trade_date": "20240131",
                 "net_amount": -9000000.0,
                 "net_rate": -3.5,
@@ -176,7 +187,11 @@ def test_loaders_merge_and_build_core_top_list_features(monkeypatch):
     day2 = features.loc[features["trade_date"] == "20240131"].iloc[0]
     assert round(day1["inst_net_buy"], 2) == 25000000.0
     assert round(day1["top_list_net_rate"], 2) == 8.5
+    assert round(day1["top_list_net_amount"], 2) == 30000000.0
+    assert round(day1["top_list_amount"], 2) == 70000000.0
+    assert day1["top_list_event_count"] == 2
     assert day1["reason_up_deviation"] == 1
+    assert day1["reason_consecutive_move"] == 1
     assert round(day2["top_list_count_3d"], 2) == 2.0
     assert day2["top_list_streak_2d"] == 1
     assert round(day1["ret_1d"], 6) == round(11.0 / 10.7 - 1.0, 6)
