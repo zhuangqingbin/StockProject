@@ -28,6 +28,7 @@
 - `margin`：融资融券相关信号和统计分析。
 - `money_flow`：资金流向和主力净流入分析。
 - `northbound`：北向资金持股与变动分析。
+- `supply_shock_strategies`：解禁、增减持、供给冲击与吸收修复矩阵分析。
 - `share_float`：解禁、流通盘变化与筹码扰动分析。
 
 ## bottom_val_strategies
