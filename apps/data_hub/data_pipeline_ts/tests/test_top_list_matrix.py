@@ -233,5 +233,56 @@ def test_build_signal_rule_defs_covers_families_and_bottom_groups():
     assert any(code.startswith("plain_inst_reversal_rebound__") for code in signal_codes)
     assert any("bottom_soft" in code for code in signal_codes)
     assert any("bottom_strict" in code for code in signal_codes)
-    assert any(rule.predicate is not None for rule in rule_defs)
+    assert any("reason_up_deviation" in rule.predicate for rule in rule_defs)
+    assert any("top_list_net_rate" in rule.predicate for rule in rule_defs)
     assert len(signal_codes) >= 120
+
+
+def test_missing_technical_inputs_do_not_create_false_state_flags(monkeypatch):
+    base_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "000002.SZ",
+                "trade_date": "20240130",
+                "close_qfq": 10.0,
+                "open_qfq": 9.8,
+                "high_qfq": 10.1,
+                "low_qfq": 9.7,
+                "pct_chg": 1.2,
+                "amount": 1200.0,
+                "vol": 120.0,
+                "volume_ratio": 1.0,
+                "turnover_rate_f": 1.2,
+                "boll_lower_qfq": None,
+                "rsi_qfq_6": None,
+                "ma_qfq_5": None,
+                "ma_qfq_20": None,
+                "ma_qfq_60": None,
+            }
+        ]
+    )
+
+    monkeypatch.setattr(module, "load_base_frame", lambda start_date, end_date: base_df.copy())
+    monkeypatch.setattr(module, "load_top_inst_frame", lambda start_date, end_date: pd.DataFrame())
+    monkeypatch.setattr(module, "load_top_list_frame", lambda start_date, end_date: pd.DataFrame())
+
+    merged = module.load_analysis_frame("20240101", "20240131")
+    assert pd.isna(merged.loc[0, "boll_lower_qfq"])
+    assert pd.isna(merged.loc[0, "rsi_qfq_6"])
+    assert pd.isna(merged.loc[0, "ma_qfq_5"])
+    assert pd.isna(merged.loc[0, "ma_qfq_20"])
+    assert pd.isna(merged.loc[0, "ma_qfq_60"])
+
+    features = module.build_features(merged)
+    row = features.iloc[0]
+    assert row["ma_reclaim_state"] == 0
+    assert row["strong_trend_state"] == 0
+    assert row["weak_trend_state"] == 0
+    assert row["volume_expand_state"] == 0
+    assert row["high_turnover_state"] == 0
+    assert row["oversold_state"] == 0
+    assert row["bottom_soft"] == 0
+    assert row["bottom_near_low"] == 0
+    assert row["bottom_oversold"] == 0
+    assert row["bottom_strict"] == 0
+    assert row["bottom_weak_ma"] == 0

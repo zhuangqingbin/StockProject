@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 from tqdm import tqdm
@@ -24,7 +24,7 @@ class SignalRuleDef:
     strategy_family: str
     signal_code: str
     description: str
-    predicate: Callable[[pd.DataFrame], pd.Series]
+    predicate: str
 
 
 REASON_GROUP_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -80,44 +80,26 @@ def _column_or_nan(frame: pd.DataFrame, column: str) -> pd.Series:
     return pd.Series(np.nan, index=frame.index, name=column)
 
 
-def _series_predicate(column: str) -> Callable[[pd.DataFrame], pd.Series]:
-    def predicate(df: pd.DataFrame) -> pd.Series:
-        if column not in df.columns:
-            return pd.Series(False, index=df.index, dtype=bool)
-        return pd.to_numeric(df[column], errors="coerce").fillna(0).gt(0)
-
-    return predicate
+def _series_predicate(column: str) -> str:
+    return f"{column} > 0"
 
 
-def _numeric_predicate(column: str, comparator: str, threshold: float) -> Callable[[pd.DataFrame], pd.Series]:
-    def predicate(df: pd.DataFrame) -> pd.Series:
-        if column not in df.columns:
-            return pd.Series(False, index=df.index, dtype=bool)
-
-        series = pd.to_numeric(df[column], errors="coerce")
-        if comparator == "ge":
-            return series.ge(threshold).fillna(False)
-        if comparator == "gt":
-            return series.gt(threshold).fillna(False)
-        if comparator == "le":
-            return series.le(threshold).fillna(False)
-        if comparator == "lt":
-            return series.lt(threshold).fillna(False)
-        if comparator == "eq":
-            return series.eq(threshold).fillna(False)
+def _numeric_predicate(column: str, comparator: str, threshold: float) -> str:
+    op_map = {
+        "ge": ">=",
+        "gt": ">",
+        "le": "<=",
+        "lt": "<",
+        "eq": "==",
+    }
+    if comparator not in op_map:
         raise ValueError(f"Unsupported comparator: {comparator}")
+    threshold_literal = str(int(threshold)) if float(threshold).is_integer() else f"{threshold:g}"
+    return f"{column} {op_map[comparator]} {threshold_literal}"
 
-    return predicate
 
-
-def _combine_predicates(*predicates: Callable[[pd.DataFrame], pd.Series]) -> Callable[[pd.DataFrame], pd.Series]:
-    def predicate(df: pd.DataFrame) -> pd.Series:
-        combined = pd.Series(True, index=df.index, dtype=bool)
-        for item in predicates:
-            combined = combined & item(df).fillna(False).astype(bool)
-        return combined
-
-    return predicate
+def _combine_predicates(*predicates: str) -> str:
+    return " & ".join(f"({predicate})" for predicate in predicates if predicate)
 
 
 def _threshold_token(value: float) -> str:
@@ -306,9 +288,9 @@ def load_analysis_frame(start_date: str, end_date: str | None) -> pd.DataFrame:
         if column in merged.columns:
             merged[column] = pd.to_numeric(merged[column], errors="coerce").fillna(0)
 
-    numeric_cols = merged.select_dtypes(include=["number"]).columns
-    if len(numeric_cols) > 0:
-        merged[numeric_cols] = merged[numeric_cols].fillna(0.0)
+    fill_zero_columns = [column for column in merged.columns if column.startswith(("inst_", "top_list_", "reason_"))]
+    for column in fill_zero_columns:
+        merged[column] = pd.to_numeric(merged[column], errors="coerce").fillna(0.0)
     return merged.sort_values(["ts_code", "trade_date"]).reset_index(drop=True)
 
 
@@ -551,7 +533,7 @@ def build_signal_rule_defs() -> list[SignalRuleDef]:
     def expand_state_rules(
         family: str,
         seeds: list[SignalRuleDef],
-        state_defs: list[tuple[str, str, Callable[[pd.DataFrame], pd.Series]]],
+        state_defs: list[tuple[str, str, str]],
     ) -> list[SignalRuleDef]:
         expanded: list[SignalRuleDef] = []
         for seed in seeds:
