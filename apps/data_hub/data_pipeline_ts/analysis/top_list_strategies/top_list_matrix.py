@@ -571,7 +571,7 @@ def _series_variance(series: pd.Series) -> float:
     numeric = pd.to_numeric(series, errors="coerce").dropna()
     if numeric.empty:
         return float("nan")
-    return float(numeric.var(ddof=0))
+    return float(numeric.var())
 
 
 def _series_win_rate(series: pd.Series) -> float:

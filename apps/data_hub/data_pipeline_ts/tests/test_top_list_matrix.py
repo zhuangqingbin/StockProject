@@ -345,6 +345,7 @@ def test_summarize_signal_matrix_builds_compact_ranking_and_latest_hits():
     assert row["sample_count"] == 2
     assert round(row["win_rate_1d"], 4) == 0.5
     assert round(row["avg_ret_1d"], 4) == 0.015
+    assert round(row["var_ret_1d"], 6) == round(0.00245, 6)
     assert row["latest_trade_date"] == "20240130"
     assert row["latest_hit_stocks"] == "000001.SZ,000002.SZ"
 
