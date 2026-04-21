@@ -195,3 +195,43 @@ def test_loaders_merge_and_build_core_top_list_features(monkeypatch):
     assert round(day2["top_list_count_3d"], 2) == 2.0
     assert day2["top_list_streak_2d"] == 1
     assert round(day1["ret_1d"], 6) == round(11.0 / 10.7 - 1.0, 6)
+
+    expected_columns = {
+        "inst_net_buy_ratio",
+        "inst_sell_ratio",
+        "ma_reclaim_state",
+        "strong_trend_state",
+        "weak_trend_state",
+        "volume_expand_state",
+        "high_turnover_state",
+        "oversold_state",
+        "pullback_state",
+        "bottom_soft",
+        "bottom_near_low",
+        "bottom_oversold",
+        "bottom_strict",
+        "bottom_weak_ma",
+    }
+    assert expected_columns.issubset(set(features.columns))
+
+
+def test_build_signal_rule_defs_covers_families_and_bottom_groups():
+    rule_defs = module.build_signal_rule_defs()
+
+    families = {rule.strategy_family for rule in rule_defs}
+    assert families == {
+        "plain_inst_follow_through",
+        "state_inst_follow_through",
+        "plain_inst_reversal_rebound",
+        "state_inst_reversal_rebound",
+        "plain_bottom_absorption",
+        "state_bottom_absorption",
+    }
+
+    signal_codes = {rule.signal_code for rule in rule_defs}
+    assert any(code.startswith("plain_inst_follow_through__") for code in signal_codes)
+    assert any(code.startswith("plain_inst_reversal_rebound__") for code in signal_codes)
+    assert any("bottom_soft" in code for code in signal_codes)
+    assert any("bottom_strict" in code for code in signal_codes)
+    assert any(rule.predicate is not None for rule in rule_defs)
+    assert len(signal_codes) >= 120

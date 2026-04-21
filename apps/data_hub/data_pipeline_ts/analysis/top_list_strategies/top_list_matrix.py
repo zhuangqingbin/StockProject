@@ -74,6 +74,68 @@ def normalize_reason_flags(reason_series: pd.Series) -> pd.DataFrame:
     return pd.DataFrame(flags, index=reason_series.index)
 
 
+def _column_or_nan(frame: pd.DataFrame, column: str) -> pd.Series:
+    if column in frame.columns:
+        return pd.to_numeric(frame[column], errors="coerce")
+    return pd.Series(np.nan, index=frame.index, name=column)
+
+
+def _series_predicate(column: str) -> Callable[[pd.DataFrame], pd.Series]:
+    def predicate(df: pd.DataFrame) -> pd.Series:
+        if column not in df.columns:
+            return pd.Series(False, index=df.index, dtype=bool)
+        return pd.to_numeric(df[column], errors="coerce").fillna(0).gt(0)
+
+    return predicate
+
+
+def _numeric_predicate(column: str, comparator: str, threshold: float) -> Callable[[pd.DataFrame], pd.Series]:
+    def predicate(df: pd.DataFrame) -> pd.Series:
+        if column not in df.columns:
+            return pd.Series(False, index=df.index, dtype=bool)
+
+        series = pd.to_numeric(df[column], errors="coerce")
+        if comparator == "ge":
+            return series.ge(threshold).fillna(False)
+        if comparator == "gt":
+            return series.gt(threshold).fillna(False)
+        if comparator == "le":
+            return series.le(threshold).fillna(False)
+        if comparator == "lt":
+            return series.lt(threshold).fillna(False)
+        if comparator == "eq":
+            return series.eq(threshold).fillna(False)
+        raise ValueError(f"Unsupported comparator: {comparator}")
+
+    return predicate
+
+
+def _combine_predicates(*predicates: Callable[[pd.DataFrame], pd.Series]) -> Callable[[pd.DataFrame], pd.Series]:
+    def predicate(df: pd.DataFrame) -> pd.Series:
+        combined = pd.Series(True, index=df.index, dtype=bool)
+        for item in predicates:
+            combined = combined & item(df).fillna(False).astype(bool)
+        return combined
+
+    return predicate
+
+
+def _threshold_token(value: float) -> str:
+    if float(value).is_integer():
+        return str(int(value))
+    return f"{value:g}".replace("-", "neg_").replace(".", "p")
+
+
+def _millions_token(value: float) -> str:
+    if float(value).is_integer():
+        return f"{int(value / 1_000_000)}m"
+    return f"{value / 1_000_000:g}m".replace("-", "neg_").replace(".", "p")
+
+
+def _seed_code(*parts: str) -> str:
+    return "__".join(parts)
+
+
 def load_base_frame(start_date: str, end_date: str | None) -> pd.DataFrame:
     end_expr = f"AND trade_date <= '{end_date}'" if end_date else ""
     sql = f"""
@@ -254,13 +316,39 @@ def build_features(frame: pd.DataFrame) -> pd.DataFrame:
     result = frame.sort_values(["ts_code", "trade_date"]).reset_index(drop=True).copy()
     grouped = result.groupby("ts_code", group_keys=False)
 
-    result["ret_1d"] = grouped["close_qfq"].shift(-1) / result["close_qfq"] - 1.0
-    result["ret_3d"] = grouped["close_qfq"].shift(-3) / result["close_qfq"] - 1.0
-    result["top_list_any"] = (result["top_list_event_count"] > 0).astype(int)
+    close_qfq = _column_or_nan(result, "close_qfq")
+    if "close_qfq" in result.columns:
+        result["ret_1d"] = grouped["close_qfq"].shift(-1) / close_qfq - 1.0
+        result["ret_3d"] = grouped["close_qfq"].shift(-3) / close_qfq - 1.0
+        rolling_low_120 = grouped["close_qfq"].transform(lambda s: s.rolling(120, min_periods=20).min())
+        rolling_high_120 = grouped["close_qfq"].transform(lambda s: s.rolling(120, min_periods=20).max())
+        spread = (rolling_high_120 - rolling_low_120).replace(0, np.nan)
+        result["pos120"] = ((close_qfq - rolling_low_120) / spread).clip(0, 1)
+        result["close_to_low_120"] = close_qfq / rolling_low_120
+    else:
+        result["ret_1d"] = np.nan
+        result["ret_3d"] = np.nan
+        result["pos120"] = np.nan
+        result["close_to_low_120"] = np.nan
+
+    if "top_list_event_count" in result.columns:
+        result["top_list_any"] = pd.to_numeric(result["top_list_event_count"], errors="coerce").fillna(0).gt(0).astype(int)
+    else:
+        result["top_list_any"] = 0
     result["top_list_count_3d"] = grouped["top_list_any"].transform(lambda s: s.rolling(3, min_periods=1).sum())
     result["top_list_count_5d"] = grouped["top_list_any"].transform(lambda s: s.rolling(5, min_periods=1).sum())
     prev_any = grouped["top_list_any"].shift(1).fillna(0)
     result["top_list_streak_2d"] = ((result["top_list_any"] == 1) & (prev_any == 1)).astype(int)
+    result["inst_net_buy_ratio"] = (
+        _column_or_nan(result, "inst_net_buy") / _column_or_nan(result, "amount").replace(0, np.nan)
+        if "inst_net_buy" in result.columns and "amount" in result.columns
+        else np.nan
+    )
+    result["inst_sell_ratio"] = (
+        _column_or_nan(result, "inst_sell") / _column_or_nan(result, "amount").replace(0, np.nan)
+        if "inst_sell" in result.columns and "amount" in result.columns
+        else np.nan
+    )
 
     for column in ("reason_up_deviation", "reason_down_deviation", "reason_consecutive_move"):
         if column not in result.columns:
@@ -268,7 +356,225 @@ def build_features(frame: pd.DataFrame) -> pd.DataFrame:
     result["consecutive_reason_flag"] = result[
         ["reason_up_deviation", "reason_down_deviation", "reason_consecutive_move"]
     ].max(axis=1)
+    if "ma_qfq_5" in result.columns:
+        result["ma_reclaim_state"] = (
+            (close_qfq >= _column_or_nan(result, "ma_qfq_5"))
+            & (grouped["close_qfq"].shift(1) < grouped["ma_qfq_5"].shift(1))
+        ).fillna(False).astype(int)
+    else:
+        result["ma_reclaim_state"] = 0
+    if "ma_qfq_20" in result.columns and "ma_qfq_60" in result.columns:
+        result["strong_trend_state"] = (
+            (close_qfq >= _column_or_nan(result, "ma_qfq_20"))
+            & (_column_or_nan(result, "ma_qfq_20") >= _column_or_nan(result, "ma_qfq_60"))
+        ).fillna(False).astype(int)
+        result["weak_trend_state"] = (
+            (close_qfq < _column_or_nan(result, "ma_qfq_20"))
+            & (_column_or_nan(result, "ma_qfq_20") < _column_or_nan(result, "ma_qfq_60"))
+        ).fillna(False).astype(int)
+        result["pullback_state"] = (
+            (result["strong_trend_state"] == 1)
+            & (_column_or_nan(result, "pct_chg") > -3.0)
+            & (close_qfq <= _column_or_nan(result, "ma_qfq_20") * 1.03)
+        ).fillna(False).astype(int)
+    else:
+        result["strong_trend_state"] = 0
+        result["weak_trend_state"] = 0
+        result["pullback_state"] = 0
+    result["volume_expand_state"] = (_column_or_nan(result, "volume_ratio") >= 1.5).fillna(False).astype(int)
+    result["high_turnover_state"] = (_column_or_nan(result, "turnover_rate_f") >= 5.0).fillna(False).astype(int)
+    result["oversold_state"] = (
+        (close_qfq <= _column_or_nan(result, "boll_lower_qfq") * 1.03)
+        & (_column_or_nan(result, "rsi_qfq_6") < 35)
+    ).fillna(False).astype(int)
+    result["bottom_soft"] = (result["pos120"] <= 0.25).fillna(False).astype(int)
+    result["bottom_near_low"] = (result["close_to_low_120"] <= 1.08).fillna(False).astype(int)
+    result["bottom_oversold"] = result["oversold_state"].astype(int)
+    result["bottom_strict"] = ((result["pos120"] <= 0.20) & (result["oversold_state"] == 1)).fillna(False).astype(int)
+    if "ma_qfq_20" in result.columns and "ma_qfq_60" in result.columns:
+        result["bottom_weak_ma"] = (
+            (close_qfq < _column_or_nan(result, "ma_qfq_20"))
+            & (close_qfq < _column_or_nan(result, "ma_qfq_60"))
+            & (result["bottom_near_low"] == 1)
+        ).fillna(False).astype(int)
+    else:
+        result["bottom_weak_ma"] = 0
     return result
+
+
+def build_signal_rule_defs() -> list[SignalRuleDef]:
+    follow_states = [
+        ("strong_trend_state", "强趋势", _series_predicate("strong_trend_state")),
+        ("volume_expand_state", "放量", _series_predicate("volume_expand_state")),
+        ("top_list_streak_2d", "连续上榜", _series_predicate("top_list_streak_2d")),
+    ]
+    reversal_states = [
+        ("oversold_state", "超跌", _series_predicate("oversold_state")),
+        ("pullback_state", "回踩", _series_predicate("pullback_state")),
+        ("weak_trend_state", "弱趋势", _series_predicate("weak_trend_state")),
+    ]
+    bottom_states = [
+        ("ma_reclaim_state", "站回均线", _series_predicate("ma_reclaim_state")),
+        ("strong_trend_state", "强趋势", _series_predicate("strong_trend_state")),
+        ("volume_expand_state", "放量", _series_predicate("volume_expand_state")),
+        ("high_turnover_state", "高换手", _series_predicate("high_turnover_state")),
+    ]
+    bottom_fields = [
+        ("bottom_soft", "底部偏软"),
+        ("bottom_near_low", "接近低位"),
+        ("bottom_oversold", "底部超跌"),
+        ("bottom_strict", "严格底部"),
+        ("bottom_weak_ma", "弱均线底部"),
+    ]
+
+    follow_net_buy_thresholds = [5_000_000.0, 15_000_000.0, 30_000_000.0, 60_000_000.0]
+    follow_rate_pairs = [(1.5, 8.0), (1.5, 15.0), (3.0, 8.0), (3.0, 15.0)]
+    reversal_net_buy_thresholds = [-5_000_000.0, -15_000_000.0, -30_000_000.0, -60_000_000.0]
+    reversal_rate_pairs = [(-1.5, 8.0), (-1.5, 15.0), (-3.0, 8.0), (-3.0, 15.0)]
+    bottom_rate_thresholds = [0.5, 1.5]
+
+    plain_follow_rules: list[SignalRuleDef] = []
+    for threshold in follow_net_buy_thresholds:
+        plain_follow_rules.append(
+            SignalRuleDef(
+                strategy_family="plain_inst_follow_through",
+                signal_code=_seed_code("plain_inst_follow_through", f"inst_net_buy_ge_{_millions_token(threshold)}"),
+                description=f"机构净买入不低于 {_millions_token(threshold)}",
+                predicate=_numeric_predicate("inst_net_buy", "ge", threshold),
+            )
+        )
+    for net_rate_threshold, amount_rate_threshold in follow_rate_pairs:
+        plain_follow_rules.append(
+            SignalRuleDef(
+                strategy_family="plain_inst_follow_through",
+                signal_code=_seed_code(
+                    "plain_inst_follow_through",
+                    f"reason_up_deviation__top_list_net_rate_ge_{_threshold_token(net_rate_threshold)}",
+                    f"top_list_amount_rate_ge_{_threshold_token(amount_rate_threshold)}",
+                ),
+                description="涨幅异动上榜且榜单净买入与成交占比同步走强",
+                predicate=_combine_predicates(
+                    _series_predicate("reason_up_deviation"),
+                    _numeric_predicate("top_list_net_rate", "ge", net_rate_threshold),
+                    _numeric_predicate("top_list_amount_rate", "ge", amount_rate_threshold),
+                ),
+            )
+        )
+    for days in [2, 3]:
+        plain_follow_rules.append(
+            SignalRuleDef(
+                strategy_family="plain_inst_follow_through",
+                signal_code=_seed_code("plain_inst_follow_through", f"top_list_count_3d_ge_{days}"),
+                description=f"近 3 日上榜次数不少于 {days}",
+                predicate=_numeric_predicate("top_list_count_3d", "ge", days),
+            )
+        )
+
+    plain_reversal_rules: list[SignalRuleDef] = []
+    for threshold in reversal_net_buy_thresholds:
+        plain_reversal_rules.append(
+            SignalRuleDef(
+                strategy_family="plain_inst_reversal_rebound",
+                signal_code=_seed_code("plain_inst_reversal_rebound", f"inst_net_buy_le_{_millions_token(abs(threshold))}"),
+                description=f"机构净卖出不低于 {_millions_token(abs(threshold))}",
+                predicate=_numeric_predicate("inst_net_buy", "le", threshold),
+            )
+        )
+    for net_rate_threshold, amount_rate_threshold in reversal_rate_pairs:
+        plain_reversal_rules.append(
+            SignalRuleDef(
+                strategy_family="plain_inst_reversal_rebound",
+                signal_code=_seed_code(
+                    "plain_inst_reversal_rebound",
+                    f"reason_down_deviation__top_list_net_rate_le_{_threshold_token(abs(net_rate_threshold))}",
+                    f"top_list_amount_rate_ge_{_threshold_token(amount_rate_threshold)}",
+                ),
+                description="跌幅异动上榜且榜单净买入明显转负",
+                predicate=_combine_predicates(
+                    _series_predicate("reason_down_deviation"),
+                    _numeric_predicate("top_list_net_rate", "le", net_rate_threshold),
+                    _numeric_predicate("top_list_amount_rate", "ge", amount_rate_threshold),
+                ),
+            )
+        )
+    for days in [2, 3]:
+        plain_reversal_rules.append(
+            SignalRuleDef(
+                strategy_family="plain_inst_reversal_rebound",
+                signal_code=_seed_code("plain_inst_reversal_rebound", f"top_list_count_5d_ge_{days}"),
+                description=f"近 5 日上榜次数不少于 {days}",
+                predicate=_numeric_predicate("top_list_count_5d", "ge", days),
+            )
+        )
+
+    plain_bottom_rules: list[SignalRuleDef] = []
+    for field, description in bottom_fields:
+        for threshold in bottom_rate_thresholds:
+            plain_bottom_rules.append(
+                SignalRuleDef(
+                    strategy_family="plain_bottom_absorption",
+                    signal_code=_seed_code(
+                        "plain_bottom_absorption",
+                        field,
+                        f"top_list_net_rate_ge_{_threshold_token(threshold)}",
+                    ),
+                    description=f"{description} 且榜单净买入占比不低于 {threshold:g}",
+                    predicate=_combine_predicates(
+                        _series_predicate(field),
+                        _numeric_predicate("top_list_net_rate", "ge", threshold),
+                    ),
+                )
+            )
+    plain_bottom_rules.extend(
+        [
+            SignalRuleDef(
+                strategy_family="plain_bottom_absorption",
+                signal_code=_seed_code("plain_bottom_absorption", "bottom_soft", "top_list_count_3d_ge_2"),
+                description="底部偏软且近 3 日持续上榜",
+                predicate=_combine_predicates(
+                    _series_predicate("bottom_soft"),
+                    _numeric_predicate("top_list_count_3d", "ge", 2),
+                ),
+            ),
+            SignalRuleDef(
+                strategy_family="plain_bottom_absorption",
+                signal_code=_seed_code("plain_bottom_absorption", "bottom_strict", "top_list_count_3d_ge_3"),
+                description="严格底部且近 3 日持续上榜",
+                predicate=_combine_predicates(
+                    _series_predicate("bottom_strict"),
+                    _numeric_predicate("top_list_count_3d", "ge", 3),
+                ),
+            ),
+        ]
+    )
+
+    def expand_state_rules(
+        family: str,
+        seeds: list[SignalRuleDef],
+        state_defs: list[tuple[str, str, Callable[[pd.DataFrame], pd.Series]]],
+    ) -> list[SignalRuleDef]:
+        expanded: list[SignalRuleDef] = []
+        for seed in seeds:
+            for state_code, state_description, state_predicate in state_defs:
+                expanded.append(
+                    SignalRuleDef(
+                        strategy_family=family,
+                        signal_code=_seed_code(family, seed.signal_code.split("__", 1)[1], state_code),
+                        description=f"{seed.description}，{state_description}",
+                        predicate=_combine_predicates(seed.predicate, state_predicate),
+                    )
+                )
+        return expanded
+
+    rules: list[SignalRuleDef] = [*plain_follow_rules, *plain_reversal_rules, *plain_bottom_rules]
+    rules.extend(expand_state_rules("state_inst_follow_through", plain_follow_rules, follow_states))
+    rules.extend(expand_state_rules("state_inst_reversal_rebound", plain_reversal_rules, reversal_states))
+    rules.extend(expand_state_rules("state_bottom_absorption", plain_bottom_rules, bottom_states))
+
+    deduped: dict[str, SignalRuleDef] = {}
+    for rule in rules:
+        deduped.setdefault(rule.signal_code, rule)
+    return list(deduped.values())
 
 
 def run_analysis(
