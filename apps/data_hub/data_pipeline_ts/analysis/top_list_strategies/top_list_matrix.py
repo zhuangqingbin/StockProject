@@ -688,12 +688,41 @@ def run_analysis(
     output_dir: Path,
     show_progress: bool = False,
 ) -> dict[str, Any]:
+    print("==> load_analysis_frame", flush=True)
+    merged_df = load_analysis_frame(start_date, end_date)
+    loaded_start = str(merged_df["trade_date"].min()) if not merged_df.empty else ""
+    loaded_end = str(merged_df["trade_date"].max()) if not merged_df.empty else ""
+    loaded_stocks = int(merged_df["ts_code"].nunique()) if not merged_df.empty else 0
+    print(
+        f"==> load_analysis_frame done | loaded_rows={len(merged_df)} | "
+        f"loaded_stocks={loaded_stocks} | date_range={loaded_start} -> {loaded_end}",
+        flush=True,
+    )
+
+    print("==> build_features", flush=True)
+    featured_df = build_features(merged_df)
+    analysis_df = featured_df.loc[featured_df["trade_date"] <= end_date].copy() if end_date else featured_df.copy()
+
+    rule_defs = build_signal_rule_defs()
+    print("==> Scanning strategies", flush=True)
+    compact_df = summarize_signal_matrix(
+        analysis_df,
+        rule_defs,
+        min_sample=min_sample,
+        show_progress=show_progress,
+    )
+
+    print("==> build_signal_code_markdown", flush=True)
+    markdown_text = build_signal_code_markdown(rule_defs)
+    print("==> write_outputs", flush=True)
+    output_paths = write_outputs(compact_df, markdown_text, output_dir=output_dir)
     return {
-        "compact_df": pd.DataFrame(),
-        "output_paths": {
-            "summary_csv": output_dir / "placeholder.csv",
-            "summary_md": output_dir / "placeholder.md",
-        },
+        "source_df": merged_df,
+        "merged_df": merged_df,
+        "featured_df": featured_df,
+        "compact_df": compact_df,
+        "output_paths": output_paths,
+        "rule_defs": rule_defs,
     }
 
 

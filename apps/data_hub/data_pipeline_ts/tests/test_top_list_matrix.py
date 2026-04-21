@@ -352,3 +352,98 @@ def test_summarize_signal_matrix_builds_compact_ranking_and_latest_hits():
     markdown = module.build_signal_code_markdown(rule_defs)
     assert "plain_inst_follow_through__demo" in markdown
     assert "demo" in markdown
+
+
+def test_run_analysis_returns_compact_results_and_writes_files(monkeypatch, tmp_path: Path):
+    merged = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "close_qfq": 10.0,
+                "open_qfq": 9.8,
+                "high_qfq": 10.2,
+                "low_qfq": 9.7,
+                "pct_chg": 7.0,
+                "amount": 1000.0,
+                "vol": 100.0,
+                "volume_ratio": 1.8,
+                "turnover_rate_f": 4.2,
+                "boll_lower_qfq": 9.1,
+                "rsi_qfq_6": 31.0,
+                "ma_qfq_5": 9.9,
+                "ma_qfq_20": 10.1,
+                "ma_qfq_60": 10.5,
+                "inst_buy": 30000000.0,
+                "inst_sell": 5000000.0,
+                "inst_net_buy": 25000000.0,
+                "inst_buy_rate": 6.0,
+                "inst_sell_rate": 1.0,
+                "top_list_net_amount": 30000000.0,
+                "top_list_net_rate": 6.0,
+                "top_list_amount_rate": 18.0,
+                "top_list_buy": 50000000.0,
+                "top_list_sell": 20000000.0,
+                "top_list_amount": 70000000.0,
+                "top_list_event_count": 1,
+                "reason_up_deviation": 1,
+                "reason_down_deviation": 0,
+                "reason_high_turnover": 0,
+                "reason_consecutive_move": 0,
+                "reason_high_amplitude": 0,
+            },
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240131",
+                "close_qfq": 10.8,
+                "open_qfq": 10.5,
+                "high_qfq": 10.9,
+                "low_qfq": 10.4,
+                "pct_chg": 3.0,
+                "amount": 1100.0,
+                "vol": 110.0,
+                "volume_ratio": 1.2,
+                "turnover_rate_f": 3.1,
+                "boll_lower_qfq": 9.2,
+                "rsi_qfq_6": 42.0,
+                "ma_qfq_5": 10.1,
+                "ma_qfq_20": 10.2,
+                "ma_qfq_60": 10.4,
+                "inst_buy": 0.0,
+                "inst_sell": 0.0,
+                "inst_net_buy": 0.0,
+                "inst_buy_rate": 0.0,
+                "inst_sell_rate": 0.0,
+                "top_list_net_amount": 0.0,
+                "top_list_net_rate": 0.0,
+                "top_list_amount_rate": 0.0,
+                "top_list_buy": 0.0,
+                "top_list_sell": 0.0,
+                "top_list_amount": 0.0,
+                "top_list_event_count": 0,
+                "reason_up_deviation": 0,
+                "reason_down_deviation": 0,
+                "reason_high_turnover": 0,
+                "reason_consecutive_move": 0,
+                "reason_high_amplitude": 0,
+            },
+        ]
+    )
+
+    monkeypatch.setattr(module, "load_analysis_frame", lambda start_date, end_date: merged.copy())
+
+    result = module.run_analysis(
+        start_date="20240101",
+        end_date="20240131",
+        min_sample=1,
+        top_n=5,
+        output_dir=tmp_path,
+        show_progress=False,
+    )
+
+    compact_df = result["compact_df"]
+    output_paths = result["output_paths"]
+    assert not compact_df.empty
+    assert output_paths["summary_csv"].exists()
+    assert output_paths["summary_md"].exists()
+    assert "signal_code" in compact_df.columns
