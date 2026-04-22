@@ -48,7 +48,7 @@ def test_main_prints_suite_context_and_result_paths(monkeypatch, tmp_path: Path,
         "strategy_names": ["bottom_volume_matrix", "limit_inst_matrix"],
         "min_sample": 30,
         "top_n": 20,
-        "output_dir": tmp_path,
+        "output_dir": tmp_path / "0423_1030",
     }
     assert "suite = strategy_suite" in stdout
     assert "requested_date_range = 20240101 -> 20240131" in stdout
@@ -303,7 +303,6 @@ def test_write_suite_compact_outputs_writes_both_csvs(tmp_path: Path):
 
 
 def test_run_suite_executes_multiple_strategies_and_writes_outputs(monkeypatch, tmp_path: Path):
-    monkeypatch.setattr(module.time, "strftime", lambda fmt, ts=None: "0423_1030")
     fake_specs = [
         StrategySpec(
             strategy_name="bottom_volume_matrix",
@@ -366,7 +365,7 @@ def test_run_suite_executes_multiple_strategies_and_writes_outputs(monkeypatch, 
         strategy_names=["bottom_volume_matrix", "limit_inst_matrix"],
         min_sample=30,
         top_n=20,
-        output_dir=tmp_path,
+        output_dir=tmp_path / "0423_1030",
     )
 
     summary_df = result["suite_summary_df"]
