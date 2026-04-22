@@ -250,6 +250,43 @@ def test_build_suite_compact_frames_filters_failed_and_zero_row_results():
     assert list(by_strategy_df["strategy_name"]) == ["bottom_volume_matrix", "bottom_volume_matrix"]
 
 
+def test_build_suite_compact_frames_returns_stable_schema_for_empty_input():
+    ranking_df, by_strategy_df = module.build_suite_compact_frames(
+        [
+            {
+                "strategy_name": "bottom_volume_matrix",
+                "strategy_description": "底部放量策略矩阵",
+                "status": "success",
+                "rows": 0,
+                "compact_df": pd.DataFrame(),
+            },
+            {
+                "strategy_name": "limit_inst_matrix",
+                "strategy_description": "涨跌停 + 龙虎榜事件矩阵",
+                "status": "failed",
+                "rows": 0,
+                "compact_df": pd.DataFrame(),
+            },
+        ]
+    )
+
+    expected_columns = [
+        "signal_code",
+        "sample_count",
+        "win_rate_1d",
+        "avg_ret_1d",
+        "win_rate_3d",
+        "avg_ret_3d",
+        "strategy_name",
+        "strategy_description",
+    ]
+
+    assert list(ranking_df.columns) == expected_columns
+    assert list(by_strategy_df.columns) == expected_columns
+    assert ranking_df.empty
+    assert by_strategy_df.empty
+
+
 def test_write_suite_compact_outputs_writes_both_csvs(tmp_path: Path):
     ranking_df = pd.DataFrame([{"strategy_name": "bottom_volume_matrix", "signal_code": "a"}])
     by_strategy_df = pd.DataFrame([{"strategy_name": "bottom_volume_matrix", "signal_code": "a"}])

@@ -12,6 +12,16 @@ from apps.data_hub.data_pipeline_ts.analysis.strategy_registry import STRATEGY_R
 
 SUITE_NAME = "strategy_suite"
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "outputs" / "strategy_suite"
+SUITE_COMPACT_COLUMNS = [
+    "signal_code",
+    "sample_count",
+    "win_rate_1d",
+    "avg_ret_1d",
+    "win_rate_3d",
+    "avg_ret_3d",
+    "strategy_name",
+    "strategy_description",
+]
 
 
 def _format_date_range(start_date: str, end_date: str | None) -> str:
@@ -154,7 +164,7 @@ def build_suite_compact_frames(
         merged_frames.append(compact_df)
 
     if not merged_frames:
-        empty = pd.DataFrame()
+        empty = pd.DataFrame(columns=SUITE_COMPACT_COLUMNS)
         return empty, empty
 
     combined = pd.concat(merged_frames, ignore_index=True)
