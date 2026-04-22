@@ -197,3 +197,68 @@ def test_build_suite_summary_frame_keeps_success_and_failure_rows():
 
     assert list(frame["strategy_name"]) == ["bottom_volume_matrix", "limit_inst_matrix"]
     assert list(frame["status"]) == ["success", "failed"]
+
+
+def test_build_suite_compact_frames_filters_failed_and_zero_row_results():
+    success_with_rows = {
+        "strategy_name": "bottom_volume_matrix",
+        "strategy_description": "底部放量策略矩阵",
+        "status": "success",
+        "rows": 2,
+        "compact_df": pd.DataFrame(
+            [
+                {
+                    "signal_code": "a",
+                    "sample_count": 20,
+                    "win_rate_1d": 0.8,
+                    "avg_ret_1d": 0.05,
+                    "win_rate_3d": 0.7,
+                    "avg_ret_3d": 0.06,
+                },
+                {
+                    "signal_code": "b",
+                    "sample_count": 10,
+                    "win_rate_1d": 0.7,
+                    "avg_ret_1d": 0.04,
+                    "win_rate_3d": 0.6,
+                    "avg_ret_3d": 0.05,
+                },
+            ]
+        ),
+    }
+    success_empty = {
+        "strategy_name": "limit_inst_matrix",
+        "strategy_description": "涨跌停 + 龙虎榜事件矩阵",
+        "status": "success",
+        "rows": 0,
+        "compact_df": pd.DataFrame(),
+    }
+    failed = {
+        "strategy_name": "top_list_matrix",
+        "strategy_description": "龙虎榜策略矩阵",
+        "status": "failed",
+        "rows": 0,
+        "compact_df": pd.DataFrame(),
+    }
+
+    ranking_df, by_strategy_df = module.build_suite_compact_frames(
+        [success_with_rows, success_empty, failed]
+    )
+
+    assert list(ranking_df["strategy_name"]) == ["bottom_volume_matrix", "bottom_volume_matrix"]
+    assert list(ranking_df["signal_code"]) == ["a", "b"]
+    assert list(by_strategy_df["strategy_name"]) == ["bottom_volume_matrix", "bottom_volume_matrix"]
+
+
+def test_write_suite_compact_outputs_writes_both_csvs(tmp_path: Path):
+    ranking_df = pd.DataFrame([{"strategy_name": "bottom_volume_matrix", "signal_code": "a"}])
+    by_strategy_df = pd.DataFrame([{"strategy_name": "bottom_volume_matrix", "signal_code": "a"}])
+
+    output_paths = module.write_suite_compact_outputs(
+        ranking_df=ranking_df,
+        by_strategy_df=by_strategy_df,
+        output_dir=tmp_path,
+    )
+
+    assert output_paths["suite_compact_ranking_csv"].exists()
+    assert output_paths["suite_compact_by_strategy_csv"].exists()

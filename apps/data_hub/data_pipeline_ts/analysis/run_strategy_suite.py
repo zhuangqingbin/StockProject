@@ -141,6 +141,53 @@ def build_suite_summary_frame(rows: list[dict[str, Any]]) -> pd.DataFrame:
     return pd.DataFrame(rows).reindex(columns=columns)
 
 
+def build_suite_compact_frames(
+    execution_rows: list[dict[str, Any]],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    merged_frames: list[pd.DataFrame] = []
+    for row in execution_rows:
+        if row["status"] != "success" or int(row["rows"]) <= 0:
+            continue
+        compact_df = row["compact_df"].copy()
+        compact_df["strategy_name"] = row["strategy_name"]
+        compact_df["strategy_description"] = row["strategy_description"]
+        merged_frames.append(compact_df)
+
+    if not merged_frames:
+        empty = pd.DataFrame()
+        return empty, empty
+
+    combined = pd.concat(merged_frames, ignore_index=True)
+    ranking_df = combined.sort_values(
+        ["win_rate_1d", "avg_ret_1d", "win_rate_3d", "avg_ret_3d", "sample_count"],
+        ascending=[False, False, False, False, False],
+        kind="mergesort",
+    ).reset_index(drop=True)
+    by_strategy_df = combined.sort_values(
+        ["strategy_name", "win_rate_1d", "avg_ret_1d", "win_rate_3d", "avg_ret_3d"],
+        ascending=[True, False, False, False, False],
+        kind="mergesort",
+    ).reset_index(drop=True)
+    return ranking_df, by_strategy_df
+
+
+def write_suite_compact_outputs(
+    *,
+    ranking_df: pd.DataFrame,
+    by_strategy_df: pd.DataFrame,
+    output_dir: Path,
+) -> dict[str, Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    ranking_path = output_dir / "suite_compact_ranking.csv"
+    by_strategy_path = output_dir / "suite_compact_by_strategy.csv"
+    ranking_df.to_csv(ranking_path, index=False)
+    by_strategy_df.to_csv(by_strategy_path, index=False)
+    return {
+        "suite_compact_ranking_csv": ranking_path,
+        "suite_compact_by_strategy_csv": by_strategy_path,
+    }
+
+
 def write_suite_summary(summary_df: pd.DataFrame, output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     summary_path = output_dir / "suite_summary.csv"
