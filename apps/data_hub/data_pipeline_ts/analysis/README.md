@@ -21,15 +21,12 @@
 - `chip_distribution`：筹码分布与赢家率分析。
 - `cross_factor`：跨因子组合、信号统计与筛选分析。
 - `earnings`：业绩预告、快报与盈利变化分析。
-- `event_price_action_strategies`：涨跌停、炸板、跌停、龙虎榜事件与主表状态的矩阵分析。
 - `holder_number`：股东户数变化与筹码集中度分析。
 - `holdertrade`：股东交易行为与增减持分析。
 - `limit_board`：涨跌停板、首板与连板信号分析。
 - `margin`：融资融券相关信号和统计分析。
 - `money_flow`：资金流向和主力净流入分析。
 - `northbound`：北向资金持股与变动分析。
-- `supply_shock_strategies`：解禁、增减持、供给冲击与吸收修复矩阵分析。
-- `top_list_strategies`：龙虎榜、机构席位、连续上榜与低位吸筹矩阵分析。
 - `share_float`：解禁、流通盘变化与筹码扰动分析。
 
 ## bottom_val_strategies
@@ -77,23 +74,3 @@ python -m apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies.bottom_v
 - 结果默认输出到脚本本地的 `outputs/` 目录。
 - `mmdd_hhmm.csv`：主结果文件；低样本策略会保留在其中。
 - `mmdd_hhmm.md`：`signal_code` 的含义和定义说明指南。
-
-## top_list_strategies
-
-当前目录下的主脚本是 `top_list_strategies/top_list_matrix.py`，主要用于龙虎榜上榜、机构净买入延续、机构净卖出反抽以及低位吸筹的矩阵分析。
-
-这个脚本直接读取数据库中的 `stock_stk_factor_pro`、`stock_top_inst` 和 `stock_top_list`，把龙虎榜事件、上榜原因、净买入强度、连续上榜特征和主表状态组合成唯一的 `signal_code`，用于做分组统计。
-
-运行后会把以下结果写入带时间戳的 `outputs/` 目录：
-
-- 样本数
-- 1d / 3d 胜率
-- 1d / 3d 平均收益
-- 1d / 3d 方差
-- 最新交易日命中的股票集合
-
-常用命令：
-
-```bash
-python -m apps.data_hub.data_pipeline_ts.analysis.top_list_strategies.top_list_matrix --start-date 20240101
-```
