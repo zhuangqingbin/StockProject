@@ -225,12 +225,44 @@ def run_suite(
     top_n: int,
     output_dir: Path,
 ) -> dict[str, Any]:
+    strategy_specs = resolve_strategy_specs(strategy_names)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    execution_rows: list[dict[str, Any]] = []
+    for spec in strategy_specs:
+        strategy_module = load_strategy_module(spec)
+        execution_rows.append(
+            run_single_strategy(
+                spec=spec,
+                strategy_module=strategy_module,
+                start_date=start_date,
+                end_date=end_date,
+                min_sample=min_sample,
+                top_n=top_n,
+                suite_output_dir=output_dir,
+            )
+        )
+
+    suite_summary_df = build_suite_summary_frame(execution_rows)
+    suite_summary_csv = write_suite_summary(suite_summary_df, output_dir)
+    suite_compact_ranking_df, suite_compact_by_strategy_df = build_suite_compact_frames(execution_rows)
+    compact_paths = write_suite_compact_outputs(
+        ranking_df=suite_compact_ranking_df,
+        by_strategy_df=suite_compact_by_strategy_df,
+        output_dir=output_dir,
+    )
+    success_count = int((suite_summary_df["status"] == "success").sum()) if not suite_summary_df.empty else 0
+    failed_count = int((suite_summary_df["status"] == "failed").sum()) if not suite_summary_df.empty else 0
+    print(f"==> suite_done = success:{success_count} failed:{failed_count}", flush=True)
+    print(f"==> suite_output_dir = {output_dir}", flush=True)
     return {
-        "suite_summary_df": pd.DataFrame(),
+        "suite_summary_df": suite_summary_df,
+        "suite_compact_ranking_df": suite_compact_ranking_df,
+        "suite_compact_by_strategy_df": suite_compact_by_strategy_df,
         "output_paths": {
-            "suite_summary_csv": output_dir / "suite_summary.csv",
-            "suite_compact_ranking_csv": output_dir / "suite_compact_ranking.csv",
-            "suite_compact_by_strategy_csv": output_dir / "suite_compact_by_strategy.csv",
+            "suite_summary_csv": suite_summary_csv,
+            "suite_compact_ranking_csv": compact_paths["suite_compact_ranking_csv"],
+            "suite_compact_by_strategy_csv": compact_paths["suite_compact_by_strategy_csv"],
         },
     }
 

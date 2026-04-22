@@ -299,3 +299,83 @@ def test_write_suite_compact_outputs_writes_both_csvs(tmp_path: Path):
 
     assert output_paths["suite_compact_ranking_csv"].exists()
     assert output_paths["suite_compact_by_strategy_csv"].exists()
+
+
+def test_run_suite_executes_multiple_strategies_and_writes_outputs(monkeypatch, tmp_path: Path):
+    fake_specs = [
+        StrategySpec(
+            strategy_name="bottom_volume_matrix",
+            strategy_description="底部放量策略矩阵",
+            module_path="demo.bottom",
+        ),
+        StrategySpec(
+            strategy_name="limit_inst_matrix",
+            strategy_description="涨跌停 + 龙虎榜事件矩阵",
+            module_path="demo.limit",
+        ),
+    ]
+
+    fake_modules = {
+        "bottom_volume_matrix": type(
+            "BottomModule",
+            (),
+            {
+                "STRATEGY_NAME": "bottom_volume_matrix",
+                "STRATEGY_DESCRIPTION": "底部放量策略矩阵",
+                "run_analysis": staticmethod(
+                    lambda **kwargs: {
+                        "compact_df": pd.DataFrame(
+                            [
+                                {
+                                    "signal_code": "alpha",
+                                    "sample_count": 12,
+                                    "win_rate_1d": 0.75,
+                                    "avg_ret_1d": 0.04,
+                                    "win_rate_3d": 0.70,
+                                    "avg_ret_3d": 0.05,
+                                }
+                            ]
+                        ),
+                        "output_paths": {
+                            "summary_csv": kwargs["output_dir"] / "0423_1200.csv",
+                            "summary_md": kwargs["output_dir"] / "0423_1200.md",
+                        },
+                    }
+                ),
+            },
+        ),
+        "limit_inst_matrix": type(
+            "LimitModule",
+            (),
+            {
+                "STRATEGY_NAME": "limit_inst_matrix",
+                "STRATEGY_DESCRIPTION": "涨跌停 + 龙虎榜事件矩阵",
+                "run_analysis": staticmethod(lambda **kwargs: (_ for _ in ()).throw(RuntimeError("db offline"))),
+            },
+        ),
+    }
+
+    monkeypatch.setattr(module, "resolve_strategy_specs", lambda strategy_names: fake_specs)
+    monkeypatch.setattr(module, "load_strategy_module", lambda spec: fake_modules[spec.strategy_name])
+
+    result = module.run_suite(
+        start_date="20240101",
+        end_date="20240131",
+        strategy_names=["bottom_volume_matrix", "limit_inst_matrix"],
+        min_sample=30,
+        top_n=20,
+        output_dir=tmp_path,
+    )
+
+    summary_df = result["suite_summary_df"]
+    ranking_df = result["suite_compact_ranking_df"]
+    by_strategy_df = result["suite_compact_by_strategy_df"]
+    output_paths = result["output_paths"]
+
+    assert list(summary_df["strategy_name"]) == ["bottom_volume_matrix", "limit_inst_matrix"]
+    assert list(summary_df["status"]) == ["success", "failed"]
+    assert list(ranking_df["strategy_name"]) == ["bottom_volume_matrix"]
+    assert list(by_strategy_df["strategy_name"]) == ["bottom_volume_matrix"]
+    assert output_paths["suite_summary_csv"].exists()
+    assert output_paths["suite_compact_ranking_csv"].exists()
+    assert output_paths["suite_compact_by_strategy_csv"].exists()
