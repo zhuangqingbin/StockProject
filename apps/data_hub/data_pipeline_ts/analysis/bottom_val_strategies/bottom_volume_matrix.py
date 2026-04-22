@@ -13,6 +13,8 @@ from tqdm import tqdm
 from apps.data_hub.data_pipeline_ts.analysis.common.db import query_df
 
 
+STRATEGY_NAME = "bottom_volume_matrix"
+STRATEGY_DESCRIPTION = "底部放量策略矩阵"
 OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"
 
 
