@@ -12,15 +12,16 @@ from apps.data_hub.data_pipeline_ts.analysis.strategy_registry import StrategySp
 
 def test_main_prints_suite_context_and_result_paths(monkeypatch, tmp_path: Path, capsys):
     captured = {}
+    monkeypatch.setattr(module.time, "strftime", lambda fmt, ts=None: "0423_1030")
 
     def fake_run_suite(**kwargs):
         captured["kwargs"] = kwargs
         return {
             "suite_summary_df": pd.DataFrame([{"strategy_name": "bottom_volume_matrix"}]),
             "output_paths": {
-                "suite_summary_csv": tmp_path / "suite_summary.csv",
-                "suite_compact_ranking_csv": tmp_path / "suite_compact_ranking.csv",
-                "suite_compact_by_strategy_csv": tmp_path / "suite_compact_by_strategy.csv",
+                "suite_summary_csv": kwargs["output_dir"] / "suite_summary.csv",
+                "suite_compact_ranking_csv": kwargs["output_dir"] / "suite_compact_ranking.csv",
+                "suite_compact_by_strategy_csv": kwargs["output_dir"] / "suite_compact_by_strategy.csv",
             },
         }
 
@@ -52,7 +53,7 @@ def test_main_prints_suite_context_and_result_paths(monkeypatch, tmp_path: Path,
     assert "suite = strategy_suite" in stdout
     assert "requested_date_range = 20240101 -> 20240131" in stdout
     assert "strategies = bottom_volume_matrix,limit_inst_matrix" in stdout
-    assert f"output_dir = {tmp_path}" in stdout
+    assert f"output_dir = {tmp_path / '0423_1030'}" in stdout
     assert "==> suite_summary_csv = " in stdout
     assert "==> suite_compact_ranking_csv = " in stdout
     assert "==> suite_compact_by_strategy_csv = " in stdout
@@ -302,6 +303,7 @@ def test_write_suite_compact_outputs_writes_both_csvs(tmp_path: Path):
 
 
 def test_run_suite_executes_multiple_strategies_and_writes_outputs(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(module.time, "strftime", lambda fmt, ts=None: "0423_1030")
     fake_specs = [
         StrategySpec(
             strategy_name="bottom_volume_matrix",
@@ -371,11 +373,15 @@ def test_run_suite_executes_multiple_strategies_and_writes_outputs(monkeypatch, 
     ranking_df = result["suite_compact_ranking_df"]
     by_strategy_df = result["suite_compact_by_strategy_df"]
     output_paths = result["output_paths"]
+    suite_run_dir = tmp_path / "0423_1030"
 
     assert list(summary_df["strategy_name"]) == ["bottom_volume_matrix", "limit_inst_matrix"]
     assert list(summary_df["status"]) == ["success", "failed"]
     assert list(ranking_df["strategy_name"]) == ["bottom_volume_matrix"]
     assert list(by_strategy_df["strategy_name"]) == ["bottom_volume_matrix"]
+    assert output_paths["suite_summary_csv"] == suite_run_dir / "suite_summary.csv"
+    assert output_paths["suite_compact_ranking_csv"] == suite_run_dir / "suite_compact_ranking.csv"
+    assert output_paths["suite_compact_by_strategy_csv"] == suite_run_dir / "suite_compact_by_strategy.csv"
     assert output_paths["suite_summary_csv"].exists()
     assert output_paths["suite_compact_ranking_csv"].exists()
     assert output_paths["suite_compact_by_strategy_csv"].exists()

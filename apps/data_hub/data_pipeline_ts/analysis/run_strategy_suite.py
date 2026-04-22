@@ -35,6 +35,11 @@ def _parse_strategy_names(raw: str | None) -> list[str] | None:
     return names or None
 
 
+def resolve_suite_run_dir(output_dir: Path) -> Path:
+    run_stamp = time.strftime("%m%d_%H%M")
+    return output_dir / run_stamp
+
+
 def _print_suite_context(
     start_date: str,
     end_date: str | None,
@@ -226,7 +231,8 @@ def run_suite(
     output_dir: Path,
 ) -> dict[str, Any]:
     strategy_specs = resolve_strategy_specs(strategy_names)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    suite_run_dir = resolve_suite_run_dir(output_dir)
+    suite_run_dir.mkdir(parents=True, exist_ok=True)
 
     execution_rows: list[dict[str, Any]] = []
     for spec in strategy_specs:
@@ -239,22 +245,22 @@ def run_suite(
                 end_date=end_date,
                 min_sample=min_sample,
                 top_n=top_n,
-                suite_output_dir=output_dir,
+                suite_output_dir=suite_run_dir,
             )
         )
 
     suite_summary_df = build_suite_summary_frame(execution_rows)
-    suite_summary_csv = write_suite_summary(suite_summary_df, output_dir)
+    suite_summary_csv = write_suite_summary(suite_summary_df, suite_run_dir)
     suite_compact_ranking_df, suite_compact_by_strategy_df = build_suite_compact_frames(execution_rows)
     compact_paths = write_suite_compact_outputs(
         ranking_df=suite_compact_ranking_df,
         by_strategy_df=suite_compact_by_strategy_df,
-        output_dir=output_dir,
+        output_dir=suite_run_dir,
     )
     success_count = int((suite_summary_df["status"] == "success").sum()) if not suite_summary_df.empty else 0
     failed_count = int((suite_summary_df["status"] == "failed").sum()) if not suite_summary_df.empty else 0
     print(f"==> suite_done = success:{success_count} failed:{failed_count}", flush=True)
-    print(f"==> suite_output_dir = {output_dir}", flush=True)
+    print(f"==> suite_output_dir = {suite_run_dir}", flush=True)
     return {
         "suite_summary_df": suite_summary_df,
         "suite_compact_ranking_df": suite_compact_ranking_df,
@@ -271,7 +277,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     strategy_names = _parse_strategy_names(args.strategies)
     output_dir = Path(args.output_dir)
-    _print_suite_context(args.start_date, args.end_date, strategy_names, output_dir)
+    suite_run_dir = resolve_suite_run_dir(output_dir)
+    _print_suite_context(args.start_date, args.end_date, strategy_names, suite_run_dir)
     result = run_suite(
         start_date=args.start_date,
         end_date=args.end_date,
