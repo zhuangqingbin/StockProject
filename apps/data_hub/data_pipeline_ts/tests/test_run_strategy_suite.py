@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import types
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from apps.data_hub.data_pipeline_ts.analysis import run_strategy_suite as module
+from apps.data_hub.data_pipeline_ts.analysis.strategy_registry import StrategySpec
 
 
 def test_main_prints_suite_context_and_result_paths(monkeypatch, tmp_path: Path, capsys):
@@ -54,3 +57,44 @@ def test_main_prints_suite_context_and_result_paths(monkeypatch, tmp_path: Path,
     assert "==> suite_compact_ranking_csv = " in stdout
     assert "==> suite_compact_by_strategy_csv = " in stdout
     assert "==> strategy_count = 1" in stdout
+
+
+def test_resolve_strategy_specs_defaults_to_all_registered():
+    specs = module.resolve_strategy_specs(None)
+    assert [item.strategy_name for item in specs] == [
+        "bottom_volume_matrix",
+        "flow_chip_northbound_matrix",
+        "limit_inst_matrix",
+        "supply_shock_matrix",
+        "top_list_matrix",
+    ]
+
+
+def test_resolve_strategy_specs_rejects_unknown_names():
+    with pytest.raises(ValueError, match="Unknown strategies: foo_matrix"):
+        module.resolve_strategy_specs(["bottom_volume_matrix", "foo_matrix"])
+
+
+def test_load_strategy_module_imports_registered_path(monkeypatch):
+    fake_module = types.SimpleNamespace(
+        STRATEGY_NAME="bottom_volume_matrix",
+        STRATEGY_DESCRIPTION="底部放量策略矩阵",
+        run_analysis=lambda **_: {},
+    )
+
+    captured = {}
+
+    def fake_import(name: str):
+        captured["module_path"] = name
+        return fake_module
+
+    monkeypatch.setattr(module.importlib, "import_module", fake_import)
+
+    spec = StrategySpec(
+        strategy_name="bottom_volume_matrix",
+        strategy_description="底部放量策略矩阵",
+        module_path="apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies.bottom_volume_matrix",
+    )
+    loaded = module.load_strategy_module(spec)
+    assert loaded is fake_module
+    assert captured["module_path"] == spec.module_path

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+from apps.data_hub.data_pipeline_ts.analysis.strategy_registry import STRATEGY_REGISTRY, StrategySpec
 
 SUITE_NAME = "strategy_suite"
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "outputs" / "strategy_suite"
@@ -32,6 +35,26 @@ def _print_suite_context(
     print(f"requested_date_range = {_format_date_range(start_date, end_date)}", flush=True)
     print(f"strategies = {names_text}", flush=True)
     print(f"output_dir = {output_dir}", flush=True)
+
+
+def resolve_strategy_specs(strategy_names: list[str] | None) -> list[StrategySpec]:
+    if strategy_names is None:
+        return [STRATEGY_REGISTRY[name] for name in STRATEGY_REGISTRY]
+    unknown = [name for name in strategy_names if name not in STRATEGY_REGISTRY]
+    if unknown:
+        joined = ",".join(unknown)
+        raise ValueError(f"Unknown strategies: {joined}")
+    return [STRATEGY_REGISTRY[name] for name in strategy_names]
+
+
+def load_strategy_module(spec: StrategySpec):
+    module = importlib.import_module(spec.module_path)
+    required = ["STRATEGY_NAME", "STRATEGY_DESCRIPTION", "run_analysis"]
+    missing = [item for item in required if not hasattr(module, item)]
+    if missing:
+        joined = ",".join(missing)
+        raise AttributeError(f"{spec.strategy_name} missing required attributes: {joined}")
+    return module
 
 
 def build_parser() -> argparse.ArgumentParser:
