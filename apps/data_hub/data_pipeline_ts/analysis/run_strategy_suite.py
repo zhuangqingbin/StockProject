@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import time
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +56,96 @@ def load_strategy_module(spec: StrategySpec):
         joined = ",".join(missing)
         raise AttributeError(f"{spec.strategy_name} missing required attributes: {joined}")
     return module
+
+
+def _strategy_output_dir(suite_output_dir: Path, strategy_name: str) -> Path:
+    return suite_output_dir / strategy_name
+
+
+def run_single_strategy(
+    *,
+    spec: StrategySpec,
+    strategy_module: Any,
+    start_date: str,
+    end_date: str | None,
+    min_sample: int,
+    top_n: int,
+    suite_output_dir: Path,
+) -> dict[str, Any]:
+    strategy_output_dir = _strategy_output_dir(suite_output_dir, spec.strategy_name)
+    strategy_output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"==> running strategy = {spec.strategy_name}", flush=True)
+    started_at = time.perf_counter()
+    try:
+        result = strategy_module.run_analysis(
+            start_date=start_date,
+            end_date=end_date,
+            min_sample=min_sample,
+            top_n=top_n,
+            output_dir=strategy_output_dir,
+            show_progress=True,
+        )
+        result = result or {}
+        compact_df = result.get("compact_df", pd.DataFrame())
+        output_paths = result.get("output_paths", {})
+        elapsed_seconds = round(time.perf_counter() - started_at, 3)
+        rows = int(len(compact_df))
+        print(
+            f"==> done strategy = {spec.strategy_name} | status = success | rows = {rows} | elapsed = {elapsed_seconds}s",
+            flush=True,
+        )
+        return {
+            "strategy_name": spec.strategy_name,
+            "strategy_description": spec.strategy_description,
+            "status": "success",
+            "rows": rows,
+            "summary_csv": str(output_paths.get("summary_csv", "")),
+            "summary_md": str(output_paths.get("summary_md", "")),
+            "elapsed_seconds": elapsed_seconds,
+            "error_message": "",
+            "compact_df": compact_df,
+        }
+    except Exception as exc:
+        elapsed_seconds = round(time.perf_counter() - started_at, 3)
+        error_message = f"{type(exc).__name__}: {exc}"
+        print(
+            f"==> failed strategy = {spec.strategy_name} | error = {error_message}",
+            flush=True,
+        )
+        return {
+            "strategy_name": spec.strategy_name,
+            "strategy_description": spec.strategy_description,
+            "status": "failed",
+            "rows": 0,
+            "summary_csv": "",
+            "summary_md": "",
+            "elapsed_seconds": elapsed_seconds,
+            "error_message": error_message,
+            "compact_df": pd.DataFrame(),
+        }
+
+
+def build_suite_summary_frame(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    columns = [
+        "strategy_name",
+        "strategy_description",
+        "status",
+        "rows",
+        "summary_csv",
+        "summary_md",
+        "elapsed_seconds",
+        "error_message",
+    ]
+    if not rows:
+        return pd.DataFrame(columns=columns)
+    return pd.DataFrame(rows).reindex(columns=columns)
+
+
+def write_suite_summary(summary_df: pd.DataFrame, output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    summary_path = output_dir / "suite_summary.csv"
+    summary_df.to_csv(summary_path, index=False)
+    return summary_path
 
 
 def build_parser() -> argparse.ArgumentParser:

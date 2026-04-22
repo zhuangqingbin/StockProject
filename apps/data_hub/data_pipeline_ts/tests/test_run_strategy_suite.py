@@ -98,3 +98,102 @@ def test_load_strategy_module_imports_registered_path(monkeypatch):
     loaded = module.load_strategy_module(spec)
     assert loaded is fake_module
     assert captured["module_path"] == spec.module_path
+
+
+def test_run_single_strategy_success_builds_summary_row(tmp_path: Path):
+    fake_module = types.SimpleNamespace(
+        STRATEGY_NAME="bottom_volume_matrix",
+        STRATEGY_DESCRIPTION="底部放量策略矩阵",
+        run_analysis=lambda **kwargs: {
+            "compact_df": pd.DataFrame([{"signal_code": "demo"}]),
+            "output_paths": {
+                "summary_csv": tmp_path / "bottom_volume_matrix" / "0423_1200.csv",
+                "summary_md": tmp_path / "bottom_volume_matrix" / "0423_1200.md",
+            },
+        },
+    )
+
+    spec = StrategySpec(
+        strategy_name="bottom_volume_matrix",
+        strategy_description="底部放量策略矩阵",
+        module_path="demo.path",
+    )
+    result = module.run_single_strategy(
+        spec=spec,
+        strategy_module=fake_module,
+        start_date="20240101",
+        end_date="20240131",
+        min_sample=30,
+        top_n=20,
+        suite_output_dir=tmp_path,
+    )
+
+    assert result["strategy_name"] == "bottom_volume_matrix"
+    assert result["status"] == "success"
+    assert result["rows"] == 1
+    assert result["summary_csv"].endswith("bottom_volume_matrix/0423_1200.csv")
+    assert result["summary_md"].endswith("bottom_volume_matrix/0423_1200.md")
+    assert result["error_message"] == ""
+
+
+def test_run_single_strategy_failure_keeps_summary_row(tmp_path: Path):
+    def boom(**kwargs):
+        raise RuntimeError("db offline")
+
+    fake_module = types.SimpleNamespace(
+        STRATEGY_NAME="limit_inst_matrix",
+        STRATEGY_DESCRIPTION="涨跌停 + 龙虎榜事件矩阵",
+        run_analysis=boom,
+    )
+    spec = StrategySpec(
+        strategy_name="limit_inst_matrix",
+        strategy_description="涨跌停 + 龙虎榜事件矩阵",
+        module_path="demo.path",
+    )
+
+    result = module.run_single_strategy(
+        spec=spec,
+        strategy_module=fake_module,
+        start_date="20240101",
+        end_date="20240131",
+        min_sample=30,
+        top_n=20,
+        suite_output_dir=tmp_path,
+    )
+
+    assert result["strategy_name"] == "limit_inst_matrix"
+    assert result["status"] == "failed"
+    assert result["rows"] == 0
+    assert result["summary_csv"] == ""
+    assert result["summary_md"] == ""
+    assert result["error_message"] == "RuntimeError: db offline"
+
+
+def test_build_suite_summary_frame_keeps_success_and_failure_rows():
+    frame = module.build_suite_summary_frame(
+        [
+            {
+                "strategy_name": "bottom_volume_matrix",
+                "strategy_description": "底部放量策略矩阵",
+                "status": "success",
+                "rows": 10,
+                "summary_csv": "/tmp/a.csv",
+                "summary_md": "/tmp/a.md",
+                "elapsed_seconds": 1.2,
+                "error_message": "",
+            },
+            {
+                "strategy_name": "limit_inst_matrix",
+                "strategy_description": "涨跌停 + 龙虎榜事件矩阵",
+                "status": "failed",
+                "rows": 0,
+                "summary_csv": "",
+                "summary_md": "",
+                "elapsed_seconds": 0.4,
+                "error_message": "RuntimeError: db offline",
+            },
+        ]
+    )
+
+    assert list(frame["strategy_name"]) == ["bottom_volume_matrix", "limit_inst_matrix"]
+    assert list(frame["status"]) == ["success", "failed"]
