@@ -1,0 +1,449 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pandas as pd
+
+from apps.data_hub.data_pipeline_ts.analysis.top_list_strategies import (
+    top_list_matrix as module,
+)
+
+
+def test_main_prints_context_and_result_paths(monkeypatch, tmp_path: Path, capsys):
+    captured = {}
+
+    def fake_run_analysis(**kwargs):
+        captured["kwargs"] = kwargs
+        return {
+            "compact_df": pd.DataFrame([{"signal_code": "demo"}]),
+            "output_paths": {
+                "summary_csv": tmp_path / "0422_1200.csv",
+                "summary_md": tmp_path / "0422_1200.md",
+            },
+        }
+
+    monkeypatch.setattr(module, "run_analysis", fake_run_analysis)
+
+    exit_code = module.main(
+        [
+            "--start-date",
+            "20240101",
+            "--end-date",
+            "20240131",
+            "--output-dir",
+            str(tmp_path),
+        ]
+    )
+
+    stdout = capsys.readouterr().out
+    assert exit_code == 0
+    assert captured["kwargs"] == {
+        "start_date": "20240101",
+        "end_date": "20240131",
+        "min_sample": 30,
+        "top_n": 20,
+        "output_dir": tmp_path,
+        "show_progress": True,
+    }
+    assert "strategy = top_list_matrix" in stdout
+    assert "description = 龙虎榜策略矩阵" in stdout
+    assert "source_tables = stock_stk_factor_pro, stock_top_inst, stock_top_list" in stdout
+    assert "requested_date_range = 20240101 -> 20240131" in stdout
+    assert f"output_dir = {tmp_path}" in stdout
+    assert "==> summary_csv = " in stdout
+    assert "==> summary_md = " in stdout
+    assert "==> rows = 1" in stdout
+
+
+def test_loaders_merge_and_build_core_top_list_features(monkeypatch):
+    base_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240129",
+                "close_qfq": 10.0,
+                "open_qfq": 9.8,
+                "high_qfq": 10.2,
+                "low_qfq": 9.7,
+                "pct_chg": 1.0,
+                "amount": 1000.0,
+                "vol": 100.0,
+                "volume_ratio": 0.9,
+                "turnover_rate_f": 1.5,
+                "boll_lower_qfq": 9.5,
+                "rsi_qfq_6": 43.0,
+                "ma_qfq_5": 9.9,
+                "ma_qfq_20": 10.4,
+                "ma_qfq_60": 10.7,
+            },
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "close_qfq": 10.7,
+                "open_qfq": 10.1,
+                "high_qfq": 10.9,
+                "low_qfq": 10.0,
+                "pct_chg": 7.0,
+                "amount": 1800.0,
+                "vol": 180.0,
+                "volume_ratio": 1.8,
+                "turnover_rate_f": 4.2,
+                "boll_lower_qfq": 9.6,
+                "rsi_qfq_6": 59.0,
+                "ma_qfq_5": 10.1,
+                "ma_qfq_20": 10.3,
+                "ma_qfq_60": 10.6,
+            },
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240131",
+                "close_qfq": 11.0,
+                "open_qfq": 10.8,
+                "high_qfq": 11.1,
+                "low_qfq": 10.7,
+                "pct_chg": 2.8,
+                "amount": 1500.0,
+                "vol": 150.0,
+                "volume_ratio": 1.2,
+                "turnover_rate_f": 3.4,
+                "boll_lower_qfq": 9.7,
+                "rsi_qfq_6": 61.0,
+                "ma_qfq_5": 10.4,
+                "ma_qfq_20": 10.4,
+                "ma_qfq_60": 10.6,
+            },
+        ]
+    )
+    top_inst_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "buy": 30000000.0,
+                "buy_rate": 6.0,
+                "sell": 5000000.0,
+                "sell_rate": 1.0,
+                "net_buy": 25000000.0,
+                "reason": "日涨幅偏离值达到7%的前五只证券",
+            },
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240131",
+                "buy": 8000000.0,
+                "buy_rate": 1.5,
+                "sell": 18000000.0,
+                "sell_rate": 3.0,
+                "net_buy": -10000000.0,
+                "reason": "日振幅值达到15%的前五只证券",
+            },
+        ]
+    )
+    top_list_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "net_amount": 30000000.0,
+                "net_rate": 8.5,
+                "amount_rate": 23.0,
+                "l_buy": 50000000.0,
+                "l_sell": 20000000.0,
+                "l_amount": 70000000.0,
+                "reason": "日涨幅偏离值达到7%的前五只证券",
+            },
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "net_amount": 30000000.0,
+                "net_rate": 8.5,
+                "amount_rate": 23.0,
+                "l_buy": 50000000.0,
+                "l_sell": 20000000.0,
+                "l_amount": 70000000.0,
+                "reason": "连续三个交易日内，涨幅偏离值累计达到20%的证券",
+            },
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240131",
+                "net_amount": -9000000.0,
+                "net_rate": -3.5,
+                "amount_rate": 11.0,
+                "l_buy": 15000000.0,
+                "l_sell": 24000000.0,
+                "l_amount": 39000000.0,
+                "reason": "连续三个交易日内，涨幅偏离值累计达到20%的证券",
+            },
+        ]
+    )
+
+    monkeypatch.setattr(module, "load_base_frame", lambda start_date, end_date: base_df.copy())
+    monkeypatch.setattr(module, "load_top_inst_frame", lambda start_date, end_date: top_inst_df.copy())
+    monkeypatch.setattr(module, "load_top_list_frame", lambda start_date, end_date: top_list_df.copy())
+
+    merged = module.load_analysis_frame("20240101", "20240131")
+    features = module.build_features(merged)
+
+    day1 = features.loc[features["trade_date"] == "20240130"].iloc[0]
+    day2 = features.loc[features["trade_date"] == "20240131"].iloc[0]
+    assert round(day1["inst_net_buy"], 2) == 25000000.0
+    assert round(day1["top_list_net_rate"], 2) == 8.5
+    assert round(day1["top_list_net_amount"], 2) == 30000000.0
+    assert round(day1["top_list_amount"], 2) == 70000000.0
+    assert day1["top_list_event_count"] == 2
+    assert day1["reason_up_deviation"] == 1
+    assert day1["reason_consecutive_move"] == 1
+    assert round(day2["top_list_count_3d"], 2) == 2.0
+    assert day2["top_list_streak_2d"] == 1
+    assert round(day1["ret_1d"], 6) == round(11.0 / 10.7 - 1.0, 6)
+
+    expected_columns = {
+        "inst_net_buy_ratio",
+        "inst_sell_ratio",
+        "ma_reclaim_state",
+        "strong_trend_state",
+        "weak_trend_state",
+        "volume_expand_state",
+        "high_turnover_state",
+        "oversold_state",
+        "pullback_state",
+        "bottom_soft",
+        "bottom_near_low",
+        "bottom_oversold",
+        "bottom_strict",
+        "bottom_weak_ma",
+    }
+    assert expected_columns.issubset(set(features.columns))
+
+
+def test_build_signal_rule_defs_covers_families_and_bottom_groups():
+    rule_defs = module.build_signal_rule_defs()
+
+    families = {rule.strategy_family for rule in rule_defs}
+    assert families == {
+        "plain_inst_follow_through",
+        "state_inst_follow_through",
+        "plain_inst_reversal_rebound",
+        "state_inst_reversal_rebound",
+        "plain_bottom_absorption",
+        "state_bottom_absorption",
+    }
+
+    signal_codes = {rule.signal_code for rule in rule_defs}
+    assert any(code.startswith("plain_inst_follow_through__") for code in signal_codes)
+    assert any(code.startswith("plain_inst_reversal_rebound__") for code in signal_codes)
+    assert any("bottom_soft" in code for code in signal_codes)
+    assert any("bottom_strict" in code for code in signal_codes)
+    assert any("reason_up_deviation" in rule.predicate for rule in rule_defs)
+    assert any("top_list_net_rate" in rule.predicate for rule in rule_defs)
+    assert len(signal_codes) >= 120
+
+
+def test_missing_technical_inputs_do_not_create_false_state_flags(monkeypatch):
+    base_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "000002.SZ",
+                "trade_date": "20240130",
+                "close_qfq": 10.0,
+                "open_qfq": 9.8,
+                "high_qfq": 10.1,
+                "low_qfq": 9.7,
+                "pct_chg": 1.2,
+                "amount": 1200.0,
+                "vol": 120.0,
+                "volume_ratio": 1.0,
+                "turnover_rate_f": 1.2,
+                "boll_lower_qfq": None,
+                "rsi_qfq_6": None,
+                "ma_qfq_5": None,
+                "ma_qfq_20": None,
+                "ma_qfq_60": None,
+            }
+        ]
+    )
+
+    monkeypatch.setattr(module, "load_base_frame", lambda start_date, end_date: base_df.copy())
+    monkeypatch.setattr(module, "load_top_inst_frame", lambda start_date, end_date: pd.DataFrame())
+    monkeypatch.setattr(module, "load_top_list_frame", lambda start_date, end_date: pd.DataFrame())
+
+    merged = module.load_analysis_frame("20240101", "20240131")
+    assert pd.isna(merged.loc[0, "boll_lower_qfq"])
+    assert pd.isna(merged.loc[0, "rsi_qfq_6"])
+    assert pd.isna(merged.loc[0, "ma_qfq_5"])
+    assert pd.isna(merged.loc[0, "ma_qfq_20"])
+    assert pd.isna(merged.loc[0, "ma_qfq_60"])
+
+    features = module.build_features(merged)
+    row = features.iloc[0]
+    assert row["ma_reclaim_state"] == 0
+    assert row["strong_trend_state"] == 0
+    assert row["weak_trend_state"] == 0
+    assert row["volume_expand_state"] == 0
+    assert row["high_turnover_state"] == 0
+    assert row["oversold_state"] == 0
+    assert row["bottom_soft"] == 0
+    assert row["bottom_near_low"] == 0
+    assert row["bottom_oversold"] == 0
+    assert row["bottom_strict"] == 0
+    assert row["bottom_weak_ma"] == 0
+
+
+def test_summarize_signal_matrix_builds_compact_ranking_and_latest_hits():
+    features = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "ret_1d": 0.05,
+                "ret_3d": 0.07,
+                "inst_net_buy": 20000000.0,
+                "top_list_net_rate": 4.0,
+                "top_list_amount_rate": 15.0,
+                "reason_up_deviation": 1,
+                "top_list_count_3d": 2.0,
+                "bottom_soft": 1,
+                "ma_reclaim_state": 1,
+                "strong_trend_state": 1,
+                "volume_expand_state": 1,
+                "high_turnover_state": 1,
+                "oversold_state": 0,
+                "pullback_state": 0,
+            },
+            {
+                "ts_code": "000002.SZ",
+                "trade_date": "20240130",
+                "ret_1d": -0.02,
+                "ret_3d": 0.01,
+                "inst_net_buy": 18000000.0,
+                "top_list_net_rate": 3.2,
+                "top_list_amount_rate": 16.0,
+                "reason_up_deviation": 1,
+                "top_list_count_3d": 1.0,
+                "bottom_soft": 0,
+                "ma_reclaim_state": 0,
+                "strong_trend_state": 1,
+                "volume_expand_state": 1,
+                "high_turnover_state": 1,
+                "oversold_state": 0,
+                "pullback_state": 0,
+            },
+        ]
+    )
+    rule_defs = [
+        module.SignalRuleDef(
+            strategy_family="plain_inst_follow_through",
+            signal_code="plain_inst_follow_through__demo",
+            description="demo",
+            predicate="(inst_net_buy >= 15000000) & (reason_up_deviation == 1)",
+        )
+    ]
+
+    compact_df = module.summarize_signal_matrix(features, rule_defs, min_sample=1)
+
+    row = compact_df.iloc[0]
+    assert row["signal_code"] == "plain_inst_follow_through__demo"
+    assert row["sample_count"] == 2
+    assert round(row["win_rate_1d"], 4) == 0.5
+    assert round(row["avg_ret_1d"], 4) == 0.015
+    assert round(row["var_ret_1d"], 6) == round(0.00245, 6)
+    assert row["latest_trade_date"] == "20240130"
+    assert row["latest_hit_stocks"] == "000001.SZ,000002.SZ"
+
+    markdown = module.build_signal_code_markdown(rule_defs)
+    assert "plain_inst_follow_through__demo" in markdown
+    assert "demo" in markdown
+
+
+def test_run_analysis_returns_compact_results_and_writes_files(monkeypatch, tmp_path: Path):
+    merged = pd.DataFrame(
+        [
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240130",
+                "close_qfq": 10.0,
+                "open_qfq": 9.8,
+                "high_qfq": 10.2,
+                "low_qfq": 9.7,
+                "pct_chg": 7.0,
+                "amount": 1000.0,
+                "vol": 100.0,
+                "volume_ratio": 1.8,
+                "turnover_rate_f": 4.2,
+                "boll_lower_qfq": 9.1,
+                "rsi_qfq_6": 31.0,
+                "ma_qfq_5": 9.9,
+                "ma_qfq_20": 10.1,
+                "ma_qfq_60": 10.5,
+                "inst_buy": 30000000.0,
+                "inst_sell": 5000000.0,
+                "inst_net_buy": 25000000.0,
+                "inst_buy_rate": 6.0,
+                "inst_sell_rate": 1.0,
+                "top_list_net_amount": 30000000.0,
+                "top_list_net_rate": 6.0,
+                "top_list_amount_rate": 18.0,
+                "top_list_buy": 50000000.0,
+                "top_list_sell": 20000000.0,
+                "top_list_amount": 70000000.0,
+                "top_list_event_count": 1,
+                "reason_up_deviation": 1,
+                "reason_down_deviation": 0,
+                "reason_high_turnover": 0,
+                "reason_consecutive_move": 0,
+                "reason_high_amplitude": 0,
+            },
+            {
+                "ts_code": "000001.SZ",
+                "trade_date": "20240131",
+                "close_qfq": 10.8,
+                "open_qfq": 10.5,
+                "high_qfq": 10.9,
+                "low_qfq": 10.4,
+                "pct_chg": 3.0,
+                "amount": 1100.0,
+                "vol": 110.0,
+                "volume_ratio": 1.2,
+                "turnover_rate_f": 3.1,
+                "boll_lower_qfq": 9.2,
+                "rsi_qfq_6": 42.0,
+                "ma_qfq_5": 10.1,
+                "ma_qfq_20": 10.2,
+                "ma_qfq_60": 10.4,
+                "inst_buy": 0.0,
+                "inst_sell": 0.0,
+                "inst_net_buy": 0.0,
+                "inst_buy_rate": 0.0,
+                "inst_sell_rate": 0.0,
+                "top_list_net_amount": 0.0,
+                "top_list_net_rate": 0.0,
+                "top_list_amount_rate": 0.0,
+                "top_list_buy": 0.0,
+                "top_list_sell": 0.0,
+                "top_list_amount": 0.0,
+                "top_list_event_count": 0,
+                "reason_up_deviation": 0,
+                "reason_down_deviation": 0,
+                "reason_high_turnover": 0,
+                "reason_consecutive_move": 0,
+                "reason_high_amplitude": 0,
+            },
+        ]
+    )
+
+    monkeypatch.setattr(module, "load_analysis_frame", lambda start_date, end_date: merged.copy())
+
+    result = module.run_analysis(
+        start_date="20240101",
+        end_date="20240131",
+        min_sample=1,
+        top_n=5,
+        output_dir=tmp_path,
+        show_progress=False,
+    )
+
+    compact_df = result["compact_df"]
+    output_paths = result["output_paths"]
+    assert not compact_df.empty
+    assert output_paths["summary_csv"].exists()
+    assert output_paths["summary_md"].exists()
+    assert "signal_code" in compact_df.columns
