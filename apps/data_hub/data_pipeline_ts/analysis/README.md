@@ -21,7 +21,6 @@
 - `chip_distribution`：筹码分布与赢家率分析。
 - `cross_factor`：跨因子组合、信号统计与筛选分析。
 - `earnings`：业绩预告、快报与盈利变化分析。
-- `flow_chip_northbound_strategies`：资金流、筹码和北向资金联合矩阵分析。
 - `holder_number`：股东户数变化与筹码集中度分析。
 - `holdertrade`：股东交易行为与增减持分析。
 - `limit_board`：涨跌停板、首板与连板信号分析。
