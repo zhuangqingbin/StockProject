@@ -17,6 +17,19 @@ def _read_site_page(relative_path: str) -> str:
     return (_repo_root() / "site_docs" / relative_path).read_text(encoding="utf-8")
 
 
+def _collect_nav_paths(nav_items: list[object]) -> list[str]:
+    paths: list[str] = []
+    for item in nav_items:
+        if not isinstance(item, dict):
+            continue
+        value = next(iter(item.values()))
+        if isinstance(value, str):
+            paths.append(value)
+        elif isinstance(value, list):
+            paths.extend(_collect_nav_paths(value))
+    return paths
+
+
 def test_apps_requirements_include_mkdocs_stack():
     content = (_repo_root() / "apps" / "requirements.txt").read_text(encoding="utf-8")
 
@@ -49,17 +62,21 @@ def test_mkdocs_config_uses_site_docs_and_explicit_nav():
     ]
 
 
-def test_top_level_site_docs_pages_exist():
+def test_all_nav_pages_exist_under_site_docs():
     repo_root = _repo_root()
-    assert (repo_root / "site_docs" / "index.md").exists()
-    assert (repo_root / "site_docs" / "getting-started.md").exists()
+    site_docs = repo_root / "site_docs"
+    nav_paths = _collect_nav_paths(_load_mkdocs_config()["nav"])
+
+    assert nav_paths
+    for relative_path in nav_paths:
+        assert (site_docs / relative_path).exists(), relative_path
 
 
 def test_root_readme_mentions_docs_preview_command():
     content = (_repo_root() / "README.md").read_text(encoding="utf-8")
 
     assert "## Docs Portal" in content
-    assert "mkdocs serve" in content
+    assert 'mkdocs serve' in content
     assert "`site_docs/`" in content
 
 
