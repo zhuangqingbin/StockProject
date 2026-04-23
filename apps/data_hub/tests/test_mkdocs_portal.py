@@ -92,3 +92,30 @@ def test_analysis_pages_document_strategy_suite_and_findings():
     assert "--strategies bottom_volume_matrix,limit_inst_matrix,top_list_matrix" in suite
     assert "首板涨停 + 主力大幅流入" in findings
     assert "跌停 + 主力大幅流出" in findings
+
+
+def test_quant_platform_pages_cover_app_and_research_workflow():
+    overview = _read_site_page("quant-platform/index.md")
+    research = _read_site_page("quant-platform/research.md")
+
+    assert "run.sh backend" in overview
+    assert "run.sh frontend" in overview
+    assert "`/research`" in research
+    assert "research-factor --from-db" in research
+    assert "run_full_pipeline" in research
+
+
+def test_ops_and_governance_pages_cover_env_test_and_docs_boundaries():
+    environment = _read_site_page("ops/environment.md")
+    testing = _read_site_page("ops/testing.md")
+    commands = _read_site_page("ops/common-commands.md")
+    governance = _read_site_page("repo-governance/index.md")
+    inventory = _read_site_page("repo-governance/inventory.md")
+
+    assert "TUSHARE_TOKEN" in environment
+    assert "TS_MYSQL_DATABASE" in environment
+    assert "python -m pytest -q" in testing
+    assert "npm --prefix apps/data_hub/data_explorer/frontend test" in testing
+    assert "mkdocs serve" in commands
+    assert "project-specific design and implementation notes" in governance
+    assert "docs/ should only hold repo-wide material" in inventory
