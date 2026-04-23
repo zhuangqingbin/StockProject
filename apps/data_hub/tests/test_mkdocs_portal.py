@@ -20,13 +20,16 @@ def _read_site_page(relative_path: str) -> str:
 def _collect_nav_paths(nav_items: list[object]) -> list[str]:
     paths: list[str] = []
     for item in nav_items:
-        if not isinstance(item, dict):
-            continue
-        value = next(iter(item.values()))
-        if isinstance(value, str):
-            paths.append(value)
-        elif isinstance(value, list):
-            paths.extend(_collect_nav_paths(value))
+        assert isinstance(item, dict), f"Unexpected nav item: {item!r}"
+        for label, value in item.items():
+            if isinstance(value, str):
+                paths.append(value)
+            elif isinstance(value, list):
+                paths.extend(_collect_nav_paths(value))
+            else:
+                raise AssertionError(
+                    f"Unexpected nav value for {label!r}: {value!r}"
+                )
     return paths
 
 
