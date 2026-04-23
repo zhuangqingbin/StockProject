@@ -17,7 +17,8 @@ bash apps/quant_platform/scripts/run.sh research-factor \
 Run the full pipeline:
 
 ```bash
-apps/.venv/bin/python -m apps.quant_platform.research.scripts.run_full_pipeline \
+PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \
+"$PYTHON_BIN" -m apps.quant_platform.research.scripts.run_full_pipeline \
   --start-date 2023-01-01 \
   --end-date 2025-12-31 \
   --max-factors 60
