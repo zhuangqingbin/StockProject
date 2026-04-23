@@ -13,6 +13,7 @@ dist/
 .next/
 .cache/
 .logs/
+site/
 # Newly generated local OMC runtime state; historical tracked files are handled separately.
 .codex-runlogs/
 .omc/sessions/
