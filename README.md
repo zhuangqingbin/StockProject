@@ -103,6 +103,19 @@ For project-specific workflows, use the project READMEs:
 - `apps/data_hub/README.md`
 - `apps/quant_platform/README.md`
 
+## Docs Portal
+
+This repository includes a MkDocs portal with repo-level entrypoints for `Data Hub`, `Analysis`, `Quant Platform`, and `Ops / Dev`.
+
+The source pages live under `site_docs/`.
+
+Preview the docs locally with the shared project Python:
+
+```bash
+PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \
+"$PYTHON_BIN" -m mkdocs serve
+```
+
 Run the maintained tests:
 
 ```bash

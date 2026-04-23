@@ -1,0 +1,43 @@
+site_name: StockProject Docs
+docs_dir: site_docs
+site_dir: site
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.instant
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Data Hub:
+      - Overview: data-hub/index.md
+      - data_pipeline_ts: data-hub/data-pipeline-ts.md
+      - data_pipeline_ak: data-hub/data-pipeline-ak.md
+      - data_explorer: data-hub/data-explorer.md
+      - Analysis:
+          - Overview: data-hub/analysis/index.md
+          - Strategy Suite: data-hub/analysis/strategy-suite.md
+          - Findings: data-hub/analysis/findings.md
+  - Quant Platform:
+      - Overview: quant-platform/index.md
+      - Research: quant-platform/research.md
+  - Ops / Dev:
+      - Environment: ops/environment.md
+      - Testing: ops/testing.md
+      - Common Commands: ops/common-commands.md
+  - Repo Governance:
+      - Overview: repo-governance/index.md
+      - Inventory: repo-governance/inventory.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.tasklist
