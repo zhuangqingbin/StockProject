@@ -1,5 +1,6 @@
 import { Card, Select, Tabs, Typography } from "antd";
 
+import { formatShanghaiDateTime } from "../time";
 import type { JobMonitorRow, MonitorOverview, PipelineRunRow, TableMonitorRow } from "../types";
 
 type MonitorTabsProps = {
@@ -34,6 +35,18 @@ const getStatusValue = (row: Record<string, unknown>) =>
 const matchesStatusFilter = (row: Record<string, unknown>, filter: string) =>
   filter === "all" ? true : getStatusValue(row) === filter;
 
+const TIMESTAMP_KEYS = new Set(["last_updated", "executed_at", "started_at", "ended_at"]);
+
+const renderCellValue = (key: string, value: unknown) => {
+  if (value === null || value === undefined || value === "") {
+    return "—";
+  }
+  if (TIMESTAMP_KEYS.has(key) && typeof value === "string") {
+    return formatShanghaiDateTime(value);
+  }
+  return String(value);
+};
+
 const renderRows = <T extends Record<string, unknown>>(
   rows: T[],
   keys: string[],
@@ -56,7 +69,7 @@ const renderRows = <T extends Record<string, unknown>>(
           }
         >
           {keys.map((key) => (
-            <td key={key}>{String(row[key] ?? "—")}</td>
+            <td key={key}>{renderCellValue(key, row[key])}</td>
           ))}
         </tr>
       ))}
@@ -98,8 +111,8 @@ const renderOverview = (overview: MonitorOverview | null) => {
               <span className="detail-chip">模式 · {overview.latest_run.run_mode}</span>
               <span className="detail-chip">窗口 · {overview.latest_run.effective_window}</span>
             </div>
-            <Text>开始时间：{overview.latest_run.started_at ?? "—"}</Text>
-            <Text>结束时间：{overview.latest_run.ended_at ?? "—"}</Text>
+            <Text>开始时间：{formatShanghaiDateTime(overview.latest_run.started_at)}</Text>
+            <Text>结束时间：{formatShanghaiDateTime(overview.latest_run.ended_at)}</Text>
             <Text>触发 Profile：{overview.latest_run.trigger_profiles.join(", ") || "—"}</Text>
           </div>
         ) : (

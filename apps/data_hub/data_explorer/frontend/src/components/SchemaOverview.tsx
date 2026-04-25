@@ -1,6 +1,7 @@
 import { Button, Card, Col, Empty, Row, Typography } from "antd";
 
 import { getProfileDescription } from "../profileInfo";
+import { formatShanghaiDateTime } from "../time";
 import type { DatabaseOverview, TableListItem, TableMetadataDetail } from "../types";
 
 type SchemaOverviewProps = {
@@ -145,7 +146,7 @@ const SchemaOverview = ({
               <Card className="metric-card" variant="borderless">
                 <Text className="metric-label">最近更新时间</Text>
                 <Text className="metric-value-text metadata-value-inline">
-                  {selectedTableEntry?.last_updated ?? "—"}
+                  {formatShanghaiDateTime(selectedTableEntry?.last_updated)}
                 </Text>
               </Card>
             </div>

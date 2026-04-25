@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from apps.data_hub.data_explorer.backend.services.monitor_service import (
     get_latest_job_runs,
     get_monitor_overview,
@@ -49,7 +51,7 @@ def test_list_table_monitor_rows_returns_table_status_rows(monkeypatch):
             "table_name": "stock_daily",
             "category": "stock_market_data",
             "latest_data_date": "20260317",
-            "last_updated": "2026-03-17T18:05:00",
+            "last_updated": "2026-03-18T02:05:00+08:00",
             "freshness": "normal",
             "trigger_profile": "trade_day_post_close_core",
             "last_run_result": "success",
@@ -95,7 +97,7 @@ def test_list_job_monitor_rows_returns_latest_job_runs(monkeypatch):
             "result": "success",
             "status": "success",
             "effective_date": None,
-            "executed_at": "2026-03-17T18:05:00",
+            "executed_at": "2026-03-18T02:05:00+08:00",
             "duration_seconds": 12.3,
             "rows_written": None,
             "error": None,
@@ -128,6 +130,7 @@ def test_get_latest_job_runs_reads_runtime_table_when_available(monkeypatch):
     assert latest["status"] == "success"
     assert latest["result"] == "success"
     assert latest["job_name"] == "stock_daily"
+    assert latest["executed_at"] == "2026-03-18T02:05:00+08:00"
 
 
 def test_list_pipeline_run_rows_groups_recent_job_runs(monkeypatch):
@@ -143,7 +146,7 @@ def test_list_pipeline_run_rows_groups_recent_job_runs(monkeypatch):
                 "result": "success",
                 "effective_date": "20260317",
                 "executed_at": "2026-03-17 18:05:00",
-                "_executed_at_dt": None,
+                "_executed_at_dt": datetime(2026, 3, 17, 18, 5, 0, tzinfo=timezone.utc),
             },
             {
                 "run_id": "run-001",
@@ -154,7 +157,7 @@ def test_list_pipeline_run_rows_groups_recent_job_runs(monkeypatch):
                 "result": "failed",
                 "effective_date": "20260317",
                 "executed_at": "2026-03-17 18:06:00",
-                "_executed_at_dt": None,
+                "_executed_at_dt": datetime(2026, 3, 17, 18, 6, 0, tzinfo=timezone.utc),
             },
         ],
     )
@@ -172,8 +175,8 @@ def test_list_pipeline_run_rows_groups_recent_job_runs(monkeypatch):
             "successful_jobs": 1,
             "table_count": 2,
             "effective_window": "20260317",
-            "started_at": None,
-            "ended_at": None,
+            "started_at": "2026-03-18T02:05:00+08:00",
+            "ended_at": "2026-03-18T02:06:00+08:00",
         }
     ]
 
@@ -219,7 +222,7 @@ def test_list_table_recent_runs_filters_runs_by_table(monkeypatch):
             "job_name": "stock_daily",
             "result": "success",
             "effective_date": "20260317",
-            "executed_at": "2026-03-17 18:05:00",
+            "executed_at": "2026-03-18T02:05:00+08:00",
             "duration_seconds": 12.3,
             "rows_written": 10,
             "error": None,

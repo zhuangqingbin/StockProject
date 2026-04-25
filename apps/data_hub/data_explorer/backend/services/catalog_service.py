@@ -20,6 +20,7 @@ from apps.data_hub.data_explorer.backend.infrastructure.mysql_introspection impo
 )
 from apps.data_hub.data_pipeline_ts.jobs.catalog import ALL_JOBS
 from apps.data_hub.data_pipeline_ts.jobs.catalog import INFRASTRUCTURE_TARGETS
+from apps.data_hub.data_explorer.backend.services.time_utils import format_shanghai_timestamp
 
 if TYPE_CHECKING:
     from apps.data_hub.data_explorer.backend.infrastructure.db import DatabaseSource
@@ -300,7 +301,11 @@ def get_table_stats(
             row_count = row_count_reader(engine, table_name)
             earliest_data_date = get_earliest_data_date(engine, table_name, columns)
             latest_data_date = get_latest_data_date(engine, table_name, columns)
-            last_updated = get_latest_job_success_time(engine, job_name) if job_name else None
+            last_updated = (
+                format_shanghai_timestamp(get_latest_job_success_time(engine, job_name))
+                if job_name
+                else None
+            )
             status = _derive_status(
                 row_count=row_count,
                 latest_data_date=latest_data_date,

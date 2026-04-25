@@ -26,13 +26,28 @@ apps/quant_platform/research/output/*/*
 !apps/quant_platform/research/output/*/.gitkeep
 
 
+# superpowers skill working artifacts (specs/ remains tracked)
+docs/superpowers/plans/
+
+# data_pipeline_ts analysis outputs (generated CSVs/MDs, not source)
+apps/data_hub/data_pipeline_ts/analysis/outputs/
+apps/data_hub/data_pipeline_ts/analysis/*/outputs/
+apps/data_hub/data_pipeline_ts/analysis/*/output/
+
 # files
 task_plan.md
 findings.md
 progress.md
 .DS_Store
+.env
 .env.local
+.env.*.local
 *.zip
 draft*.py
 *.log
 *.tsbuildinfo
+*.sqlite
+*.sqlite3
+.python-version
+.vscode/
+.omc/project-memory.json

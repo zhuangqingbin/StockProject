@@ -12,10 +12,11 @@ from tqdm import tqdm
 
 from apps.data_hub.data_pipeline_ts.analysis.common.db import query_df
 
-
+# python -m apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies.bottom_volume_matrix --start-date 20220101
+OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"
 STRATEGY_NAME = "bottom_volume_matrix"
 STRATEGY_DESCRIPTION = "底部放量策略矩阵"
-OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"
+SOURCE_TABLE = "stock_stk_factor_pro"
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,34 @@ def _series_win_rate(series: pd.Series) -> float:
 
 def _select_existing_columns(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     return frame[[column for column in columns if column in frame.columns]].copy()
+
+
+def _format_date_range(start_date: str, end_date: str | None) -> str:
+    return f"{start_date} -> {end_date or 'latest'}"
+
+
+def _print_execution_context(
+    start_date: str,
+    end_date: str | None,
+    min_sample: int,
+    top_n: int,
+    output_dir: Path,
+) -> None:
+    print(f"strategy = {STRATEGY_NAME}", flush=True)
+    print(f"description = {STRATEGY_DESCRIPTION}", flush=True)
+    print(f"source_table = {SOURCE_TABLE}", flush=True)
+    print(f"requested_date_range = {_format_date_range(start_date, end_date)}", flush=True)
+    print(f"output_dir = {output_dir}", flush=True)
+    print(f"min_sample = {min_sample}", flush=True)
+    print(f"top_n = {top_n}", flush=True)
+
+
+def _print_stage(step: str, **details: object) -> None:
+    if details:
+        detail_parts = [f"{key} = {value}" for key, value in details.items()]
+        print(f"==> {step} | {' | '.join(detail_parts)}", flush=True)
+        return
+    print(f"==> {step}", flush=True)
 
 
 def build_features(frame: pd.DataFrame) -> pd.DataFrame:
@@ -654,9 +683,19 @@ def run_analysis(
     output_dir: Path,
     show_progress: bool = False,
 ) -> dict[str, object]:
+    _print_stage("load_base_frame")
     source_df = load_base_frame(start_date=start_date, end_date=end_date)
+    effective_end_date = str(source_df["trade_date"].max()) if not source_df.empty else (end_date or "n/a")
+    _print_stage(
+        "load_base_frame done",
+        loaded_rows=len(source_df),
+        loaded_stocks=source_df["ts_code"].nunique() if "ts_code" in source_df.columns else 0,
+        date_range=_format_date_range(start_date, effective_end_date),
+    )
+    _print_stage("build_features")
     featured_df = build_features(source_df)
     analysis_df = featured_df[featured_df["trade_date"] <= end_date].copy() if end_date else featured_df
+    _print_stage("Scanning strategies")
     summary_df, trigger_df, _, _ = summarize_signal_matrix(
         analysis_df,
         min_sample=min_sample,
@@ -664,6 +703,7 @@ def run_analysis(
     )
     compact_df = build_compact_summary(summary_df, trigger_df)
     signal_code_markdown = build_signal_code_markdown(build_bottom_rule_defs(), build_volume_rule_defs())
+    _print_stage("write_outputs")
     output_paths = write_outputs(
         compact_df=compact_df,
         signal_code_markdown=signal_code_markdown,
@@ -691,6 +731,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    _print_execution_context(
+        start_date=args.start_date,
+        end_date=args.end_date,
+        min_sample=args.min_sample,
+        top_n=args.top_n,
+        output_dir=args.output_dir,
+    )
     result = run_analysis(
         start_date=args.start_date,
         end_date=args.end_date,
@@ -699,9 +746,9 @@ def main(argv: list[str] | None = None) -> int:
         output_dir=args.output_dir,
         show_progress=True,
     )
-    print(f"summary_csv={result['output_paths']['summary_csv']}")
-    print(f"summary_md={result['output_paths']['summary_md']}")
-    print(f"rows={len(result['compact_df'])}")
+    print(f"==> summary_csv = {result['output_paths']['summary_csv']}")
+    print(f"==> summary_md = {result['output_paths']['summary_md']}")
+    print(f"==> rows = {len(result['compact_df'])}")
     return 0
 
 

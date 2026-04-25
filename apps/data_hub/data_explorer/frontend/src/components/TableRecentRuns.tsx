@@ -1,5 +1,6 @@
 import { Empty, Typography } from "antd";
 
+import { formatShanghaiDateTime } from "../time";
 import type { TableRecentRun } from "../types";
 
 type TableRecentRunsProps = {
@@ -40,7 +41,7 @@ const TableRecentRuns = ({ runs }: TableRecentRunsProps) => (
               <td>{run.effective_date ?? "—"}</td>
               <td>{run.rows_written ?? "—"}</td>
               <td>{run.duration_seconds ?? "—"}</td>
-              <td>{run.executed_at ?? "—"}</td>
+              <td>{formatShanghaiDateTime(run.executed_at)}</td>
               <td>{run.error ?? "—"}</td>
             </tr>
           ))}

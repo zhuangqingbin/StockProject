@@ -76,7 +76,7 @@ describe("data_explorer app shell", () => {
             row_count: 5400,
             earliest_data_date: "19910403",
             latest_data_date: "20260317",
-            last_updated: "2026-03-17T09:25:00",
+            last_updated: "2026-03-17T17:25:00+08:00",
             status: "normal",
           },
           {
@@ -87,7 +87,7 @@ describe("data_explorer app shell", () => {
             row_count: 18000,
             earliest_data_date: "19901219",
             latest_data_date: "20260318",
-            last_updated: "2026-03-18T08:00:00",
+            last_updated: "2026-03-18T16:00:00+08:00",
             status: "normal",
           },
         ];
@@ -102,7 +102,7 @@ describe("data_explorer app shell", () => {
           row_count: 5230000,
           earliest_data_date: "19901219",
           latest_data_date: "20260317",
-          last_updated: "2026-03-17T18:05:00",
+          last_updated: "2026-03-18T02:05:00+08:00",
           status: "delayed",
         },
       ];
@@ -118,7 +118,7 @@ describe("data_explorer app shell", () => {
         row_count: 5400,
         earliest_data_date: "19910403",
         latest_data_date: "20260317",
-        last_updated: "2026-03-17T09:25:00",
+        last_updated: "2026-03-17T17:25:00+08:00",
         status: "normal",
       },
       structure: {
@@ -144,7 +144,7 @@ describe("data_explorer app shell", () => {
           job_name: "stock_basic",
           result: "success",
           effective_date: "20260317",
-          executed_at: "2026-03-17 09:25:00",
+          executed_at: "2026-03-17T17:25:00+08:00",
           duration_seconds: 1.2,
           rows_written: 5400,
           error: null,
@@ -183,8 +183,8 @@ describe("data_explorer app shell", () => {
         successful_jobs: 1,
         table_count: 2,
         effective_window: "20260317",
-        started_at: "2026-03-17 18:00:00",
-        ended_at: "2026-03-17 18:05:00",
+        started_at: "2026-03-18T02:00:00+08:00",
+        ended_at: "2026-03-18T02:05:00+08:00",
       },
     });
     mockApi.fetchMonitorTables.mockResolvedValue([
@@ -192,7 +192,7 @@ describe("data_explorer app shell", () => {
         table_name: "stock_daily",
         category: "stock_market_data",
         latest_data_date: "20260317",
-        last_updated: "2026-03-17T18:05:00",
+        last_updated: "2026-03-18T02:05:00+08:00",
         freshness: "delayed",
         trigger_profile: "trade_day_post_close_core",
         last_run_result: "failed",
@@ -208,7 +208,7 @@ describe("data_explorer app shell", () => {
         table_name: "stock_daily",
         result: "success",
         effective_date: "20260317",
-        executed_at: "2026-03-17T18:05:00",
+        executed_at: "2026-03-18T02:05:00+08:00",
         duration_seconds: 12.3,
         rows_written: 5230000,
         error: null,
@@ -225,8 +225,8 @@ describe("data_explorer app shell", () => {
         successful_jobs: 1,
         table_count: 2,
         effective_window: "20260317",
-        started_at: "2026-03-17 18:00:00",
-        ended_at: "2026-03-17 18:05:00",
+        started_at: "2026-03-18T02:00:00+08:00",
+        ended_at: "2026-03-18T02:05:00+08:00",
       },
     ]);
     mockApi.fetchDatabaseOverview.mockResolvedValue({
@@ -267,6 +267,7 @@ describe("data_explorer app shell", () => {
       "https://tushare.pro/document/2?doc_id=25",
     );
     expect(screen.getByRole("cell", { name: "19910403" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "2026-03-17 17:25:00" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "查看 trade_cal API 文档" })).toHaveAttribute(
       "href",
       "https://tushare.pro/document/2?doc_id=26",
@@ -287,6 +288,7 @@ describe("data_explorer app shell", () => {
     expect(screen.getAllByText("reference_calendar_nightly").length).toBeGreaterThan(0);
     expect(screen.getByText("Profile 是这张表绑定的数据触发节奏与执行场景。")).toBeInTheDocument();
     expect(screen.getByText("夜间参考数据刷新链路")).toBeInTheDocument();
+    expect(screen.getByText("2026-03-17 17:25:00")).toBeInTheDocument();
     expect(screen.getByText("字段结构")).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "中文名" })).toBeInTheDocument();
     expect(screen.getAllByRole("cell", { name: "股票代码" }).length).toBeGreaterThan(0);
@@ -348,15 +350,19 @@ describe("data_explorer app shell", () => {
 
     expect(await screen.findByRole("tab", { name: "总览" })).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByText("run-001")).toBeInTheDocument();
+    expect(screen.getByText("开始时间：2026-03-18 02:00:00")).toBeInTheDocument();
+    expect(screen.getByText("结束时间：2026-03-18 02:05:00")).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "数据资产" }));
     expect(await screen.findByRole("cell", { name: "stock_daily" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "2026-03-18 02:05:00" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "任务执行" }));
     expect((await screen.findAllByRole("cell", { name: "stock_daily" })).length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("tab", { name: "批次 Runs" }));
     expect(await screen.findByRole("cell", { name: "partial_failed" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "2026-03-18 02:00:00" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "数据资产" }));
     await user.click((await screen.findAllByRole("cell", { name: "stock_daily" }))[0]);

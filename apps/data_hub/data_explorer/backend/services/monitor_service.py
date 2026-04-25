@@ -13,21 +13,12 @@ from apps.data_hub.data_explorer.backend.services.catalog_service import (
     get_table_registry,
     get_table_stats,
 )
-
-
-def _parse_datetime(raw_value: object) -> datetime | None:
-    if isinstance(raw_value, datetime):
-        return raw_value
-    if raw_value in {None, ""}:
-        return None
-
-    value = str(raw_value)
-    for pattern in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
-        try:
-            return datetime.strptime(value, pattern)
-        except ValueError:
-            continue
-    return None
+from apps.data_hub.data_explorer.backend.services.time_utils import (
+    UTC,
+    UTC_MIN,
+    format_shanghai_timestamp,
+    parse_timestamp,
+)
 
 
 def _resolve_table_name(
@@ -70,8 +61,8 @@ def _normalize_job_run_row(
         "error": row.get("error"),
         "as_of_date": row.get("as_of_date"),
         "effective_date": row.get("effective_date"),
-        "executed_at": None if executed_at is None else str(executed_at),
-        "_executed_at_dt": _parse_datetime(executed_at),
+        "executed_at": format_shanghai_timestamp(executed_at),
+        "_executed_at_dt": parse_timestamp(executed_at),
     }
 
 
@@ -84,7 +75,7 @@ def get_recent_job_runs(limit: int = 200) -> list[dict[str, object]]:
 
     normalized = [_normalize_job_run_row(row, registry) for row in rows if row.get("job_name")]
     normalized.sort(
-        key=lambda row: row.get("_executed_at_dt") or datetime.min,
+        key=lambda row: row.get("_executed_at_dt") or UTC_MIN,
         reverse=True,
     )
     return normalized
@@ -112,7 +103,7 @@ def get_monitor_overview() -> dict[str, object]:
         str(stats.get(table_name, {}).get("status", "unknown"))
         for table_name in registry
     )
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     recent_failed_jobs = [
         row
         for row in recent_job_runs
@@ -151,7 +142,7 @@ def list_table_monitor_rows() -> list[dict[str, object]]:
                 "table_name": table_name,
                 "category": entry["category"],
                 "latest_data_date": table_stats.get("latest_data_date"),
-                "last_updated": table_stats.get("last_updated"),
+                "last_updated": format_shanghai_timestamp(table_stats.get("last_updated")),
                 "freshness": table_stats.get("status", "normal"),
                 "trigger_profile": entry.get("trigger_profile", ""),
                 "last_run_result": latest_job_run.get("result"),
@@ -189,7 +180,7 @@ def list_job_monitor_rows() -> list[dict[str, object]]:
             "result": job_run.get("result") or job_run.get("status"),
             "status": job_run.get("result") or job_run.get("status"),
             "effective_date": job_run.get("effective_date"),
-            "executed_at": job_run.get("executed_at"),
+            "executed_at": format_shanghai_timestamp(job_run.get("executed_at")),
             "duration_seconds": job_run.get("duration_seconds"),
             "rows_written": job_run.get("rows_written"),
             "error": job_run.get("error"),
@@ -285,14 +276,14 @@ def list_pipeline_run_rows(
                 "successful_jobs": group["successful_jobs"],
                 "table_count": len(group["table_names"]),
                 "effective_window": effective_window,
-                "started_at": None if started_at is None else started_at.isoformat(sep=" "),
-                "ended_at": None if ended_at is None else ended_at.isoformat(sep=" "),
+                "started_at": format_shanghai_timestamp(started_at),
+                "ended_at": format_shanghai_timestamp(ended_at),
                 "_started_at_dt": started_at,
             }
         )
 
     aggregated_rows.sort(
-        key=lambda row: row.get("_started_at_dt") or datetime.min,
+        key=lambda row: row.get("_started_at_dt") or UTC_MIN,
         reverse=True,
     )
     return [
@@ -316,7 +307,7 @@ def list_table_recent_runs(table_name: str, *, limit: int = 10) -> list[dict[str
             "job_name": row.get("job_name"),
             "result": row.get("result"),
             "effective_date": row.get("effective_date"),
-            "executed_at": row.get("executed_at"),
+            "executed_at": format_shanghai_timestamp(row.get("executed_at")),
             "duration_seconds": row.get("duration_seconds"),
             "rows_written": row.get("rows_written"),
             "error": row.get("error"),

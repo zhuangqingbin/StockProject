@@ -1,5 +1,6 @@
 import { Empty, Input, Select, Spin, Typography } from "antd";
 
+import { formatShanghaiDateTime } from "../time";
 import type { TableListItem } from "../types";
 
 type TableListProps = {
@@ -101,7 +102,7 @@ const TableList = ({
                 <td>{renderCell(table.row_count)}</td>
                 <td>{renderCell(table.earliest_data_date)}</td>
                 <td>{renderCell(table.latest_data_date)}</td>
-                <td>{renderCell(table.last_updated)}</td>
+                <td>{table.last_updated ? formatShanghaiDateTime(table.last_updated) : "—"}</td>
                 <td>
                   <span className={`status-pill status-${table.status}`}>{table.status}</span>
                 </td>

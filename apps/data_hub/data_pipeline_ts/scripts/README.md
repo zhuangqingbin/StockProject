@@ -120,7 +120,10 @@ bash apps/data_hub/data_pipeline_ts/scripts/run_recommended_backfill.sh \
 说明：
 
 - 这个脚本负责编排，不改变现有 `run_backfill.sh` / `run_job.sh` / `sync_infrastructure.sh` 的职责边界
-- 显式范围 job 的“是否截断”仍建议结合 stdout 里的 `rows_fetched/rows_written` 与目标表日期覆盖一起判断
+- 每次真实执行都会在 `apps/data_hub/data_pipeline_ts/scripts/logs/` 生成一个分钟级时间戳日志，例如 `202604181001.log`
+- Step 1 / Step 2 / Step 4 只记录失败命令和对应报错，不记录成功输出
+- Step 3 除了记录失败命令和报错，还会把 `kpl_list` / `report_rc` 的按日期聚合行数写进日志
+- 显式范围 job 的“是否截断”仍建议结合这个日志、stdout 里的 `rows_fetched/rows_written` 与目标表日期覆盖一起判断
 
 ## 推荐回溯流程
 
@@ -316,7 +319,7 @@ macOS launchd 定时任务安装器，自动为所有有 cron 的 profile 生成
 | `financial_calendar_nightly` | `...financial-calendar-nightly` | 每天 21:30 |
 | `reference_calendar_nightly` | `...reference-calendar-nightly` | 每天 21:45 |
 
-日志输出到 `apps/data_hub/data_pipeline_ts/.logs/`。
+日志输出到 `apps/data_hub/data_pipeline_ts/scripts/logs/`。
 
 ```bash
 bash apps/data_hub/data_pipeline_ts/scripts/install_launchd.sh

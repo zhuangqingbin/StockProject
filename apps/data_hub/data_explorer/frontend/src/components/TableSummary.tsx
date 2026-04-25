@@ -1,6 +1,7 @@
 import { Button, Card, Col, Row, Typography } from "antd";
 
 import { getProfileDescription } from "../profileInfo";
+import { formatShanghaiDateTime } from "../time";
 import type { TableDetail } from "../types";
 
 type TableSummaryProps = {
@@ -17,7 +18,7 @@ const TableSummary = ({ detail }: TableSummaryProps) => {
     { label: "总行数", value: detail.summary.row_count },
     { label: "最早数据日期", value: detail.summary.earliest_data_date ?? "—" },
     { label: "最新数据日期", value: detail.summary.latest_data_date ?? "—" },
-    { label: "最近更新时间", value: detail.summary.last_updated ?? "—" },
+    { label: "最近更新时间", value: formatShanghaiDateTime(detail.summary.last_updated) },
     { label: "状态", value: detail.summary.status },
     { label: "关联任务", value: detail.job_name ?? "—" },
     { label: "触发 Profile", value: detail.trigger_profile ?? "—" },

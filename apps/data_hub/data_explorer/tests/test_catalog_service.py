@@ -52,14 +52,14 @@ def test_list_tables_by_category_returns_only_current_category(monkeypatch):
                 "row_count": 5230000,
                 "earliest_data_date": "19901219",
                 "latest_data_date": "20260317",
-                "last_updated": "2026-03-17T18:05:00",
+                "last_updated": "2026-03-18T02:05:00+08:00",
                 "status": "normal",
             },
             "stock_daily_basic": {
                 "row_count": 5230000,
                 "earliest_data_date": "19901219",
                 "latest_data_date": "20260317",
-                "last_updated": "2026-03-17T18:06:00",
+                "last_updated": "2026-03-18T02:06:00+08:00",
                 "status": "normal",
             },
         }
@@ -93,7 +93,7 @@ def test_list_tables_by_category_uses_approximate_row_counts(monkeypatch):
                 "row_count": 1,
                 "earliest_data_date": "19901219",
                 "latest_data_date": "20260317",
-                "last_updated": "2026-03-17T18:05:00",
+                "last_updated": "2026-03-18T02:05:00+08:00",
                 "status": "normal",
             }
             for table_name in table_names
@@ -202,7 +202,7 @@ def test_get_table_stats_reads_exact_counts_date_range_and_last_successful_updat
         "row_count": 5230000,
         "earliest_data_date": "19901219",
         "latest_data_date": "20260317",
-        "last_updated": "2026-03-17T18:05:00",
+        "last_updated": "2026-03-18T02:05:00+08:00",
         "status": "normal",
     }
     assert stats["ak_trade_cal"] == {
@@ -258,7 +258,7 @@ def test_get_table_stats_can_use_approximate_row_counts(monkeypatch):
         "row_count": 5200000,
         "earliest_data_date": "19901219",
         "latest_data_date": "20260317",
-        "last_updated": "2026-03-17T18:05:00",
+        "last_updated": "2026-03-18T02:05:00+08:00",
         "status": "normal",
     }
 

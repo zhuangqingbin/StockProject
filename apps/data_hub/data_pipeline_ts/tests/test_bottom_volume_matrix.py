@@ -752,6 +752,105 @@ def test_run_analysis_returns_final_compact_contract(monkeypatch, tmp_path: Path
     }
 
 
+def test_run_analysis_prints_stage_messages(monkeypatch, tmp_path: Path, capsys):
+    source_df = pd.DataFrame(
+        [
+            {"ts_code": "000001.SZ", "trade_date": "20240101", "close_qfq": 10.0},
+            {"ts_code": "000001.SZ", "trade_date": "20240102", "close_qfq": 10.2},
+        ]
+    )
+    featured_df = pd.DataFrame(
+        [
+            {"ts_code": "000001.SZ", "trade_date": "20240101", "close_qfq": 10.0},
+            {"ts_code": "000001.SZ", "trade_date": "20240102", "close_qfq": 10.2},
+        ]
+    )
+    summary_df = pd.DataFrame(
+        [
+            {
+                "signal_code": "demo",
+                "sample_count": 1,
+                "avg_ret_1d": 0.03,
+                "median_ret_1d": 0.03,
+                "win_rate_1d": 1.0,
+                "avg_ret_3d": 0.02,
+                "median_ret_3d": 0.02,
+                "win_rate_3d": 1.0,
+            }
+        ]
+    )
+    trigger_df = pd.DataFrame(
+        [
+            {
+                "signal_code": "demo",
+                "trade_date": "20240102",
+                "ts_code": "000001.SZ",
+                "ret_1d": 0.03,
+                "ret_3d": 0.02,
+            }
+        ]
+    )
+    compact_df = pd.DataFrame(
+        [
+            {
+                "signal_code": "demo",
+                "sample_count": 1,
+                "win_rate_1d": 1.0,
+                "avg_ret_1d": 0.03,
+                "var_ret_1d": 0.0,
+                "win_rate_3d": 1.0,
+                "avg_ret_3d": 0.02,
+                "var_ret_3d": 0.0,
+                "latest_trade_date": "20240102",
+                "latest_hit_stocks": "000001.SZ",
+            }
+        ]
+    )
+
+    monkeypatch.setattr(module, "load_base_frame", lambda start_date, end_date=None: source_df)
+    monkeypatch.setattr(module, "build_features", lambda frame: featured_df)
+    monkeypatch.setattr(
+        module,
+        "summarize_signal_matrix",
+        lambda frame, min_sample=30, show_progress=False: (
+            summary_df,
+            trigger_df,
+            pd.DataFrame(),
+            pd.DataFrame(),
+        ),
+    )
+    monkeypatch.setattr(module, "build_compact_summary", lambda summary, trigger: compact_df)
+    monkeypatch.setattr(module, "build_signal_code_markdown", lambda bottom_rules, volume_rules: "## Signal Codes")
+    monkeypatch.setattr(
+        module,
+        "write_outputs",
+        lambda compact_df, signal_code_markdown, output_dir: {
+            "summary_csv": output_dir / "0418_1630.csv",
+            "summary_md": output_dir / "0418_1630.md",
+        },
+    )
+
+    result = module.run_analysis(
+        start_date="20240101",
+        end_date="20240131",
+        min_sample=5,
+        top_n=3,
+        output_dir=tmp_path,
+        show_progress=True,
+    )
+
+    stdout = capsys.readouterr().out
+    assert "==> load_base_frame" in stdout
+    assert "==> load_base_frame done" in stdout
+    assert "loaded_rows = 2" in stdout
+    assert "loaded_stocks = 1" in stdout
+    assert "date_range = 20240101 -> 20240102" in stdout
+    assert "==> build_features" in stdout
+    assert "==> Scanning strategies" in stdout
+    assert "==> write_outputs" in stdout
+    assert result["output_paths"]["summary_csv"] == tmp_path / "0418_1630.csv"
+
+
 def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
     monkeypatch.setattr(
         module,
@@ -800,7 +899,11 @@ def test_main_accepts_cli_arguments(monkeypatch, tmp_path: Path, capsys):
 
     stdout = capsys.readouterr().out
     assert exit_code == 0
+    assert "strategy = bottom_volume_matrix" in stdout
+    assert "source_table = stock_stk_factor_pro" in stdout
+    assert "requested_date_range = 20240101 -> 20240131" in stdout
+    assert f"output_dir = {tmp_path}" in stdout
     assert "0418_1630.csv" in stdout
     assert "0418_1630.md" in stdout
-    assert "rows=1" in stdout
+    assert "==> rows = 1" in stdout
     assert "demo" not in stdout

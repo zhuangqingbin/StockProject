@@ -24,6 +24,7 @@ VENV_DIR="${REPO_ROOT}/apps/.venv"
 PYTHON_BIN="${VENV_DIR}/bin/python"
 FRONTEND_DIR="${REPO_ROOT}/apps/data_hub/data_explorer/frontend"
 ENV_FILE="${REPO_ROOT}/.env"
+ENV_LOCAL_FILE="${REPO_ROOT}/.env.local"
 ENV_EXAMPLE="${REPO_ROOT}/env.example"
 
 # -- parse flags ----------------------------------------------------------
@@ -159,19 +160,31 @@ else
   fi
 fi
 
-# -- load .env for subsequent steps ----------------------------------------
-# Use line-by-line parsing instead of `source` to avoid syntax errors
-# from values containing shell-special characters (brackets, quotes, etc.)
-while IFS= read -r line || [[ -n "${line}" ]]; do
-  [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]] && continue
-  if [[ "${line}" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*) ]]; then
-    key="${BASH_REMATCH[1]}"
-    val="${BASH_REMATCH[2]}"
-    val="${val#\"}" ; val="${val%\"}"
-    val="${val#\'}" ; val="${val%\'}"
-    export "${key}=${val}"
-  fi
-done < "${ENV_FILE}"
+# -- load .env then .env.local for subsequent steps ------------------------
+# Resolution order: .env.local > .env > shell env (matches runtime loader).
+# Line-by-line parsing avoids `source` syntax errors from values containing
+# shell-special characters (brackets, quotes, etc.).
+load_env_file() {
+  local file="$1"
+  [[ -f "${file}" ]] || return 0
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]] && continue
+    if [[ "${line}" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*) ]]; then
+      key="${BASH_REMATCH[1]}"
+      val="${BASH_REMATCH[2]}"
+      val="${val#\"}" ; val="${val%\"}"
+      val="${val#\'}" ; val="${val%\'}"
+      export "${key}=${val}"
+    fi
+  done < "${file}"
+}
+
+load_env_file "${ENV_FILE}"
+load_env_file "${ENV_LOCAL_FILE}"
+
+if [[ -f "${ENV_LOCAL_FILE}" ]]; then
+  ok ".env.local detected — overrides applied."
+fi
 
 # =========================================================================
 # Step 4: MySQL database creation
