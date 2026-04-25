@@ -1,14 +1,14 @@
 # Analysis
 
-`apps/data_hub/data_pipeline_ts/analysis/` is the database-backed research and strategy-matrix area inside `data_hub`.
+`apps/data_hub/data_pipeline_ts/analysis/` 是 `data_hub` 内基于数据库的研究与策略矩阵区域。
 
-## What Lives Here
+## 包含的内容
 
-- strategy-family directories such as `bottom_val_strategies`
-- top-level orchestration such as `run_strategy_suite.py`
-- findings summaries derived from historical research output
+- 策略族目录，如 `bottom_val_strategies`
+- 顶层编排脚本，如 `run_strategy_suite.py`
+- 从历史研究产出沉淀下来的 findings 总结
 
-## Stable Matrix Entrypoints
+## 稳定的矩阵入口
 
 - `bottom_volume_matrix`
 - `flow_chip_northbound_matrix`
@@ -16,9 +16,9 @@
 - `supply_shock_matrix`
 - `top_list_matrix`
 
-## Common Commands
+## 常用命令
 
-Run the unified suite:
+跑统一策略套件：
 
 ```bash
 PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \
@@ -26,7 +26,7 @@ PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \
   --start-date 20240101
 ```
 
-Run one matrix directly:
+直接跑单个矩阵：
 
 ```bash
 python -m apps.data_hub.data_pipeline_ts.analysis.bottom_val_strategies.bottom_volume_matrix \

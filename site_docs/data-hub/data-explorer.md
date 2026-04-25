@@ -1,30 +1,30 @@
 # data_explorer
 
-`data_explorer` is the read-only data catalog, preview, and monitoring application for the `data_hub` databases.
+`data_explorer` 是 `data_hub` 数据库的只读目录、预览与监控应用。
 
-## Features
+## 功能
 
-- table directory browsing
-- schema and index inspection
-- paginated data preview
-- task and run monitoring
-- database-level metadata views
+- 表目录浏览
+- 表结构与索引查看
+- 分页数据预览
+- 任务与运行监控
+- 数据库级元数据视图
 
-## Run Commands
+## 启动命令
 
-Start the backend:
+启动后端：
 
 ```bash
 ./apps/data_hub/data_explorer/scripts/run.sh backend
 ```
 
-Start the frontend:
+启动前端：
 
 ```bash
 ./apps/data_hub/data_explorer/scripts/run.sh frontend
 ```
 
-Run tests:
+跑测试：
 
 ```bash
 python -m pytest -q apps/data_hub/data_explorer/tests

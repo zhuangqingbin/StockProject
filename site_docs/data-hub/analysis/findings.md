@@ -1,21 +1,21 @@
 # Findings
 
-This page is a curated entrypoint derived from the current `apps/data_hub/data_pipeline_ts/analysis/FINDINGS.md`.
+本页是从当前 `apps/data_hub/data_pipeline_ts/analysis/FINDINGS.md` 精选出来的入口。
 
-## High-Signal Long Setups
+## 高信号做多组合
 
-- `首板涨停 + 主力大幅流入`: high win rate and strong short-horizon return profile
-- `极低获利比例 + 放量`: large sample count with stable positive bias
-- `看多因子 >= 7 个亮灯`: lower frequency but stronger conviction profile
+- `首板涨停 + 主力大幅流入`：胜率高，短窗口收益曲线稳健
+- `极低获利比例 + 放量`：样本量大，正向偏置稳定
+- `看多因子 >= 7 个亮灯`：触发频率较低，但 conviction 更强
 
-## High-Signal Avoid / Short Setups
+## 高信号回避 / 做空组合
 
-- `跌停 + 主力大幅流出`: strongest continuation-down signal in the current summary
-- `机构大幅净卖出`: negative next-day expectation
-- `户数骤增 + 高换手`: crowding / distribution risk signal
+- `跌停 + 主力大幅流出`：当前总结中最强的下跌延续信号
+- `机构大幅净卖出`：次日预期为负
+- `户数骤增 + 高换手`：拥挤 / 派发风险信号
 
-## How To Use This Page
+## 如何使用本页
 
-- start here to understand the current top conclusions
-- then move to `Analysis` and `Strategy Suite` for the runnable entrypoints
-- keep the source `FINDINGS.md` as the longer-form reference for raw context
+- 先看本页快速了解当前的关键结论
+- 再到 `Analysis` 与 `Strategy Suite` 找可执行的入口
+- 把原始 `FINDINGS.md` 当作长篇上下文参考

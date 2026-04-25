@@ -1,9 +1,10 @@
-site_name: StockProject Docs
+site_name: StockProject 文档
 docs_dir: site_docs
 site_dir: site
 dev_addr: 127.0.0.1:8200
 theme:
   name: material
+  language: zh
   features:
     - navigation.sections
     - navigation.instant
@@ -11,27 +12,27 @@ theme:
     - search.highlight
 
 nav:
-  - Home: index.md
-  - Getting Started: getting-started.md
+  - 首页: index.md
+  - 快速上手: getting-started.md
   - Data Hub:
-      - Overview: data-hub/index.md
+      - 概览: data-hub/index.md
       - data_pipeline_ts: data-hub/data-pipeline-ts.md
       - data_pipeline_ak: data-hub/data-pipeline-ak.md
       - data_explorer: data-hub/data-explorer.md
       - Analysis:
-          - Overview: data-hub/analysis/index.md
-          - Strategy Suite: data-hub/analysis/strategy-suite.md
-          - Findings: data-hub/analysis/findings.md
+          - 概览: data-hub/analysis/index.md
+          - 策略套件: data-hub/analysis/strategy-suite.md
+          - 研究结论: data-hub/analysis/findings.md
   - Quant Platform:
-      - Overview: quant-platform/index.md
-      - Research: quant-platform/research.md
+      - 概览: quant-platform/index.md
+      - 研究: quant-platform/research.md
   - Ops / Dev:
-      - Environment: ops/environment.md
-      - Testing: ops/testing.md
-      - Common Commands: ops/common-commands.md
-  - Repo Governance:
-      - Overview: repo-governance/index.md
-      - Inventory: repo-governance/inventory.md
+      - 环境变量: ops/environment.md
+      - 测试: ops/testing.md
+      - 常用命令: ops/common-commands.md
+  - 仓库治理:
+      - 概览: repo-governance/index.md
+      - 文档清单: repo-governance/inventory.md
 
 markdown_extensions:
   - admonition

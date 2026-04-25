@@ -1,6 +1,6 @@
-# Environment
+# 环境变量
 
-## Shared MySQL Variables
+## 共享 MySQL 变量
 
 - `MYSQL_USER`
 - `MYSQL_PASSWORD`
@@ -8,17 +8,17 @@
 - `MYSQL_PORT`
 - `MYSQL_CHARSET`
 
-## Data Hub Variables
+## Data Hub 变量
 
 - `TUSHARE_TOKEN`
 - `TS_MYSQL_DATABASE`
 - `AK_MYSQL_DATABASE`
 
-## Quant Platform Variables
+## Quant Platform 变量
 
 - `QV_MYSQL_DATABASE`
 - `QV_API_PORT`
 - `QV_API_HOST`
 - `QV_DEBUG`
 
-Keep real values in `.env` or `.env.local`. Do not hardcode credentials in the repository.
+真实凭据放到 `.env` 或 `.env.local`，**不要**把密钥硬编码进仓库。

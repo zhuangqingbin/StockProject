@@ -1,22 +1,22 @@
 # Data Hub
 
-`data_hub` is the repository’s data-production and observability application.
+`data_hub` 是仓库内负责数据生产和可观测性的应用。
 
-It owns:
+承担的职责：
 
-- A-share data ingestion and persistence
-- daily scheduling and backfill workflows
-- read-only exploration and monitoring
-- research-facing analysis scripts that read database tables directly
+- A 股数据采集与入库
+- 每日调度与历史回填
+- 只读浏览与监控
+- 面向研究、直接读库的分析脚本
 
-## Components
+## 组件
 
-- `data_pipeline_ts`: TuShare-native production pipeline
-- `data_pipeline_ak`: AkShare helper context for calendar and fallback imports
-- `data_explorer`: read-only FastAPI + React browsing and monitoring UI
-- `analysis`: database-backed research scripts and strategy matrices
+- `data_pipeline_ts`：基于 TuShare 的生产 pipeline
+- `data_pipeline_ak`：AkShare 辅助上下文，用于交易日历和兜底导入
+- `data_explorer`：只读的 FastAPI + React 浏览与监控 UI
+- `analysis`：基于数据库的研究脚本和策略矩阵
 
-## Common Entry Points
+## 常用入口
 
 - `bash apps/data_hub/setup.sh`
 - `bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh --help`

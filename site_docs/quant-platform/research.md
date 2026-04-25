@@ -1,10 +1,10 @@
 # Research
 
-The `apps/quant_platform/research/` area is the factor, ranking, and backtest workflow for the repo.
+`apps/quant_platform/research/` 是仓库的因子、排序与回测研究入口。
 
-## Common Research Entrypoints
+## 常用研究入口
 
-Run factor research directly from the database with `research-factor --from-db`:
+直接从数据库做因子研究，使用 `research-factor --from-db`：
 
 ```bash
 bash apps/quant_platform/scripts/run.sh research-factor \
@@ -14,7 +14,7 @@ bash apps/quant_platform/scripts/run.sh research-factor \
   --output-dir apps/quant_platform/research/output/full_research
 ```
 
-Run the full pipeline:
+跑完整 pipeline：
 
 ```bash
 PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \
@@ -24,8 +24,8 @@ PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \
   --max-factors 60
 ```
 
-## Published Surface
+## 对外暴露
 
-- frontend route: `/research`
-- API docs from the backend app
-- static outputs served through `research-assets`
+- 前端路由：`/research`
+- 后端应用提供的 API 文档
+- 通过 `research-assets` 提供的静态产出

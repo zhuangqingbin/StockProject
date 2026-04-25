@@ -1,20 +1,20 @@
 # data_pipeline_ak
 
-`data_pipeline_ak` is the AkShare helper context inside `data_hub`.
+`data_pipeline_ak` 是 `data_hub` 内的 AkShare 辅助上下文。
 
-## Current Scope
+## 当前定位
 
-- provide AkShare-side import capability
-- keep a lightweight fallback and extension point for data that does not belong in the TuShare runner
-- currently focus on calendar-related imports
+- 提供 AkShare 一侧的导入能力
+- 作为 TuShare runner 之外、轻量的兜底与扩展点
+- 当前主要服务于交易日历相关的导入
 
-## Current Layout
+## 当前结构
 
 - `apps/data_hub/data_pipeline_ak/calendar.py`
 - `apps/data_hub/data_pipeline_ak/fetchers/calendar.py`
 - `apps/data_hub/data_pipeline_ak/provider/client.py`
 - `apps/data_hub/data_pipeline_ak/tests/test_calendar.py`
 
-## Notes
+## 备注
 
-This context is intentionally smaller than `data_pipeline_ts`. The current repo-level docs should describe it as an AkShare support module rather than a second full production scheduler.
+这个上下文体量明显比 `data_pipeline_ts` 小。仓库级文档应该把它定位为"AkShare 支持模块"，而不是另一个完整的生产调度器。

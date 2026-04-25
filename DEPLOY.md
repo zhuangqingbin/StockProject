@@ -21,7 +21,51 @@ sudo dnf install -y git python3.11 nodejs npm mysql
 - **Node.js**：只有要跑 `data_explorer` 前端时才需要；纯跑 pipeline 可以 `--skip-fe`
 - **Python**：必须 3.11+，`apps/setup.sh` 会校验
 
-## 2. 拉代码 + 配 `.env.local`（敏感信息）
+## 2. MySQL 初始化（新装服务器才需要）
+
+```bash
+# 启动服务
+sudo systemctl start mysqld          # CentOS/Fedora/AliCloud
+sudo systemctl start mysql           # Debian/Ubuntu
+sudo systemctl enable mysqld         # 开机自启
+
+# 首次登录（新装的 MySQL root 还没有密码）
+sudo mysql                           # 走 socket，不用密码
+```
+
+进入 mysql shell 之后设置 root 密码（用你 `.env.local` 里的 `MYSQL_PASSWORD`）：
+
+```sql
+ALTER USER 'root'@'localhost' IDENTIFIED BY '<你设置的密码>';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+> MySQL 8 安装时如果自动生成了临时密码，可以从日志找到：
+> ```bash
+> sudo grep 'temporary password' /var/log/mysqld.log
+> ```
+
+之后用密码登录验证：
+
+```bash
+mysql -u root -p                     # 输入刚设的密码
+```
+
+进入后常用命令：
+
+```sql
+SHOW DATABASES;                      -- 列出所有库
+USE tushare_database;                -- 切到指定库
+SHOW TABLES;                         -- 当前库的表
+SELECT COUNT(*) FROM stock_basic;    -- 看行数
+DESC stock_basic;                    -- 看表结构
+EXIT;
+```
+
+库本身不需要手动建——下面第 4 步的 `apps/setup.sh` 会按 `.env.local` 里的 `TS_MYSQL_DATABASE` / `AK_MYSQL_DATABASE` 自动创建。
+
+## 3. 拉代码 + 配 `.env.local`（敏感信息）
 
 ```bash
 git clone <your-repo-url> ~/StockProject
@@ -49,7 +93,7 @@ vim .env.local
 | `AK_MYSQL_DATABASE` | AkShare 库名（如 `akshare_database`） |
 | `MAIL_*`（可选） | 任务失败邮件通知，不需要可留空 |
 
-## 3. 一键安装（按用途选 flag）
+## 4. 一键安装（按用途选 flag）
 
 | 场景 | 命令 |
 |------|------|
@@ -60,7 +104,7 @@ vim .env.local
 
 `apps/setup.sh` 是幂等的，可以反复运行。
 
-## 4. 验证
+## 5. 验证
 
 ```bash
 # 跑一次盘后核心 profile（替换为最近交易日）
@@ -78,7 +122,7 @@ crontab -l | grep stockproject
 ls apps/data_hub/data_pipeline_ts/.logs/
 ```
 
-## 5. 常用日常命令
+## 6. 常用日常命令
 
 ```bash
 # 手动跑某个 profile
@@ -93,7 +137,7 @@ bash apps/data_hub/data_pipeline_ts/scripts/run_recommended_backfill.sh \
 crontab -l | grep -v stockproject | crontab -
 ```
 
-## 6. 默认定时计划（cron 安装后自动生效）
+## 7. 默认定时计划（cron 安装后自动生效）
 
 | 时间 | Profile | 用途 |
 |------|---------|------|
@@ -104,7 +148,7 @@ crontab -l | grep -v stockproject | crontab -
 | 21:30 | `financial_calendar_nightly` | 财务公告：利润表 / 资产负债表 / 现金流等 |
 | 21:45 | `reference_calendar_nightly` | 参考数据：股东 / 质押 / 回购 / 解禁等 |
 
-## 7. 常见坑
+## 8. 常见坑
 
 - `.env.local` 里的 MySQL 必须是**服务器能连到**的地址；用云 MySQL 时记得把服务器 IP 加白名单
 - TuShare token 没填或权限不足时 `run_daily.sh` 会失败但**不会自动告警**，建议把日志接入监控（默认输出到 `apps/data_hub/data_pipeline_ts/.logs/<profile>.log`）

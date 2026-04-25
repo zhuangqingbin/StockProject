@@ -1,9 +1,9 @@
-# Repo Governance
+# 仓库治理
 
-Use this section for repo-level boundaries and documentation placement rules.
+本节用于定义仓库级的边界和文档归属规则。
 
-## Current Rule
+## 现行规则
 
-`docs/` is reserved for repo-level material such as governance, cross-project rules, and repository-wide plans.
+`docs/` 仅保留仓库级内容，例如治理规则、跨项目约定、覆盖整个仓库的计划文档。
 
-project-specific design and implementation notes should stay near the owning project instead of collecting under repo-level docs by default.
+具体到某个项目的设计与实现笔记，应该放在所属项目目录里，不要默认堆到仓库级 `docs/` 下。

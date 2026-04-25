@@ -1,17 +1,17 @@
 # data_pipeline_ts
 
-`data_pipeline_ts` is the Python-native TuShare pipeline used for production ingestion, persistence, scheduling, and backfill.
+`data_pipeline_ts` 是基于 TuShare 的 Python 原生 pipeline，用于生产环境的数据采集、入库、调度与回填。
 
-## Core Responsibilities
+## 核心职责
 
-- call TuShare fetchers and write MySQL tables
-- run daily profiles and historical backfills
-- sync infrastructure tables such as `stock_basic`, `stock_company`, and `trade_cal`
-- provide the database base used by `analysis`
+- 调用 TuShare fetcher 并写入 MySQL 表
+- 跑每日 profile 与历史回填
+- 同步基础设施表，例如 `stock_basic`、`stock_company`、`trade_cal`
+- 为 `analysis` 提供数据库底座
 
-## Common Commands
+## 常用命令
 
-Run one daily profile:
+跑一次每日 profile：
 
 ```bash
 bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh \
@@ -19,7 +19,7 @@ bash apps/data_hub/data_pipeline_ts/scripts/run_daily.sh \
   --as-of 2026-03-16
 ```
 
-Run a backfill:
+跑历史回填：
 
 ```bash
 bash apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh \
@@ -28,15 +28,15 @@ bash apps/data_hub/data_pipeline_ts/scripts/run_backfill.sh \
   --end 20250331
 ```
 
-Sync infrastructure tables:
+同步基础设施表：
 
 ```bash
 bash apps/data_hub/data_pipeline_ts/scripts/sync_infrastructure.sh \
   --targets stock_basic,stock_company,trade_cal
 ```
 
-## Analysis Data Convention
+## Analysis 数据约定
 
-For new daily analysis work, treat `stock_stk_factor_pro` as the primary base table and join side tables by `(ts_code, trade_date)`.
+新做日级别分析时，把 `stock_stk_factor_pro` 当作主表，按 `(ts_code, trade_date)` 关联其他副表。
 
-Prefer `open_qfq`, `high_qfq`, `low_qfq`, and `close_qfq` for price-based research calculations.
+涉及价格的研究计算优先使用 `open_qfq`、`high_qfq`、`low_qfq`、`close_qfq` 这一组前复权字段。

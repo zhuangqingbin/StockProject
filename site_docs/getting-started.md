@@ -1,44 +1,44 @@
-# Getting Started
+# 快速上手
 
-## Environment Baseline
+## 环境基线
 
 - Python `3.11+`
-- Node.js `18+` for frontend development
-- MySQL with credentials loaded from `.env` or `.env.local`
+- 前端开发需要 Node.js `18+`
+- MySQL，凭据从 `.env` 或 `.env.local` 加载
 
-## Shared Python Runtime
+## 共享 Python 运行时
 
-Resolve the project Python:
+定位项目使用的 Python：
 
 ```bash
 ./shared/scripts/resolve_project_python.sh
 ```
 
-Create the shared `apps/.venv` and install dependencies:
+创建共享虚拟环境 `apps/.venv` 并安装依赖：
 
 ```bash
 bash apps/setup.sh
 ```
 
-## Common Startup Commands
+## 常用启动命令
 
-Start the `data_explorer` backend and frontend:
+启动 `data_explorer` 后端与前端：
 
 ```bash
 ./apps/data_hub/data_explorer/scripts/run.sh backend
 ./apps/data_hub/data_explorer/scripts/run.sh frontend
 ```
 
-Start the `quant_platform` backend and frontend:
+启动 `quant_platform` 后端与前端：
 
 ```bash
 bash apps/quant_platform/scripts/run.sh backend
 bash apps/quant_platform/scripts/run.sh frontend
 ```
 
-## Preview The Docs Portal
+## 本地预览文档门户
 
-Use the shared project Python:
+使用项目共享 Python：
 
 ```bash
 PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \

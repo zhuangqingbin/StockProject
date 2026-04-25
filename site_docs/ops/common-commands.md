@@ -1,6 +1,6 @@
-# Common Commands
+# 常用命令
 
-## Environment And Setup
+## 环境与初始化
 
 ```bash
 ./shared/scripts/resolve_project_python.sh
@@ -22,7 +22,7 @@ bash apps/quant_platform/scripts/run.sh backend
 bash apps/quant_platform/scripts/run.sh frontend
 ```
 
-## Docs Portal
+## 文档门户
 
 ```bash
 PYTHON_BIN="$(./shared/scripts/resolve_project_python.sh)" && \

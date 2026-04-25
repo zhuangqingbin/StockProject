@@ -1,26 +1,26 @@
-# Repo Doc Inventory
+# 仓库文档清单
 
-This page is derived from `docs/repo-doc-inventory.md`.
+本页内容来源于 `docs/repo-doc-inventory.md`。
 
-## Repo-Level Material
+## 仓库级内容
 
 - `docs/README.md`
 - `docs/repo-governance.md`
 - `docs/repo-doc-inventory.md`
 
-## Historical Or Mixed Repo-Wide Material
+## 历史 / 混合性的仓库级内容
 
 - `docs/plans/2026-03-15-python-default-and-cleanup.md`
 
-## Review For Project-Local Placement
+## 待评估是否下沉到具体项目
 
 - `docs/plans/2026-04-04-quant-research-phase1-foundation.md`
 - `docs/plans/2026-03-18-data-hub-bounded-context-refactor.md`
 - `docs/plans/2026-03-18-data-hub-rename.md`
 - `docs/plans/2026-03-17-stock-data-platform-v1.md`
 
-## Placement Rule
+## 归属规则
 
-`docs/ should only hold repo-wide material`.
+`docs/` 只放仓库级内容。
 
-If a design note only affects `apps/data_hub` or `apps/quant_platform`, move it toward the owning project instead of expanding the repo-level docs tree.
+如果一份设计文档只影响 `apps/data_hub` 或 `apps/quant_platform`，应该把它移到所属项目目录，而不是继续扩张仓库级文档树。

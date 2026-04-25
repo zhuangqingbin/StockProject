@@ -1,28 +1,28 @@
 # Quant Platform
 
-`quant_platform` is the repo's quant research and application project.
+`quant_platform` 是仓库的量化研究与对外应用项目。
 
-## Responsibilities
+## 职责
 
-- quant-oriented APIs and pages
-- strategy workflows and backtesting
-- factor research and research asset publishing
+- 量化方向的 API 和页面
+- 策略流程与回测
+- 因子研究与研究资产发布
 
-## Common Commands
+## 常用命令
 
-Start the backend:
+启动后端：
 
 ```bash
 bash apps/quant_platform/scripts/run.sh backend
 ```
 
-Start the frontend:
+启动前端：
 
 ```bash
 bash apps/quant_platform/scripts/run.sh frontend
 ```
 
-Initialize local app data:
+初始化本地应用数据：
 
 ```bash
 bash apps/quant_platform/scripts/run.sh init
